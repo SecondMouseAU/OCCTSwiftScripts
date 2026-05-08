@@ -1,5 +1,6 @@
 import Foundation
 import OCCTSwift
+import OCCTSwiftIO  // TopologyGraph.exportForML / GraphExport extension (v0.171.0+)
 import ScriptHarness
 
 enum GraphMLCommand: Subcommand {

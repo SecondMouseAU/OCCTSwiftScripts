@@ -21,54 +21,45 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // OCCTSwift v0.157+ pins to OCCT 8.0.0 beta1 (xcframework rebuilt against
-        // V8_0_0_beta1; internal BRepGraph bridge migrations to EditorView /
-        // NCollection_DynamicArray; Swift public API unchanged). Floor is
-        // v0.165.0 — earlier v0.157-v0.164 had a broken Package.swift binary
-        // target URL still pointing at the rc-era v0.131.0 xcframework
-        // (OCCTSwift#97), so remote SPM consumers couldn't compile against
-        // those tags. Soak window per OCCTSwiftScripts#36; bump to from: "1.0.0"
-        // when OCCT 8.0.0 GA tags on 2026-05-07.
-        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "0.165.0"),
-        // OCCTSwiftViewport v0.55.0+ no longer ships OCCTSwiftTools as a
-        // sub-product — that bridge layer was split into its own repo to
-        // share with OCCTSwiftAIS (a sibling toolkit). We declare both as
-        // direct deps below.
-        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "0.55.0"),
-        // OCCTSwiftTools v0.6.0 split file-I/O off into a sibling repo
-        // (OCCTSwiftIO) so headless consumers don't drag in Viewport just to
-        // load a STEP file. We only use Tools for the bridge-layer
-        // CADFileLoader.shapeToBodyAndMetadata in RenderPreview, which
-        // legitimately needs Viewport, so the Tools dep stays. We don't
-        // separately depend on OCCTSwiftIO because:
-        //   1. ScriptHarness / DrawingComposer libraries already don't pull
-        //      Viewport (target deps explicit; only `occtkit` does, via
-        //      RenderPreview), so the "drop Viewport from non-render
-        //      targets" story is already realized for library consumers.
-        //   2. OCCTSwiftIO's ScriptManifest is missing the `graphs` field
-        //      our local Sources/ScriptHarness/Manifest.swift carries — the
-        //      topology-graph descriptors that ScriptContext.addGraph() and
-        //      addGraphsForAllShapes() emit. Swapping would silently lose
-        //      that metadata for downstream OCCTSwiftViewport ScriptWatcher
-        //      consumers.
+        // OCCTSwift v1.0.0 pins to OCCT 8.0.0 GA (2026-05-07). v1.0.1 ships
+        // the TopologyGraph.NodeKind fix (Product/Occurrence raw values were
+        // missing, so rootNodes silently returned [] for any graph with
+        // assembly roots). SemVer-stable from this floor.
+        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.0.1"),
+        // OCCTSwiftViewport stays at 0.55.x — no v1.0 yet. Floor 0.55.1
+        // matches OCCTSwiftAIS v1.0.0's required `body.triangleStyles` /
+        // `TriangleStyle` symbols (renderer-backed highlight overlay).
+        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "0.55.1"),
+        // OCCTSwiftTools v1.0.0 graduated alongside OCCTSwift v1.0.0. We use
+        // Tools for the bridge-layer CADFileLoader.shapeToBodyAndMetadata in
+        // RenderPreview, which legitimately needs Viewport, so the Tools dep
+        // stays. We don't separately depend on OCCTSwiftIO because
+        // OCCTSwiftIO's ScriptManifest is missing the `graphs` field our
+        // local Sources/ScriptHarness/Manifest.swift carries — the
+        // topology-graph descriptors that ScriptContext.addGraph() and
+        // addGraphsForAllShapes() emit. Swapping would silently lose that
+        // metadata for downstream OCCTSwiftViewport ScriptWatcher consumers.
         // If a future verb wants progress-aware STEP loading via
         // OCCTSwiftIO's ShapeLoader.load(from:format:progress:), add the dep
         // then.
-        .package(url: "https://github.com/gsdali/OCCTSwiftTools.git", from: "0.6.0"),
-        // OCCTSwiftAIS: high-level interactive services. Used here for the
-        // headless-friendly subset only — Trihedron / WorkPlane / Axis /
-        // PointCloud scene objects (each emits ViewportBody arrays via
-        // makeBodies()) and the SubShape ↔ ViewportBody plumbing for
+        .package(url: "https://github.com/gsdali/OCCTSwiftTools.git", from: "1.0.0"),
+        // OCCTSwiftAIS v1.0.0 graduated alongside OCCTSwift v1.0.0. Used
+        // here for the headless-friendly subset only — Trihedron / WorkPlane
+        // / Axis / PointCloud scene objects (each emits ViewportBody arrays
+        // via makeBodies()) and the SubShape ↔ ViewportBody plumbing for
         // highlight overlays. Selection / Manipulator / SwiftUI surfaces
-        // aren't relevant to a CLI; Dimension overlays render via a
-        // SwiftUI Canvas inside MetalViewportView and so don't reach
-        // OffscreenRenderer (filed upstream — see CLAUDE.md).
-        .package(url: "https://github.com/gsdali/OCCTSwiftAIS.git", from: "0.3.0"),
-        // OCCTSwiftMesh: mesh-domain algorithms (decimation today; smoothing /
-        // repair / remeshing in future releases). Vendors meshoptimizer
-        // (BSD-2-Clause / MIT-equivalent) inside an LGPL-2.1 wrapper. Powers
+        // aren't relevant to a CLI; Dimension overlays render via a SwiftUI
+        // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
+        .package(url: "https://github.com/gsdali/OCCTSwiftAIS.git", from: "1.0.0"),
+        // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
-        .package(url: "https://github.com/gsdali/OCCTSwiftMesh.git", from: "0.1.0"),
+        .package(url: "https://github.com/gsdali/OCCTSwiftMesh.git", from: "1.0.0"),
+        // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
+        // TopologyGraph.exportForML / exportJSON via extension after OCCTSwift
+        // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
+        // graphml verbs only — the rest of the package keeps its existing
+        // ScriptManifest type (with the `graphs` field) from ScriptHarness.
+        .package(url: "https://github.com/gsdali/OCCTSwiftIO.git", from: "1.0.0"),
     ],
     targets: [
         .target(
@@ -139,6 +130,7 @@ let package = Package(
             dependencies: [
                 "ScriptHarness",
                 .product(name: "OCCTSwift", package: "OCCTSwift"),
+                .product(name: "OCCTSwiftIO", package: "OCCTSwiftIO"),
             ],
             path: "Sources/GraphML",
             swiftSettings: [.swiftLanguageMode(.v6)]
@@ -170,6 +162,7 @@ let package = Package(
                 .product(name: "OCCTSwiftTools", package: "OCCTSwiftTools"),
                 .product(name: "OCCTSwiftAIS", package: "OCCTSwiftAIS"),
                 .product(name: "OCCTSwiftMesh", package: "OCCTSwiftMesh"),
+                .product(name: "OCCTSwiftIO", package: "OCCTSwiftIO"),
             ],
             path: "Sources/occtkit",
             swiftSettings: [.swiftLanguageMode(.v6)]
