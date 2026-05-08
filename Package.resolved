@@ -1,13 +1,13 @@
 {
-  "originHash" : "9fcef339be64008d38393e50e167b22041b790e7759011d059c7646ee64ef8da",
+  "originHash" : "7ea3fd153b91822fbe37fd2581ff4563c89173a9a26d7ea7da0654ad9ef37184",
   "pins" : [
     {
       "identity" : "occtswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gsdali/OCCTSwift.git",
       "state" : {
-        "revision" : "c37fcff1b99f557f2572b209964abee699a2b7cc",
-        "version" : "0.170.1"
+        "revision" : "27ec6a6f12b512bf7c6fbdced084470f4b2d7b44",
+        "version" : "1.0.1"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gsdali/OCCTSwiftAIS.git",
       "state" : {
-        "revision" : "b906f7487246dd59a6243b28efbbd47704e9908d",
-        "version" : "0.6.0"
+        "revision" : "1c18da5d5fd4e42fe7637d9be10d75d1804167f6",
+        "version" : "1.0.0"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gsdali/OCCTSwiftIO.git",
       "state" : {
-        "revision" : "1905299e476e5fbe19ec927aa44565cc59efc09a",
-        "version" : "0.1.0"
+        "revision" : "ef7a4ad2d9c057968cda24f08122534e54980f50",
+        "version" : "1.0.0"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gsdali/OCCTSwiftMesh.git",
       "state" : {
-        "revision" : "ceb6b91cec80a2988fd5ef08f908e379d4179ac3",
-        "version" : "0.1.0"
+        "revision" : "01bd6b1abce612de78081e0875e05beaaf4bfbe6",
+        "version" : "1.0.0"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gsdali/OCCTSwiftTools.git",
       "state" : {
-        "revision" : "5e6dca35801966f7efc399c734a9d9739e48ec70",
-        "version" : "0.6.0"
+        "revision" : "4a082ee3af755cd60e159a9b82f214ee5239dd8c",
+        "version" : "1.0.0"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gsdali/OCCTSwiftViewport.git",
       "state" : {
-        "revision" : "88c6f80abf66363afd1c4ea4f1e4de0b5eab6e25",
-        "version" : "0.55.0"
+        "revision" : "aaea62742ed6ae4e075e582c49292f397613c649",
+        "version" : "0.55.3"
       }
     }
   ],

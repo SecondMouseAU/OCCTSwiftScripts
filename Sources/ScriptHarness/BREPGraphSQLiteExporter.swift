@@ -237,8 +237,10 @@ public enum BREPGraphSQLiteExporter {
         CREATE TABLE occurrences (
             idx                     INTEGER PRIMARY KEY,
             product_idx             INTEGER NOT NULL,
-            parent_product_idx      INTEGER NOT NULL,
-            parent_occurrence_idx   INTEGER
+            parent_product_idx      INTEGER NOT NULL
+            -- OCCT 8.0.0 reshaped assembly topology to Product → Occurrence →
+            -- Product, so an occurrence has only one parent (a product); the
+            -- old parent_occurrence_idx column was removed in v1.0.0.
         );
 
         CREATE TABLE root_products (
@@ -784,11 +786,9 @@ public enum BREPGraphSQLiteExporter {
         }
 
         for i in 0..<g.occurrenceCount {
-            let parentOcc = g.occurrenceParentOccurrence(i)
-            let parentOccStr = parentOcc.map { "\($0)" } ?? "NULL"
             try exec(db, """
-                INSERT INTO occurrences (idx, product_idx, parent_product_idx, parent_occurrence_idx)
-                VALUES (\(i), \(g.occurrenceProduct(i)), \(g.occurrenceParentProduct(i)), \(parentOccStr))
+                INSERT INTO occurrences (idx, product_idx, parent_product_idx)
+                VALUES (\(i), \(g.occurrenceProduct(i)), \(g.occurrenceParentProduct(i)))
                 """)
         }
 

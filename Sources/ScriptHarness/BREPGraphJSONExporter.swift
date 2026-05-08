@@ -325,8 +325,7 @@ public enum BREPGraphJSONExporter {
             occurrences.append(OccurrenceEntry(
                 index: i,
                 productIndex: g.occurrenceProduct(i),
-                parentProductIndex: g.occurrenceParentProduct(i),
-                parentOccurrenceIndex: g.occurrenceParentOccurrence(i)
+                parentProductIndex: g.occurrenceParentProduct(i)
             ))
         }
 
@@ -350,6 +349,8 @@ public enum BREPGraphJSONExporter {
         case .compound: return "compound"
         case .compSolid: return "compSolid"
         case .coedge: return "coedge"
+        case .product: return "product"
+        case .occurrence: return "occurrence"
         }
     }
 }
@@ -543,5 +544,7 @@ struct ProductEntry: Codable {
 struct OccurrenceEntry: Codable {
     let index: Int
     let productIndex, parentProductIndex: Int
-    let parentOccurrenceIndex: Int?
+    // OCCT 8.0.0 reshaped assembly topology to Product → Occurrence → Product,
+    // so an occurrence has only one parent (a product). The old
+    // parentOccurrenceIndex field was removed in v1.0.0.
 }
