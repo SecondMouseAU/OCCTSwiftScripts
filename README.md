@@ -4,6 +4,8 @@ A script harness for rapid iteration on [OCCTSwift](https://github.com/gsdali/OC
 
 This is the OCCTSwift equivalent of CadQuery or OpenSCAD — write parametric, constraint-based CAD code and get visual + file feedback immediately.
 
+Part of the [OCCTSwift ecosystem](https://github.com/gsdali/OCCTSwift/blob/main/docs/ecosystem.md) — see the ecosystem map for how this package fits with the kernel, viewport, and sibling layers. SemVer-stable from v1.0.0.
+
 ## Quick Start
 
 ```bash
