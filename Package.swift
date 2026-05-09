@@ -26,10 +26,11 @@ let package = Package(
         // missing, so rootNodes silently returned [] for any graph with
         // assembly roots). SemVer-stable from this floor.
         .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.0.1"),
-        // OCCTSwiftViewport stays at 0.55.x — no v1.0 yet. Floor 0.55.1
-        // matches OCCTSwiftAIS v1.0.0's required `body.triangleStyles` /
-        // `TriangleStyle` symbols (renderer-backed highlight overlay).
-        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "0.55.1"),
+        // OCCTSwiftViewport graduated to v1.0.0 on 2026-05-08, one day after
+        // the rest of the cohort, with v1.0.1 the day after. The 1.0.0 floor
+        // is unblocked by OCCTSwiftTools v1.0.2, which widened its own
+        // Viewport constraint. Closes #45.
+        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "1.0.0"),
         // OCCTSwiftTools v1.0.0 graduated alongside OCCTSwift v1.0.0. We use
         // Tools for the bridge-layer CADFileLoader.shapeToBodyAndMetadata in
         // RenderPreview, which legitimately needs Viewport, so the Tools dep
