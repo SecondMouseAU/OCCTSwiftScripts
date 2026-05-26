@@ -26,10 +26,11 @@ let package = Package(
         // missing, so rootNodes silently returned [] for any graph with
         // assembly roots). SemVer-stable from this floor.
         .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.0.3"),
-        // OCCTSwiftViewport graduated to v1.0.0 on 2026-05-08 with v1.0.1
-        // the day after. The cohort floor is unblocked by OCCTSwiftTools
-        // v1.0.2, which widened its own Viewport constraint. Closes #45.
-        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "1.0.1"),
+        // RenderPreview rasterizes through Viewport's OffscreenRenderer.
+        // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
+        // body load (Viewport #30) and v1.0.4 makes the published Viewport
+        // package dependency-free (broke the Viewport↔Tools cycle).
+        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "1.0.4"),
         // OCCTSwiftTools v1.0.0 graduated alongside OCCTSwift v1.0.0. We use
         // Tools for the bridge-layer CADFileLoader.shapeToBodyAndMetadata in
         // RenderPreview, which legitimately needs Viewport, so the Tools dep
@@ -42,7 +43,7 @@ let package = Package(
         // If a future verb wants progress-aware STEP loading via
         // OCCTSwiftIO's ShapeLoader.load(from:format:progress:), add the dep
         // then.
-        .package(url: "https://github.com/gsdali/OCCTSwiftTools.git", from: "1.0.2"),
+        .package(url: "https://github.com/gsdali/OCCTSwiftTools.git", from: "1.1.1"),
         // OCCTSwiftAIS v1.0.0 graduated alongside OCCTSwift v1.0.0. Used
         // here for the headless-friendly subset only — Trihedron / WorkPlane
         // / Axis / PointCloud scene objects (each emits ViewportBody arrays
@@ -50,7 +51,7 @@ let package = Package(
         // highlight overlays. Selection / Manipulator / SwiftUI surfaces
         // aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        .package(url: "https://github.com/gsdali/OCCTSwiftAIS.git", from: "1.0.0"),
+        .package(url: "https://github.com/gsdali/OCCTSwiftAIS.git", from: "1.0.2"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
         .package(url: "https://github.com/gsdali/OCCTSwiftMesh.git", from: "1.0.0"),
