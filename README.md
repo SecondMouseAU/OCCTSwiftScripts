@@ -211,6 +211,25 @@ try ctx.add(hole2, id: "final", color: C.steel)
 try ctx.emit(description: "Parametric L-bracket")
 ```
 
+## Examples / Recipes
+
+The [`recipes/`](recipes/) cookbook holds self-contained, parametric worked examples —
+copy a folder, tweak the parameters, run. The seed batch:
+
+| # | Recipe | What it shows |
+|---|--------|---------------|
+| 01 | [Mounting bracket](recipes/01-mounting-bracket/) | sketch → 2D fillet → extrude → drill |
+| 02 | [Helical compression spring](recipes/02-helical-spring/) | helix path + circular section → pipe sweep |
+| 03 | [Pipe flange](recipes/03-pipe-flange/) | revolve + bolt-circle pattern + chamfer |
+
+```bash
+swift run occtkit run recipes/01-mounting-bracket/main.swift --format brep --output /tmp/out
+make recipe NAME=my-widget   # scaffold a new recipe
+make recipes-test            # smoke-test every recipe
+```
+
+See [`recipes/README.md`](recipes/README.md) for the full index and contributor guide.
+
 ## Output Directory
 
 `~/.occtswift-scripts/output/` — cleaned on each run.
