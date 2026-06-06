@@ -6,7 +6,9 @@
 //          circle placed at the helix start and oriented along the start tangent, then
 //          swept along the path (Shape.sweep → BRepOffsetAPI_MakePipe). The section
 //          MUST sit on the spine start and face along the tangent or the pipe fails.
-//          Ground/closed ends are out of scope here — this is an open-coil spring.
+//          Shape.sweep orientation-normalises its result (OCCTSwift v1.3.1, #170), so the
+//          solid has positive volume regardless of section sense. Ground/closed ends are
+//          out of scope here — this is an open-coil spring.
 //
 // Run:  swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
@@ -31,13 +33,10 @@ let meanRadius = (outsideDia - wireDia) / 2
 let path = Wire.helix(radius: meanRadius, pitch: pitch, turns: activeCoils)!
 
 // ── Wire cross-section: a circle at the helix start, oriented along the start
-//    tangent. Helix r(θ)=(R cosθ, R sinθ, pitch·θ/2π); tangent at θ=0 is
-//    (0, R, pitch/2π). We point the section's normal *against* the tangent so the
-//    swept solid ends up with outward-facing normals (positive volume); building it
-//    along +tangent yields a correct but reversed-orientation solid.
+//    tangent. Helix r(θ)=(R cosθ, R sinθ, pitch·θ/2π); tangent at θ=0 is (0, R, pitch/2π).
 let t = SIMD3<Double>(0, meanRadius, pitch / (2 * .pi))
 let tLen = (t.x * t.x + t.y * t.y + t.z * t.z).squareRoot()
-let tangent = SIMD3<Double>(-t.x / tLen, -t.y / tLen, -t.z / tLen)
+let tangent = SIMD3<Double>(t.x / tLen, t.y / tLen, t.z / tLen)
 let section = Wire.circle(origin: SIMD3(meanRadius, 0, 0), normal: tangent, radius: wireDia / 2)!
 
 let spring = Shape.sweep(profile: section, along: path)!

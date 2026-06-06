@@ -4,15 +4,15 @@
 // Outputs: one solid body — a raised-face pipe flange with a bolt circle.
 // Notes:   The flange is a surface of revolution. The half-section is drawn in the XY
 //          plane as (radius, axial) pairs with radius ≥ bore (so it never crosses the
-//          axis) and revolved a full turn about the Y axis. One bolt hole is drilled
-//          axially, then circular-patterned around the bolt circle. A small all-edge
-//          chamfer breaks sharp corners; it degrades gracefully if the blend fails.
+//          axis) and revolved a full turn about the Y axis. The bolt circle is cut with
+//          Shape.circularPatternCut (OCCTSwift v1.3.1, #169), which patterns a single hole
+//          tool around the axis and subtracts the whole compound in one call. A small
+//          all-edge chamfer breaks sharp corners; it degrades gracefully if it fails.
 //
 // Run:  swift run occtkit run recipes/03-pipe-flange/main.swift --format brep
 
 import OCCTSwift
 import ScriptHarness
-import Foundation
 
 // ── Parameters ──────────────────────────────────────────────────────────────
 let boreRadius: Double      = 25   // through-bore radius (mm)
@@ -45,18 +45,14 @@ let section = Wire.polygon([
 var flange = Shape.revolve(profile: section, axisOrigin: .zero,
                            axisDirection: SIMD3(0, 1, 0), angle: 2 * .pi)!
 
-// ── Bolt holes around the bolt circle (in the XZ plane; axis is Y) ─────────────
-//    NOTE: Shape.circularPattern patterns the whole *body*, not a feature, so we
-//    drill each hole individually rather than pattern a single hole. (See the recipe
-//    README — a feature-level circular pattern is a filed OCCTSwift gap.)
+// ── Bolt circle: one axial hole tool, patterned + subtracted around the Y axis ─
 let depth = thickness + raisedHeight + 2
-for i in 0..<boltCount {
-    let theta = 2 * .pi * Double(i) / Double(boltCount)
-    let at = SIMD3(boltCircleRadius * Foundation.cos(theta), -1.0,
-                   boltCircleRadius * Foundation.sin(theta))
-    flange = flange.drilled(at: at, direction: SIMD3(0, 1, 0),
-                            radius: boltRadius, depth: depth)!
-}
+let holeTool = Shape.cylinder(at: SIMD3(boltCircleRadius, -1.0, 0),
+                              direction: SIMD3(0, 1, 0),
+                              radius: boltRadius, height: depth)!
+flange = flange.circularPatternCut(tool: holeTool, axisPoint: .zero,
+                                   axisDirection: SIMD3(0, 1, 0),
+                                   count: boltCount, angle: 2 * .pi)!
 
 // ── Break all sharp edges (optional; falls back if the chamfer fails) ─────────
 flange = flange.chamfered(distance: 1.0) ?? flange

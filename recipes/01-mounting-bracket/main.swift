@@ -3,10 +3,11 @@
 // Inputs:  none (edit the parameter block below)
 // Outputs: one solid body — an L-bracket with a filleted inside corner and four
 //          through-holes (two per leg).
-// Notes:   The inside corner is rounded in 2D on the profile wire (Wire.filleted2D)
-//          *before* extrusion, which is more robust than fillet-by-edge-index on the
-//          solid. Holes are drilled through the leg thickness with a small overshoot
-//          so the cut faces stay clean.
+// Notes:   The inside corner is rounded by filleting the solid's concave edge, found
+//          geometrically with Shape.concaveEdges() (OCCTSwift v1.3.1, #171) rather than
+//          by a fragile edge index. Fillet before drilling so concaveEdges() returns only
+//          the reentrant corner. Holes are drilled through the leg thickness with a small
+//          overshoot so the cut faces stay clean.
 //
 // Run:  swift run occtkit run recipes/01-mounting-bracket/main.swift --format brep
 
@@ -27,16 +28,16 @@ let ctx = ScriptContext(metadata: ManifestMetadata(
 ))
 let C = ScriptContext.Colors.self
 
-// ── L-shaped cross-section (XY plane), inside corner is vertex index 3 ────────
+// ── L-shaped cross-section (XY plane), reentrant corner at (thickness, thickness)
 let lProfile = Wire.polygon([
     SIMD2(0, 0), SIMD2(legLength, 0), SIMD2(legLength, thickness),
     SIMD2(thickness, thickness),          // ← inside corner
     SIMD2(thickness, legLength), SIMD2(0, legLength),
 ])!
-let rounded = lProfile.filleted2D(vertexIndex: 3, radius: filletRadius) ?? lProfile
 
-// ── Extrude to a solid prism along Z ─────────────────────────────────────────
-var bracket = Shape.extrude(profile: rounded, direction: SIMD3(0, 0, 1), length: width)!
+// ── Extrude to a solid prism, then round the concave (inside-corner) edge ─────
+let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: width)!
+var bracket = prism.filleted(edges: prism.concaveEdges(), radius: filletRadius) ?? prism
 
 // ── Four through-holes: two in the base leg (drill along Y), two in the upright
 //    leg (drill along X). Start just outside the entry face and over-run the exit.

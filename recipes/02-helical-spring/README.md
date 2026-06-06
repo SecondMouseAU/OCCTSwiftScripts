@@ -19,11 +19,10 @@ Mean coil radius is derived: `meanRadius = (outsideDia − wireDia) / 2`.
 ## Algorithm
 
 The coil centre-line is a helix about Z (`Wire.helix`). The wire cross-section is a
-circle placed at the helix start point `(meanRadius, 0, 0)` and oriented perpendicular to
-the start tangent `(0, R, pitch/2π)`. The section is then swept along the helix with
-`Shape.sweep` (which wraps `BRepOffsetAPI_MakePipe`). To get a solid with outward-facing
-normals (positive volume), the section's normal is pointed *against* the tangent — sweeping
-along `+tangent` produces a geometrically correct but reverse-oriented solid.
+circle placed at the helix start point `(meanRadius, 0, 0)` and oriented along the start
+tangent `(0, R, pitch/2π)`. The section is then swept along the helix with `Shape.sweep`
+(which wraps `BRepOffsetAPI_MakePipe`). `sweep` orientation-normalises its result, so the
+solid comes back with positive volume regardless of the section's sense.
 
 ## OCCTSwift APIs used
 
@@ -36,9 +35,9 @@ along `+tangent` produces a geometrically correct but reverse-oriented solid.
 
 - The section circle **must** sit on the spine start and face along the tangent, or the
   pipe sweep fails. Don't leave it at the origin.
-- Sweep orientation matters: building along `+tangent` yields a negative-volume (reversed)
-  solid. Flip the section normal — as done here — for a correctly-oriented body. (Filed
-  upstream as a request for an orientation-normalising sweep / `Shape.reversed()` helper.)
+- `Shape.sweep` orientation-normalises since OCCTSwift v1.3.1, so you no longer need to
+  flip the section sense to avoid a negative-volume solid. Use `Shape.signedVolume` if you
+  need to inspect the raw orientation, or `Shape.orientedForward()` to normalise explicitly.
 - Ground/closed/squared ends are **out of scope** — this is an open-coil spring. Closed
   ends need either a variable-pitch helix or an end-grinding boolean.
 - `Wire.helix` uses `turns:` (a coil count), **not** a `height:`. Free length ≈ `pitch ·

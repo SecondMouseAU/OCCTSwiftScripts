@@ -24,15 +24,17 @@ The flange is a surface of revolution. Its half-section is drawn in the XY plane
 closed polygon of `(radius, axial)` pairs — bore wall, back face, OD, disk front, the
 raised-face step, and back to the bore — with every radius `≥ boreRadius` so the profile
 never crosses the axis. It is revolved a full turn about the **Y axis** (the bore axis).
-The bolt holes are then drilled one-by-one at evenly-spaced angles around the bolt circle
-(in the XZ plane, since the axis is Y). Finally a small all-edge chamfer breaks the sharp
+The bolt circle is cut with `Shape.circularPatternCut`: a single cylindrical hole tool is
+built at the bolt-circle radius (oriented along Y), then patterned `boltCount` times around
+the axis and subtracted as one compound. Finally a small all-edge chamfer breaks the sharp
 corners; it falls back to the un-chamfered body if the blend fails.
 
 ## OCCTSwift APIs used
 
 - `Wire.polygon(_:closed:)` — the `(radius, axial)` half-section
 - `Shape.revolve(profile:axisOrigin:axisDirection:angle:)` — surface of revolution
-- `Shape.drilled(at:direction:radius:depth:)` — the bolt holes (one per angle)
+- `Shape.cylinder(at:direction:radius:height:)` — the bolt-hole tool
+- `Shape.circularPatternCut(tool:axisPoint:axisDirection:count:angle:)` — the bolt circle (OCCTSwift v1.3.1)
 - `Shape.chamfered(distance:)` — edge break (optional)
 
 ## Gotchas
@@ -43,7 +45,7 @@ corners; it falls back to the un-chamfered body if the blend fails.
   produces a degenerate or self-intersecting revolution.
 - `chamfered(distance:)` blends **all** edges. On a flange with many bolt-hole edges this
   can be slow or fail; the recipe guards it with `?? flange` so the body still emits.
-- **`Shape.circularPattern` patterns the whole *body*, not a feature.** Using it here would
-  produce 8 overlapping copies of the entire flange (≈8× the volume), not 8 holes — so the
-  recipe drills each hole in a loop instead. A feature-level circular pattern (pattern a
-  hole/pocket around an axis) is filed as an OCCTSwift ergonomic-gap request.
+- Use `circularPatternCut`, **not** `circularPattern`, for the bolt circle. `circularPattern`
+  patterns the whole *body* — applied to a holed flange it produces overlapping flange copies
+  (≈8× the volume) with the holes filled in. `circularPatternCut` patterns the *tool* and
+  subtracts it, which is the feature-level behaviour you want here.

@@ -52,10 +52,10 @@ during the seed batch).
 
 This is a seed batch; the following are tracked for later additions (order/selection open):
 
-- Spur gear (needs hand-rolled involute — no `Curve2D.involute`; see OCCTSwift gap issue)
+- Spur gear (needs a hand-rolled involute — no `Curve2D.involute` yet)
 - Sheet-metal enclosure (`compose-sheet-metal` + `reconstruct`)
 - Lattice cube (linear pattern + sweep + boolean union)
 - M8×40 bolt (hex head + helical thread)
-- Finger-jointed lid box (needs 2D profile composition — no wire booleans; see gap issue)
+- Finger-jointed lid box (2D profile composition — no wire booleans yet)
 - Fan blade (lofted sections)
 - Planetary gear set (XCAF assembly via `Document`)
