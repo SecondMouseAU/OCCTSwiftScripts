@@ -9,9 +9,13 @@ tweak the parameters.
 
 | # | Recipe | Preview | What it shows |
 |---|--------|---------|---------------|
-| 01 | [Mounting bracket](01-mounting-bracket/) | <img src="01-mounting-bracket/output.png" width="160"> | sketch → 2D fillet → extrude → drill |
+| 01 | [Mounting bracket](01-mounting-bracket/) | <img src="01-mounting-bracket/output.png" width="160"> | sketch → extrude → `concaveEdges` fillet → drill |
 | 02 | [Helical compression spring](02-helical-spring/) | <img src="02-helical-spring/output.png" width="160"> | helix path + circular section → pipe sweep |
-| 03 | [Pipe flange](03-pipe-flange/) | <img src="03-pipe-flange/output.png" width="160"> | revolve + bolt-circle pattern + chamfer |
+| 03 | [Pipe flange](03-pipe-flange/) | <img src="03-pipe-flange/output.png" width="160"> | revolve + `circularPatternCut` bolt circle + chamfer |
+| 04 | [Involute spur gear](04-spur-gear/) | <img src="04-spur-gear/output.png" width="160"> | involute tooth math → polygon → extrude → bore |
+| 05 | [Strut lattice cube](05-lattice-cube/) | <img src="05-lattice-cube/output.png" width="160"> | `linearPattern` tiling + boolean union |
+| 06 | [Twisted fan blade](06-fan-blade/) | <img src="06-fan-blade/output.png" width="160"> | twisted airfoil sections → `loft` + hub |
+| 07 | [Sheet-metal U-channel](07-sheet-metal-channel/) | <img src="07-sheet-metal-channel/output.png" width="160"> | `SheetMetal` flanges + bends → fold |
 
 > Previews are locally-generated artifacts (`make recipes-render`). If an image is
 > missing, the recipe still builds — PNGs are never a CI gate.
@@ -50,12 +54,12 @@ during the seed batch).
 
 ## Planned recipes
 
-This is a seed batch; the following are tracked for later additions (order/selection open):
+The following are tracked for later additions (order/selection open):
 
-- Spur gear (needs a hand-rolled involute — no `Curve2D.involute` yet)
-- Sheet-metal enclosure (`compose-sheet-metal` + `reconstruct`)
-- Lattice cube (linear pattern + sweep + boolean union)
-- M8×40 bolt (hex head + helical thread)
+- M8×40 bolt (hex head + helical thread) — deferred: cutting a helical thread groove via
+  boolean is unreliable in the current OCCT build (the cut/fuse of a helical sweep against a
+  coaxial cylinder fails). Awaiting a robust thread approach / helper.
 - Finger-jointed lid box (2D profile composition — no wire booleans yet)
-- Fan blade (lofted sections)
 - Planetary gear set (XCAF assembly via `Document`)
+- Closed sheet-metal box / tray — needs four-wall corner folding, which the `SheetMetal`
+  builder doesn't support yet (corner fillets fail); see [07](07-sheet-metal-channel/).

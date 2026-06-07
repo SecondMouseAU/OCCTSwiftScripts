@@ -214,13 +214,17 @@ try ctx.emit(description: "Parametric L-bracket")
 ## Examples / Recipes
 
 The [`recipes/`](recipes/) cookbook holds self-contained, parametric worked examples —
-copy a folder, tweak the parameters, run. The seed batch:
+copy a folder, tweak the parameters, run:
 
 | # | Recipe | What it shows |
 |---|--------|---------------|
-| 01 | [Mounting bracket](recipes/01-mounting-bracket/) | sketch → 2D fillet → extrude → drill |
+| 01 | [Mounting bracket](recipes/01-mounting-bracket/) | sketch → extrude → `concaveEdges` fillet → drill |
 | 02 | [Helical compression spring](recipes/02-helical-spring/) | helix path + circular section → pipe sweep |
-| 03 | [Pipe flange](recipes/03-pipe-flange/) | revolve + bolt-circle pattern + chamfer |
+| 03 | [Pipe flange](recipes/03-pipe-flange/) | revolve + `circularPatternCut` bolt circle + chamfer |
+| 04 | [Involute spur gear](recipes/04-spur-gear/) | involute tooth math → polygon → extrude → bore |
+| 05 | [Strut lattice cube](recipes/05-lattice-cube/) | `linearPattern` tiling + boolean union |
+| 06 | [Twisted fan blade](recipes/06-fan-blade/) | twisted airfoil sections → `loft` + hub |
+| 07 | [Sheet-metal U-channel](recipes/07-sheet-metal-channel/) | `SheetMetal` flanges + bends → fold |
 
 ```bash
 swift run occtkit run recipes/01-mounting-bracket/main.swift --format brep --output /tmp/out
