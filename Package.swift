@@ -24,8 +24,13 @@ let package = Package(
         // OCCTSwift v1.0.0 pins to OCCT 8.0.0 GA (2026-05-07). v1.0.1 ships
         // the TopologyGraph.NodeKind fix (Product/Occurrence raw values were
         // missing, so rootNodes silently returned [] for any graph with
-        // assembly roots). SemVer-stable from this floor.
-        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.0.3"),
+        // assembly roots). Floored at v1.3.1, which adds the cookbook-driven
+        // ergonomics used by recipes/: Shape.circularPatternCut (feature-level
+        // circular pattern, #169), orientation-normalised Shape.sweep +
+        // orientedForward/signedVolume (#170), and concaveEdges/convexEdges/
+        // edges(where:) selectors (#171). NB these landed only in v1.3.1 — the
+        // v1.2.1/v1.3.0 tags pre-date the merge. SemVer-stable from this floor.
+        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.3.1"),
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport

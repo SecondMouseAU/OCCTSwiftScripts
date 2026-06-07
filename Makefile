@@ -5,7 +5,7 @@ BUILD   = .build/release/$(BIN)
 
 VERBS = run graph-validate graph-compact graph-dedup graph-query graph-ml feature-recognize dxf-export drawing-export reconstruct compose-sheet-metal transform boolean pattern metrics query-topology measure-distance load-brep import check-thickness analyze-clearance heal mesh render-preview inspect-assembly set-metadata simplify-mesh
 
-.PHONY: build install uninstall clean help
+.PHONY: build install uninstall clean help recipe recipes-test recipes-render
 
 help:
 	@echo "Targets:"
@@ -13,6 +13,18 @@ help:
 	@echo "  install [PREFIX=]  copy occtkit + verb symlinks to \$$(PREFIX)/bin (default /usr/local)"
 	@echo "  uninstall [PREFIX=]"
 	@echo "  clean              swift package clean"
+	@echo "  recipe NAME=<n>    scaffold recipes/NN-<n>/ (auto-numbered)"
+	@echo "  recipes-test       run + smoke-test every recipe (occtkit run + metrics)"
+	@echo "  recipes-render     regenerate each recipe's output.png (skips if no Metal)"
+
+recipe:
+	@Scripts/new-recipe.sh "$(NAME)"
+
+recipes-test:
+	@Scripts/recipe-check.sh
+
+recipes-render:
+	@Scripts/render-recipe.sh
 
 build:
 	swift build -c release

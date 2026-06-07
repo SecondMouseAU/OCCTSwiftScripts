@@ -1,0 +1,45 @@
+name: recipes
+
+# Smoke-tests every cookbook recipe: builds occtkit, runs each recipe, and asserts the
+# emitted body is a valid, non-empty, positive-volume solid that matches its committed
+# reference output.brep. Allowed to fail for now (issue #16) — promote to required once
+# the seed batch settles. macOS-only: the OCCTSwift dependency is a macOS xcframework.
+
+on:
+  push:
+    paths:
+      - 'recipes/**'
+      - 'Scripts/recipe-check.sh'
+      - 'Sources/**'
+      - 'Package.*'
+      - '.github/workflows/recipes.yml'
+  pull_request:
+    paths:
+      - 'recipes/**'
+      - 'Scripts/recipe-check.sh'
+      - 'Sources/**'
+      - 'Package.*'
+      - '.github/workflows/recipes.yml'
+  workflow_dispatch:
+
+jobs:
+  recipes:
+    runs-on: macos-15
+    continue-on-error: true   # allowed-to-fail seed phase
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build occtkit
+        run: swift build -c release --product occtkit
+
+      - name: Run recipe smoke tests
+        env:
+          OCCTKIT: .build/release/occtkit
+        run: Scripts/recipe-check.sh
