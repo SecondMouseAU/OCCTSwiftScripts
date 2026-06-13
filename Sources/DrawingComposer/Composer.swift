@@ -28,12 +28,20 @@ public struct DrawingComposerResult: Sendable {
     public let viewCount: Int
     public let sectionCount: Int
     public let detailCount: Int
+    /// Number of components laid out (1 for the single-shape path; N for a
+    /// general-arrangement / assembly drawing).
+    public let componentCount: Int
+    /// Parts-list rows rendered on the sheet (empty for the single-shape path).
+    public let partsList: [BillOfMaterials.Item]
 
     public init(writer: DXFWriter, scaleLabel: String,
-                viewCount: Int, sectionCount: Int, detailCount: Int) {
+                viewCount: Int, sectionCount: Int, detailCount: Int,
+                componentCount: Int = 1, partsList: [BillOfMaterials.Item] = []) {
         self.writer = writer; self.scaleLabel = scaleLabel
         self.viewCount = viewCount
         self.sectionCount = sectionCount; self.detailCount = detailCount
+        self.componentCount = componentCount
+        self.partsList = partsList
     }
 }
 

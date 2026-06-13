@@ -173,5 +173,14 @@ let package = Package(
             path: "Sources/occtkit",
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        .testTarget(
+            name: "DrawingComposerTests",
+            dependencies: [
+                "DrawingComposer",
+                .product(name: "OCCTSwift", package: "OCCTSwift"),
+            ],
+            path: "Tests/DrawingComposerTests",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
     ]
 )
