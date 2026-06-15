@@ -4,7 +4,16 @@ import PackageDescription
 let package = Package(
     name: "OCCTSwiftScripts",
     platforms: [
-        .macOS(.v15)
+        .macOS(.v15),
+        // iOS so the library products (DrawingComposer, ScriptHarness) link
+        // into downstream iOS apps (e.g. OCCTSwiftPartsAgent's SwiftUI app).
+        // Floored at v18 to match the sibling cohort (Viewport/Tools/AIS
+        // are .iOS(.v18)); OCCTSwift itself only needs v15. The executable
+        // targets (occtkit, Script, the legacy Graph* tools) shell out via
+        // Foundation.Process and aren't iOS-buildable, but SPM only compiles
+        // a target when something reachable requires it — an iOS app linking
+        // a library product never pulls the executables in. See #52.
+        .iOS(.v18)
     ],
     products: [
         .library(
