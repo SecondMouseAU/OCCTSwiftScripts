@@ -10,6 +10,13 @@ OCCTSwiftScripts is a script harness for rapid OCCTSwift geometry iteration — 
 
 See `docs/SCRIPT_WORKFLOW.md` for the script iteration workflow.
 
+**Knowledge management**: durable, cross-cutting project knowledge lives in `docs/knowledge/`
+— an **OKF** bundle (Open Knowledge Format: categorized markdown + YAML frontmatter, from
+Google's Knowledge Catalog). Start at `docs/knowledge/index.md`. `CLAUDE.md` remains the
+detailed quick reference; the bundle holds policies, durable decisions, and the relationship
+to downstream consumers (e.g. the commercial OCCTStudio app). Record durable decisions/policies
+as OKF entries (+ a `log.md` line), not only in chat or commit messages.
+
 ## Build & Run
 
 ```bash
