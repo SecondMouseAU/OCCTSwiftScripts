@@ -30,16 +30,19 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // OCCTSwift v1.0.0 pins to OCCT 8.0.0 GA (2026-05-07). v1.0.1 ships
-        // the TopologyGraph.NodeKind fix (Product/Occurrence raw values were
-        // missing, so rootNodes silently returned [] for any graph with
-        // assembly roots). Floored at v1.3.1, which adds the cookbook-driven
-        // ergonomics used by recipes/: Shape.circularPatternCut (feature-level
-        // circular pattern, #169), orientation-normalised Shape.sweep +
-        // orientedForward/signedVolume (#170), and concaveEdges/convexEdges/
-        // edges(where:) selectors (#171). NB these landed only in v1.3.1 — the
-        // v1.2.1/v1.3.0 tags pre-date the merge. SemVer-stable from this floor.
-        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.3.1"),
+        // Floored at v1.7.1 = OCCT 8.0.0p1. v1.7.0 realigned BRepGraph to OCCT's
+        // redesigned graph model (definitions vs references/usages, persistent
+        // UIDs, controlled layers); v1.7.1 made the derived graph reads real
+        // again — `adjacentFaces`/`faces(of:)`/`edges(of:)`/`sharedEdges`,
+        // `faceSameDomain`, `faceIsNaturalRestriction` — plus durable
+        // UID/RefUID/ItemUID accessors. Behaviour changes vs the old model are
+        // confined to the BRepGraph domain (see OCCTSwift docs/CHANGELOG v1.7.0):
+        // edgeMaxContinuity/setEdgeRegularity are now no-ops (use
+        // Shape.maxContinuity); SameParameter/SameRange/Degenerated/IsClosed
+        // setters no-op but getters return the live derived value. The cookbook
+        // ergonomics relied on since v1.3.1 (circularPatternCut #169, sweep
+        // orientation #170, concave/convex/edges(where:) #171) are unchanged.
+        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.7.1"),
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
