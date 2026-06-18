@@ -18,9 +18,19 @@ enum GraphMLCommand: Subcommand {
         let edgeToVertex: COO
         let faces: [Face]
         let edges: [Edge]
+        // Convexity-attributed face-adjacency (the gAAG edge attribute used by
+        // B-rep GNNs). Face indices follow shape.faces() order — the `face[N]`
+        // scheme query-topology emits. Added OCCTSwiftScripts#55.
+        let faceAdjacency: [FaceAdjacency]
         let sampling: Sampling
 
         struct COO: Codable { let sources: [Int]; let targets: [Int] }
+        struct FaceAdjacency: Codable {
+            let face1: Int
+            let face2: Int
+            let convexity: String   // convex | concave | smooth
+            let sharedEdgeCount: Int
+        }
         struct Face: Codable {
             let index: Int
             let uSamples: Int
@@ -64,6 +74,17 @@ enum GraphMLCommand: Subcommand {
             return Payload.Edge(index: i, samples: pts.map { [$0.x, $0.y, $0.z] })
         }
 
+        // Attributed face-adjacency with per-adjacency convexity, from the AAG.
+        let aag = AAG(shape: shape)
+        let faceAdjacency: [Payload.FaceAdjacency] = aag.edges.map {
+            Payload.FaceAdjacency(
+                face1: $0.face1Index,
+                face2: $0.face2Index,
+                convexity: $0.convexity.label,
+                sharedEdgeCount: $0.sharedEdgeCount
+            )
+        }
+
         let payload = Payload(
             vertexPositions: g.vertexPositions,
             edgeBoundaryFlags: g.edgeBoundaryFlags,
@@ -74,6 +95,7 @@ enum GraphMLCommand: Subcommand {
             edgeToVertex: Payload.COO(sources: g.edgeToVertex.sources, targets: g.edgeToVertex.targets),
             faces: faces,
             edges: edges,
+            faceAdjacency: faceAdjacency,
             sampling: Payload.Sampling(uvSamples: uvSamples, edgeSamples: edgeSamples)
         )
         try GraphIO.emitJSON(payload)
