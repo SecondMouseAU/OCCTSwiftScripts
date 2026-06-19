@@ -25,7 +25,7 @@ enum MetricsCommand: Subcommand {
     static let summary = "Volume / area / center of mass / bbox / principal axes for a BREP"
     static let usage = """
         Usage:
-          metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,principalAxes]
+          metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,boundingBoxOptimal,principalAxes]
           metrics <request.json>             (JSON request from file)
           metrics                            (JSON request from stdin)
         """
@@ -45,6 +45,7 @@ enum MetricsCommand: Subcommand {
         let surfaceArea: Double?
         let centerOfMass: [Double]?
         let boundingBox: BoundingBox?
+        let boundingBoxOptimal: BoundingBox?
         let principalAxes: PrincipalAxes?
 
         struct BoundingBox: Encodable {
@@ -75,6 +76,18 @@ enum MetricsCommand: Subcommand {
             )
         }()
 
+        // Opt-in only (not part of default-all): AddOptimal is costlier than
+        // the Bnd_Box, and the default box over-reports curved B-spline faces
+        // (control-point hull). Tight extent for curved geometry. (OCCTMCP #44)
+        let bbOptimal: Response.BoundingBox? = {
+            guard want != nil, want!.contains("boundingBoxOptimal"),
+                  let o = shape.boundingBoxOptimal() else { return nil }
+            return .init(
+                min: [o.min.x, o.min.y, o.min.z],
+                max: [o.max.x, o.max.y, o.max.z]
+            )
+        }()
+
         let pa: Response.PrincipalAxes? = {
             guard wants("principalAxes"), let v = inertia else { return nil }
             return .init(
@@ -94,6 +107,7 @@ enum MetricsCommand: Subcommand {
                 [v.centerOfMass.x, v.centerOfMass.y, v.centerOfMass.z]
             } : nil,
             boundingBox: bb,
+            boundingBoxOptimal: bbOptimal,
             principalAxes: pa
         ))
         return 0

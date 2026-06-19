@@ -31,6 +31,7 @@ enum Registry {
         MetricsCommand.self,
         QueryTopologyCommand.self,
         MeasureDistanceCommand.self,
+        MeasureDeviationCommand.self,
         LoadBrepCommand.self,
         ImportCommand.self,
         CheckThicknessCommand.self,
