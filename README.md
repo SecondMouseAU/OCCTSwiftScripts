@@ -56,7 +56,7 @@ Subcommands (26 verbs as of v0.8.1):
 | Drawings & export | `dxf-export`, `drawing-export` |
 | Composition | `compose-sheet-metal`, `reconstruct` |
 | Construction | `transform`, `boolean`, `pattern` |
-| Introspection | `metrics`, `query-topology`, `measure-distance`, `feature-recognize` |
+| Introspection | `metrics`, `query-topology`, `measure-distance`, `measure-deviation`, `feature-recognize` |
 | I/O | `load-brep`, `import` |
 | Engineering analysis | `check-thickness`, `analyze-clearance`, `heal` |
 | Mesh | `mesh`, `simplify-mesh` |
