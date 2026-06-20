@@ -43,7 +43,7 @@ enum ImportCommand: Subcommand {
         Usage:
           import <input> --emit-manifest <dir>
               [--format auto|step|iges|stl|obj]
-              [--id-prefix <p>] [--preserve-assembly] [--heal-on-import]
+              [--id-prefix <p>] [--preserve-assembly] [--heal-on-import] [--allow-invalid]
           import <request.json>              (JSON request from file)
           import                             (JSON request from stdin)
         """
@@ -55,6 +55,7 @@ enum ImportCommand: Subcommand {
         var idPrefix: String
         var preserveAssembly: Bool
         var healOnImport: Bool
+        var allowInvalid: Bool
     }
 
     private enum Format: String, Decodable {
@@ -68,6 +69,7 @@ enum ImportCommand: Subcommand {
         let idPrefix: String?
         let preserveAssembly: Bool?
         let healOnImport: Bool?
+        let allowInvalid: Bool?
     }
 
     struct Response: Encodable {
@@ -107,7 +109,8 @@ enum ImportCommand: Subcommand {
             let document = try loadDocumentSTEP(path: req.inputPath)
             assembly = try walkAssembly(
                 document: document, emitDir: emitDir,
-                idPrefix: req.idPrefix, bodies: &bodies, addedIds: &addedIds
+                idPrefix: req.idPrefix, allowInvalid: req.allowInvalid,
+                bodies: &bodies, addedIds: &addedIds
             )
         } else {
             if req.preserveAssembly && format != .step {
@@ -116,7 +119,7 @@ enum ImportCommand: Subcommand {
             let shape = try loadSingleShape(format: format, path: req.inputPath)
             let id = "\(req.idPrefix)_0"
             let bodyURL = emitDir.appendingPathComponent("\(id).brep")
-            try GraphIO.writeBREP(shape, to: bodyURL.path)
+            try GraphIO.writeBREP(shape, to: bodyURL.path, allowInvalid: req.allowInvalid)
             bodies.append(BodyDescriptor(id: id, file: "\(id).brep"))
             addedIds.append(id)
         }
@@ -185,6 +188,7 @@ enum ImportCommand: Subcommand {
         document: Document,
         emitDir: URL,
         idPrefix: String,
+        allowInvalid: Bool,
         bodies: inout [BodyDescriptor],
         addedIds: inout [String]
     ) throws -> Response.Assembly {
@@ -195,7 +199,8 @@ enum ImportCommand: Subcommand {
         for root in roots {
             let component = try walkNode(
                 node: root, idPrefix: idPrefix, parentPathSegment: nil,
-                emitDir: emitDir, bodies: &bodies, addedIds: &addedIds, counter: &counter
+                emitDir: emitDir, allowInvalid: allowInvalid,
+                bodies: &bodies, addedIds: &addedIds, counter: &counter
             )
             components.append(component)
         }
@@ -209,6 +214,7 @@ enum ImportCommand: Subcommand {
         idPrefix: String,
         parentPathSegment: String?,
         emitDir: URL,
+        allowInvalid: Bool,
         bodies: inout [BodyDescriptor],
         addedIds: inout [String],
         counter: inout Int
@@ -219,7 +225,7 @@ enum ImportCommand: Subcommand {
         // Write geometry if this node has any (pure-assembly nodes have no shape).
         if let shape = node.shape {
             let bodyURL = emitDir.appendingPathComponent("\(id).brep")
-            try GraphIO.writeBREP(shape, to: bodyURL.path)
+            try GraphIO.writeBREP(shape, to: bodyURL.path, allowInvalid: allowInvalid)
             bodies.append(BodyDescriptor(
                 id: id,
                 file: "\(id).brep",
@@ -238,7 +244,8 @@ enum ImportCommand: Subcommand {
         for child in node.children {
             children.append(try walkNode(
                 node: child, idPrefix: idPrefix, parentPathSegment: id,
-                emitDir: emitDir, bodies: &bodies, addedIds: &addedIds, counter: &counter
+                emitDir: emitDir, allowInvalid: allowInvalid,
+                bodies: &bodies, addedIds: &addedIds, counter: &counter
             ))
         }
 
@@ -272,6 +279,7 @@ enum ImportCommand: Subcommand {
         var idPrefix: String = "imported"
         var preserveAssembly = false
         var healOnImport = false
+        var allowInvalid = false
         var i = 1
         while i < args.count {
             switch args[i] {
@@ -290,6 +298,8 @@ enum ImportCommand: Subcommand {
                 preserveAssembly = true
             case "--heal-on-import":
                 healOnImport = true
+            case "--allow-invalid":
+                allowInvalid = true
             default:
                 throw ScriptError.message("Unknown flag: \(args[i])")
             }
@@ -298,7 +308,7 @@ enum ImportCommand: Subcommand {
         guard let emitManifest else { throw ScriptError.message("--emit-manifest is required") }
         return Request(inputPath: inputPath, emitManifest: emitManifest, format: format,
                        idPrefix: idPrefix, preserveAssembly: preserveAssembly,
-                       healOnImport: healOnImport)
+                       healOnImport: healOnImport, allowInvalid: allowInvalid)
     }
 
     private static func valueOrThrow(args: [String], i: Int, flag: String) throws -> String {
@@ -326,7 +336,8 @@ enum ImportCommand: Subcommand {
             format: raw.format ?? .auto,
             idPrefix: raw.idPrefix ?? "imported",
             preserveAssembly: raw.preserveAssembly ?? false,
-            healOnImport: raw.healOnImport ?? false
+            healOnImport: raw.healOnImport ?? false,
+            allowInvalid: raw.allowInvalid ?? false
         )
     }
 }
