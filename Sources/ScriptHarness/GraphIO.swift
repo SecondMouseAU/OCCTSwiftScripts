@@ -32,10 +32,13 @@ public enum GraphIO {
         }
     }
 
-    public static func writeBREP(_ shape: Shape, to path: String) throws {
+    /// - Parameter allowInvalid: skip the `shape.isValid` write gate so an
+    ///   in-progress / loose-face reconstruction can be persisted as-is
+    ///   (OCCTSwift ≥ 1.8.0; loadBREP doesn't gate on read).
+    public static func writeBREP(_ shape: Shape, to path: String, allowInvalid: Bool = false) throws {
         let url = URL(fileURLWithPath: path)
         do {
-            try Exporter.writeBREP(shape: shape, to: url)
+            try Exporter.writeBREP(shape: shape, to: url, allowInvalid: allowInvalid)
         } catch {
             throw ScriptError.message("Failed to write BREP at \(path): \(error.localizedDescription)")
         }

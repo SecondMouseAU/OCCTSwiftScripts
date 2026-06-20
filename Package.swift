@@ -42,7 +42,9 @@ let package = Package(
         // setters no-op but getters return the live derived value. The cookbook
         // ergonomics relied on since v1.3.1 (circularPatternCut #169, sweep
         // orientation #170, concave/convex/edges(where:) #171) are unchanged.
-        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.7.1"),
+        // 1.8.0 adds Exporter.writeBREP(allowInvalid:) for the load-brep /
+        // import `--allow-invalid` flags (OCCTMCP #41).
+        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.8.0"),
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport

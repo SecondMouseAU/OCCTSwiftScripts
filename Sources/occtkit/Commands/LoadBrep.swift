@@ -29,7 +29,7 @@ enum LoadBrepCommand: Subcommand {
     static let summary = "Load a BREP and emit a manifest entry for OCCTSwiftViewport"
     static let usage = """
         Usage:
-          load-brep <input.brep> --emit-manifest <dir> [--id <bodyId>] [--color <hex>]
+          load-brep <input.brep> --emit-manifest <dir> [--id <bodyId>] [--color <hex>] [--allow-invalid]
           load-brep <request.json>           (JSON request from file)
           load-brep                          (JSON request from stdin)
         """
@@ -39,6 +39,7 @@ enum LoadBrepCommand: Subcommand {
         var emitManifest: String
         var id: String?
         var color: String?
+        var allowInvalid: Bool
     }
 
     private struct JSONRequest: Decodable {
@@ -46,6 +47,7 @@ enum LoadBrepCommand: Subcommand {
         let emitManifest: String
         let id: String?
         let color: String?
+        let allowInvalid: Bool?
     }
 
     struct Response: Encodable {
@@ -71,7 +73,7 @@ enum LoadBrepCommand: Subcommand {
         let emitDir = URL(fileURLWithPath: req.emitManifest)
         try? FileManager.default.createDirectory(at: emitDir, withIntermediateDirectories: true)
         let bodyURL = emitDir.appendingPathComponent("\(bodyId).brep")
-        try GraphIO.writeBREP(shape, to: bodyURL.path)
+        try GraphIO.writeBREP(shape, to: bodyURL.path, allowInvalid: req.allowInvalid)
 
         let manifest = ScriptManifest(
             description: "Imported via load-brep",
@@ -104,6 +106,7 @@ enum LoadBrepCommand: Subcommand {
         var emitManifest: String?
         var id: String?
         var color: String?
+        var allowInvalid = false
         var i = 1
         while i < args.count {
             switch args[i] {
@@ -119,13 +122,16 @@ enum LoadBrepCommand: Subcommand {
                 i += 1
                 guard i < args.count else { throw ScriptError.message("--color expects a value") }
                 color = args[i]
+            case "--allow-invalid":
+                allowInvalid = true
             default:
                 throw ScriptError.message("Unknown flag: \(args[i])")
             }
             i += 1
         }
         guard let emitManifest else { throw ScriptError.message("--emit-manifest is required") }
-        return Request(inputBrep: inputBrep, emitManifest: emitManifest, id: id, color: color)
+        return Request(inputBrep: inputBrep, emitManifest: emitManifest, id: id, color: color,
+                       allowInvalid: allowInvalid)
     }
 
     private static func readFile(_ path: String) throws -> Data {
@@ -143,7 +149,7 @@ enum LoadBrepCommand: Subcommand {
             throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
         }
         return Request(inputBrep: raw.inputBrep, emitManifest: raw.emitManifest,
-                       id: raw.id, color: raw.color)
+                       id: raw.id, color: raw.color, allowInvalid: raw.allowInvalid ?? false)
     }
 
     // MARK: - Helpers (shared with Import)
