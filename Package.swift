@@ -1,5 +1,18 @@
 // swift-tools-version: 6.0
 import PackageDescription
+import Foundation
+
+// Prefer a local sibling checkout (../<name>) when present, else the published URL — so the whole
+// OCCT ecosystem SHARES the single OCCTSwift/Libraries/OCCT.xcframework instead of each repo
+// extracting its own 1.3 GB copy. CI / fresh clones (no sibling) use the URL pin. `#filePath`-relative
+// so it's independent of build CWD.
+func occtDep(_ name: String, from version: String) -> Package.Dependency {
+    let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
+    if FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift") {
+        return .package(path: "../\(name)")
+    }
+    return .package(url: "https://github.com/gsdali/\(name).git", from: Version(version)!)
+}
 
 let package = Package(
     name: "OCCTSwiftScripts",
@@ -44,12 +57,12 @@ let package = Package(
         // orientation #170, concave/convex/edges(where:) #171) are unchanged.
         // 1.8.0 adds Exporter.writeBREP(allowInvalid:) for the load-brep /
         // import `--allow-invalid` flags (OCCTMCP #41).
-        .package(url: "https://github.com/gsdali/OCCTSwift.git", from: "1.8.0"),
+        occtDep("OCCTSwift", from: "1.8.0"),
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
         // package dependency-free (broke the Viewport↔Tools cycle).
-        .package(url: "https://github.com/gsdali/OCCTSwiftViewport.git", from: "1.0.4"),
+        occtDep("OCCTSwiftViewport", from: "1.0.4"),
         // OCCTSwiftTools v1.0.0 graduated alongside OCCTSwift v1.0.0. We use
         // Tools for the bridge-layer CADFileLoader.shapeToBodyAndMetadata in
         // RenderPreview, which legitimately needs Viewport, so the Tools dep
@@ -62,7 +75,7 @@ let package = Package(
         // If a future verb wants progress-aware STEP loading via
         // OCCTSwiftIO's ShapeLoader.load(from:format:progress:), add the dep
         // then.
-        .package(url: "https://github.com/gsdali/OCCTSwiftTools.git", from: "1.1.1"),
+        occtDep("OCCTSwiftTools", from: "1.1.1"),
         // OCCTSwiftAIS v1.0.0 graduated alongside OCCTSwift v1.0.0. Used
         // here for the headless-friendly subset only — Trihedron / WorkPlane
         // / Axis / PointCloud scene objects (each emits ViewportBody arrays
@@ -70,16 +83,16 @@ let package = Package(
         // highlight overlays. Selection / Manipulator / SwiftUI surfaces
         // aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        .package(url: "https://github.com/gsdali/OCCTSwiftAIS.git", from: "1.0.2"),
+        occtDep("OCCTSwiftAIS", from: "1.0.2"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
-        .package(url: "https://github.com/gsdali/OCCTSwiftMesh.git", from: "1.0.0"),
+        occtDep("OCCTSwiftMesh", from: "1.0.0"),
         // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
         // TopologyGraph.exportForML / exportJSON via extension after OCCTSwift
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
         // graphml verbs only — the rest of the package keeps its existing
         // ScriptManifest type (with the `graphs` field) from ScriptHarness.
-        .package(url: "https://github.com/gsdali/OCCTSwiftIO.git", from: "1.0.0"),
+        occtDep("OCCTSwiftIO", from: "1.0.0"),
     ],
     targets: [
         .target(
