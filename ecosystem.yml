@@ -1,0 +1,10 @@
+okf_version: 1
+repo: OCCTSwiftScripts
+cluster: kernel
+visibility: public
+status: active
+language: Swift
+summary: occtkit CLI plus ScriptHarness — headless OCCTSwift geometry verbs and a script-iteration harness, OCCTMCP-ready.
+products: []
+depends_on: [OCCTSwift, OCCTSwiftViewport, OCCTSwiftTools, OCCTSwiftAIS, OCCTSwiftMesh, OCCTSwiftIO]
+maintainer: gsdali
