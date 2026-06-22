@@ -1,10 +1,10 @@
 {
-  "originHash" : "193f12a2c125ba349244b6ef2c622ab89425ebd63522973119c7c5869efbaa80",
+  "originHash" : "900580db2a730a42e874a9fd1f9d24315df3b8435efc49b7653a88235fce9a9d",
   "pins" : [
     {
       "identity" : "occtswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gsdali/OCCTSwift.git",
+      "location" : "https://github.com/SecondMouseAU/OCCTSwift.git",
       "state" : {
         "revision" : "94eea64c25c265f268ecd6da6fef36b05a60ce9b",
         "version" : "1.8.0"
@@ -13,7 +13,7 @@
     {
       "identity" : "occtswiftais",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gsdali/OCCTSwiftAIS.git",
+      "location" : "https://github.com/SecondMouseAU/OCCTSwiftAIS.git",
       "state" : {
         "revision" : "dcb814b6332706d40717f66c6f327698283b59cf",
         "version" : "1.0.2"
@@ -22,7 +22,7 @@
     {
       "identity" : "occtswiftio",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gsdali/OCCTSwiftIO.git",
+      "location" : "https://github.com/SecondMouseAU/OCCTSwiftIO.git",
       "state" : {
         "revision" : "ef7a4ad2d9c057968cda24f08122534e54980f50",
         "version" : "1.0.0"
@@ -31,7 +31,7 @@
     {
       "identity" : "occtswiftmesh",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gsdali/OCCTSwiftMesh.git",
+      "location" : "https://github.com/SecondMouseAU/OCCTSwiftMesh.git",
       "state" : {
         "revision" : "01bd6b1abce612de78081e0875e05beaaf4bfbe6",
         "version" : "1.0.0"
@@ -40,7 +40,7 @@
     {
       "identity" : "occtswifttools",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gsdali/OCCTSwiftTools.git",
+      "location" : "https://github.com/SecondMouseAU/OCCTSwiftTools.git",
       "state" : {
         "revision" : "d71764d0468069369e71ee18e52c95e26a7aae0a",
         "version" : "1.1.1"
@@ -49,7 +49,7 @@
     {
       "identity" : "occtswiftviewport",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gsdali/OCCTSwiftViewport.git",
+      "location" : "https://github.com/SecondMouseAU/OCCTSwiftViewport.git",
       "state" : {
         "revision" : "6c8e95e62e2b25666ba9160af24bce22c7ccb08c",
         "version" : "1.0.4"
