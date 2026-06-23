@@ -1,0 +1,30 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "OCCTSwiftScripts",
+  "description": "A script harness + headless CLI for OpenCASCADE CAD in Swift — the OCCTSwift answer to CadQuery / OpenSCAD. Edit a Swift script against the full OCCTSwift API, run it, see geometry live in OCCTSwiftViewport. Bundles the multi-call `occtkit` binary: 29 verbs for the topology graph, ISO technical drawings, reconstruction, sheet metal, construction (transform / boolean / pattern), introspection & measurement, mesh, render, STEP/IGES/STL I/O, and XCAF assemblies — each with flag-form, JSON-form, and a JSONL `--serve` mode for OCCTMCP and other consumers.",
+  "folders": [
+    "docs",
+    "Sources/ScriptHarness",
+    "Sources/DrawingComposer",
+    "Sources/occtkit",
+    "recipes"
+  ],
+  "excludeFolders": [
+    "docs/knowledge",
+    "Tests",
+    "Scripts",
+    ".build",
+    ".swiftpm"
+  ],
+  "rules": [
+    "OCCTSwiftScripts is a CadQuery/OpenSCAD-style harness for OCCTSwift, not a CAD kernel itself — geometry comes from the OCCTSwift API (`import OCCTSwift`). The script accumulates bodies in a `ScriptContext` and calls `emit()`; the OCCTSwiftViewport demo app's file watcher live-reloads the result.",
+    "The script entry point is `Sources/Script/main.swift`. Iterate with `swift build` then `swift run Script`. A script always: `let ctx = ScriptContext()`, build geometry, `try ctx.add(shape, id:, color:, name:)` per body, then `try ctx.emit(description:)`.",
+    "Fallible OCCTSwift factories return optionals — unwrap with `guard let` / `if let` or a trailing `!` only in throwaway scripts; never assume success. `ScriptContext.add()` accepts `Shape`, `Wire`, or `Edge`.",
+    "Colors are `ScriptContext.Colors` constants (`.steel`, `.brass`, `.copper`, `.red`, …), passed as the `color:` argument; they are `[Float]` RGBA under the hood.",
+    "BREP is the primary output format (~1ms/body); a combined `output.step` is optional. Output lands in iCloud Drive `~/Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output/` if present, else `~/.occtswift-scripts/output/`; `manifest.json` is written last so a partial failure leaves the prior frame intact.",
+    "`occtkit` is a busybox-style multi-call binary: run a verb as `occtkit <verb> ...`, `swift run occtkit <verb> ...`, or via an installed symlink (`make install`). 29 verbs cover graph / drawings / reconstruct / sheet-metal / construction / introspection / mesh / render / I/O / XCAF.",
+    "Every occtkit verb accepts flag-form OR JSON-form input (JSON on stdin or a file-path argv), plus a generic `--serve` mode that reads JSONL `{\"args\":[...]}` requests and emits one JSONL envelope per request (`{\"ok\":bool,\"exit\":int,\"stdout\":str,\"stderr\":str,\"error\":str?}`) — this is how OCCTMCP drives it. Verbs throw rather than `exit()` so `--serve` can recover.",
+    "Per-verb standalone executables (`OCCTRunner`, `GraphValidate`, …) are DEPRECATED — they print a stderr notice and will be removed; migrate to `occtkit <verb>`. 2D constraint solving (`solve-sketch`) was removed to keep the package free of closed-source deps.",
+    "Library products `ScriptHarness` (the `ScriptContext` output pipeline) and `DrawingComposer` (the multi-view ISO drawing orchestrator behind `drawing-export`) can be imported directly by downstream Swift packages without going through the CLI."
+  ]
+}

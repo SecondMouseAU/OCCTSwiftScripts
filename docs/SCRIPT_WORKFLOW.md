@@ -1,3 +1,8 @@
+---
+title: Script workflow (in depth)
+nav_order: 6
+---
+
 # OCCTSwiftScripts — Workflow Guide
 
 This document describes how to use the OCCTSwift script harness to develop parametric geometry, produce 2D/3D gallery views, and promote script code into a reusable app library.

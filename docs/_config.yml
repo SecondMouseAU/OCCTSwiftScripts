@@ -1,0 +1,24 @@
+# GitHub Pages (Jekyll) config for the OCCTSwiftScripts docs site — served from /docs on main.
+#
+# Theme: just-the-docs (left sidebar nav + search). Pinned to v0.3.3, the last release
+# compatible with GitHub Pages' native (no-Actions) build, which pins Jekyll 3.9.
+# Sidebar entries/order come from each page's `title` / `nav_order` front matter;
+# `nav_exclude: true` hides internal pages. GitHub Pages' default plugins still apply
+# (optional-front-matter, readme-index, relative-links).
+title: OCCTSwiftScripts
+description: A CadQuery/OpenSCAD-style script harness + headless occtkit CLI for OpenCASCADE CAD in Swift, built on OCCTSwift.
+remote_theme: just-the-docs/just-the-docs@v0.3.3
+
+# just-the-docs options
+search_enabled: true
+heading_anchors: true
+aux_links:
+  "GitHub": ["https://github.com/gsdali/OCCTSwiftScripts"]
+aux_links_new_tab: true
+
+exclude:
+  - "*.sh"
+  - Gemfile
+  - Gemfile.lock
+  # The internal OKF knowledge bundle is not part of the published site.
+  - knowledge
