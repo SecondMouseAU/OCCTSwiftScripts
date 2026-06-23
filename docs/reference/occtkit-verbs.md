@@ -510,7 +510,11 @@ render-preview part.brep --output part.png --camera iso --display-mode shaded-wi
 render-preview part.brep --output hl.png --highlight 'face[3],edge[7]' --highlight-color '#ffa500'
 ```
 
-<!-- 3D render TODO: render-preview output for part.png -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<model-viewer src="../models/drilled-block.glb" camera-controls auto-rotate environment-image="neutral" exposure="1.1" shadow-intensity="1" style="width:340px;height:300px;background:#eef1f5;border-radius:6px"></model-viewer>
+
+*Interactive 3D — representative kernel model (render-preview output for part.png).*
 
 ---
 
