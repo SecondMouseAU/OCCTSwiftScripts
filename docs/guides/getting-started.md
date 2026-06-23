@@ -22,7 +22,7 @@ thereafter) without a C++ source build.
 ## Build
 
 ```bash
-git clone https://github.com/gsdali/OCCTSwiftScripts.git
+git clone https://github.com/SecondMouseAU/OCCTSwiftScripts.git
 cd OCCTSwiftScripts
 swift build                  # first build ~30s, incremental ~1-2s
 ```
@@ -56,7 +56,8 @@ swift run Script
 ```
 
 This writes one `body-N.brep` per `add()`, a combined `output.step`, and `manifest.json` (written
-last) to the output directory.
+last) to the output directory. To run an arbitrary `.swift` file headlessly (no editing of
+`Sources/Script/main.swift`), use `occtkit run my_script.swift`.
 
 ### Output location
 
@@ -100,13 +101,30 @@ make uninstall
 
 Every verb accepts **flag-form** or **JSON-form** input (JSON on stdin or as an argv path), plus a
 generic **`--serve`** mode that reads JSONL `{"args":[...]}` requests and writes one JSONL envelope
-per request — used by OCCTMCP and any other JSON-driven consumer. See
-[occtkit CLI basics](../guides/cookbook/occtkit-cli.md).
+per request — used by OCCTMCP and any other JSON-driven consumer.
+
+```bash
+# JSON-form on stdin
+echo '{"inputBrep":"part.brep","metrics":["volume","boundingBox"]}' | occtkit metrics
+
+# --serve: one envelope per request line
+printf '{"args":["a.brep"]}\n{"args":["b.brep"]}\n' | occtkit graph-validate --serve
+```
+
+### Render a preview (this repo owns `render-preview`)
+
+```bash
+occtkit render-preview part.brep --output part.png --camera iso --display-mode shaded-with-edges
+```
+
+<!-- 3D render TODO: render-preview output for part.png -->
 
 ---
 
 ## Next steps
 
+- **[occtkit verb reference](../reference/occtkit-verbs.md)** — all 29 verbs: purpose, flags, JSON I/O, runnable examples.
+- **[ScriptHarness API](../reference/ScriptHarness.md)** — the `ScriptContext` output pipeline, with runnable Swift snippets.
+- **[DrawingComposer API](../reference/DrawingComposer.md)** — the multi-view ISO drawing library behind `drawing-export`.
 - **[Cookbook](../guides/cookbook/)** — task-oriented recipes for authoring, drawings, measurement, reconstruction, and more.
-- **[Reference](../reference/)** — the `ScriptContext` API and every `occtkit` verb's flags, JSON schema, and example calls.
 - **[Architecture](architecture.md)** — the targets, the output pipeline, the `--serve` envelope, and the ecosystem.
