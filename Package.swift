@@ -7,16 +7,18 @@ import Foundation
 // extracting its own 1.3 GB copy. CI / fresh clones (no sibling) use the URL pin. `#filePath`-relative
 // so it's independent of build CWD.
 // Only trust a sibling checkout when THIS manifest is a real local dev clone — never when this
-// manifest is itself a transitively-resolved SwiftPM checkout (.build/checkouts/<repo>/Package.swift).
-// SwiftPM lays every dependency's checkout out flat under one shared `checkouts/` directory, so once
+// manifest is itself a transitively-resolved SwiftPM checkout under a consumer's `.build/`. SwiftPM
+// lays every dependency's checkout out flat under one shared `.build/checkouts/` directory, so once
 // e.g. `.build/checkouts/OCCTSwiftIO` exists, `../OCCTSwiftIO` relative to
 // `.build/checkouts/OCCTSwiftScripts` spuriously "exists" too — flipping this manifest's own
 // declaration from url to path *during* the resolution process that created that checkout. SwiftPM
 // then sees a non-deterministic manifest and reports the whole graph unresolvable ("exhausted
 // attempts to resolve the dependencies graph") for every lean consumer that pulls this package in
 // transitively — the actual mechanism behind ecosystem issue #69, beyond the OCCTSwiftIO version cap.
+// Same guard OCCTSwiftIO adopted (2026-06-23, "don't path-link siblings when resolved under a
+// consumer's .build") — kept as `/.build/` here for consistency across the fleet.
 private func isRealLocalSibling(_ manifestDir: String, _ name: String) -> Bool {
-    guard !manifestDir.contains("/checkouts/") else { return false }
+    guard !manifestDir.contains("/.build/") else { return false }
     return FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift")
 }
 
