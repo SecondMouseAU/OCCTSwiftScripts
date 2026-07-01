@@ -14,6 +14,19 @@ func occtDep(_ name: String, from version: String) -> Package.Dependency {
     return .package(url: "https://github.com/SecondMouseAU/\(name).git", from: Version(version)!)
 }
 
+// As occtDep, but pins to the package's minor line instead of an open major range. Used to cap a
+// transitive dependency whose newer minors pull deps we don't want in the graph — OCCTSwiftIO 1.1.0+
+// pulls in the heavy mesh-IO stack (SwiftX/SwiftDXF/SwiftJWW/SwiftPMX/ThreeMF/SwiftGLTF/…), which the
+// narrow GraphML/graphml usage here doesn't need and which breaks resolution for lean consumers that
+// have no root package to override from (ecosystem issue: OCCTSwiftScripts#69).
+func occtDepUpToNextMinor(_ name: String, from version: String) -> Package.Dependency {
+    let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
+    if FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift") {
+        return .package(path: "../\(name)")
+    }
+    return .package(url: "https://github.com/SecondMouseAU/\(name).git", .upToNextMinor(from: Version(version)!))
+}
+
 let package = Package(
     name: "OCCTSwiftScripts",
     platforms: [
@@ -92,7 +105,9 @@ let package = Package(
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
         // graphml verbs only — the rest of the package keeps its existing
         // ScriptManifest type (with the `graphs` field) from ScriptHarness.
-        occtDep("OCCTSwiftIO", from: "1.0.0"),
+        // Capped to the 1.0.x minor line (occtDepUpToNextMinor): 1.1.0+ pulls in the
+        // heavy mesh-IO stack this narrow usage doesn't need (#69).
+        occtDepUpToNextMinor("OCCTSwiftIO", from: "1.0.0"),
     ],
     targets: [
         .target(
