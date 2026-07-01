@@ -6,12 +6,41 @@ import Foundation
 // OCCT ecosystem SHARES the single OCCTSwift/Libraries/OCCT.xcframework instead of each repo
 // extracting its own 1.3 GB copy. CI / fresh clones (no sibling) use the URL pin. `#filePath`-relative
 // so it's independent of build CWD.
+// Only trust a sibling checkout when THIS manifest is a real local dev clone — never when this
+// manifest is itself a transitively-resolved SwiftPM checkout under a consumer's `.build/`. SwiftPM
+// lays every dependency's checkout out flat under one shared `.build/checkouts/` directory, so once
+// e.g. `.build/checkouts/OCCTSwiftIO` exists, `../OCCTSwiftIO` relative to
+// `.build/checkouts/OCCTSwiftScripts` spuriously "exists" too — flipping this manifest's own
+// declaration from url to path *during* the resolution process that created that checkout. SwiftPM
+// then sees a non-deterministic manifest and reports the whole graph unresolvable ("exhausted
+// attempts to resolve the dependencies graph") for every lean consumer that pulls this package in
+// transitively — the actual mechanism behind ecosystem issue #69, beyond the OCCTSwiftIO version cap.
+// Same guard OCCTSwiftIO adopted (2026-06-23, "don't path-link siblings when resolved under a
+// consumer's .build") — kept as `/.build/` here for consistency across the fleet.
+private func isRealLocalSibling(_ manifestDir: String, _ name: String) -> Bool {
+    guard !manifestDir.contains("/.build/") else { return false }
+    return FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift")
+}
+
 func occtDep(_ name: String, from version: String) -> Package.Dependency {
     let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
-    if FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift") {
+    if isRealLocalSibling(manifestDir, name) {
         return .package(path: "../\(name)")
     }
     return .package(url: "https://github.com/SecondMouseAU/\(name).git", from: Version(version)!)
+}
+
+// As occtDep, but pins to the package's minor line instead of an open major range. Used to cap a
+// transitive dependency whose newer minors pull deps we don't want in the graph — OCCTSwiftIO 1.1.0+
+// pulls in the heavy mesh-IO stack (SwiftX/SwiftDXF/SwiftJWW/SwiftPMX/ThreeMF/SwiftGLTF/…), which the
+// narrow GraphML/graphml usage here doesn't need and which breaks resolution for lean consumers that
+// have no root package to override from (ecosystem issue: OCCTSwiftScripts#69).
+func occtDepUpToNextMinor(_ name: String, from version: String) -> Package.Dependency {
+    let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
+    if isRealLocalSibling(manifestDir, name) {
+        return .package(path: "../\(name)")
+    }
+    return .package(url: "https://github.com/SecondMouseAU/\(name).git", .upToNextMinor(from: Version(version)!))
 }
 
 let package = Package(
@@ -92,7 +121,9 @@ let package = Package(
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
         // graphml verbs only — the rest of the package keeps its existing
         // ScriptManifest type (with the `graphs` field) from ScriptHarness.
-        occtDep("OCCTSwiftIO", from: "1.0.0"),
+        // Capped to the 1.0.x minor line (occtDepUpToNextMinor): 1.1.0+ pulls in the
+        // heavy mesh-IO stack this narrow usage doesn't need (#69).
+        occtDepUpToNextMinor("OCCTSwiftIO", from: "1.0.0"),
     ],
     targets: [
         .target(
