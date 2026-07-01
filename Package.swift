@@ -6,9 +6,23 @@ import Foundation
 // OCCT ecosystem SHARES the single OCCTSwift/Libraries/OCCT.xcframework instead of each repo
 // extracting its own 1.3 GB copy. CI / fresh clones (no sibling) use the URL pin. `#filePath`-relative
 // so it's independent of build CWD.
+// Only trust a sibling checkout when THIS manifest is a real local dev clone — never when this
+// manifest is itself a transitively-resolved SwiftPM checkout (.build/checkouts/<repo>/Package.swift).
+// SwiftPM lays every dependency's checkout out flat under one shared `checkouts/` directory, so once
+// e.g. `.build/checkouts/OCCTSwiftIO` exists, `../OCCTSwiftIO` relative to
+// `.build/checkouts/OCCTSwiftScripts` spuriously "exists" too — flipping this manifest's own
+// declaration from url to path *during* the resolution process that created that checkout. SwiftPM
+// then sees a non-deterministic manifest and reports the whole graph unresolvable ("exhausted
+// attempts to resolve the dependencies graph") for every lean consumer that pulls this package in
+// transitively — the actual mechanism behind ecosystem issue #69, beyond the OCCTSwiftIO version cap.
+private func isRealLocalSibling(_ manifestDir: String, _ name: String) -> Bool {
+    guard !manifestDir.contains("/checkouts/") else { return false }
+    return FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift")
+}
+
 func occtDep(_ name: String, from version: String) -> Package.Dependency {
     let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
-    if FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift") {
+    if isRealLocalSibling(manifestDir, name) {
         return .package(path: "../\(name)")
     }
     return .package(url: "https://github.com/SecondMouseAU/\(name).git", from: Version(version)!)
@@ -21,7 +35,7 @@ func occtDep(_ name: String, from version: String) -> Package.Dependency {
 // have no root package to override from (ecosystem issue: OCCTSwiftScripts#69).
 func occtDepUpToNextMinor(_ name: String, from version: String) -> Package.Dependency {
     let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
-    if FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift") {
+    if isRealLocalSibling(manifestDir, name) {
         return .package(path: "../\(name)")
     }
     return .package(url: "https://github.com/SecondMouseAU/\(name).git", .upToNextMinor(from: Version(version)!))
