@@ -1,10 +1,13 @@
 # OCCTSwiftScripts
 
-A script harness for rapid iteration on [OCCTSwift](https://github.com/gsdali/OCCTSwift) parametric geometry. Edit a Swift script using the **full OCCTSwift API**, run it, and see results instantly in the [OCCTSwiftViewport](https://github.com/gsdali/OCCTSwiftViewport) demo app.
+[![Swift](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FSecondMouseAU%2FOCCTSwiftScripts%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/SecondMouseAU/OCCTSwiftScripts)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FSecondMouseAU%2FOCCTSwiftScripts%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/SecondMouseAU/OCCTSwiftScripts)
+
+A script harness for rapid iteration on [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) parametric geometry. Edit a Swift script using the **full OCCTSwift API**, run it, and see results instantly in the [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) demo app.
 
 This is the OCCTSwift equivalent of CadQuery or OpenSCAD — write parametric, constraint-based CAD code and get visual + file feedback immediately.
 
-Part of the [OCCTSwift ecosystem](https://github.com/gsdali/OCCTSwift/blob/main/docs/ecosystem.md) — see the ecosystem map for how this package fits with the kernel, viewport, and sibling layers. SemVer-stable from v1.0.0.
+Part of the [OCCTSwift ecosystem](https://github.com/SecondMouseAU/OCCTSwift/blob/main/docs/ecosystem.md) — see the ecosystem map for how this package fits with the kernel, viewport, and sibling layers. SemVer-stable from v1.0.0.
 
 ## Quick Start
 
@@ -247,7 +250,7 @@ See [`recipes/README.md`](recipes/README.md) for the full index and contributor 
 `ScriptHarness` and `DrawingComposer` are exposed as library products for in-process consumers:
 
 ```swift
-.package(url: "https://github.com/gsdali/OCCTSwiftScripts.git", from: "0.8.1"),
+.package(url: "https://github.com/SecondMouseAU/OCCTSwiftScripts.git", from: "1.4.2"),
 ```
 
 ```swift
@@ -261,9 +264,9 @@ The `occtkit` executable is a separate target — install via the `Makefile` abo
 
 - macOS 15+
 - Swift 6.0+
-- [OCCTSwift](https://github.com/gsdali/OCCTSwift) `>= 1.0.1` (xcframework built against OCCT 8.0.0 GA)
-- [OCCTSwiftViewport](https://github.com/gsdali/OCCTSwiftViewport) `>= 1.0.0` (powers `render-preview`)
-- [OCCTSwiftTools](https://github.com/gsdali/OCCTSwiftTools) `>= 1.0.0` (bridge layer used by `render-preview` for Shape→ViewportBody conversion)
-- [OCCTSwiftAIS](https://github.com/gsdali/OCCTSwiftAIS) `>= 1.0.0` (headless overlays for `render-preview`'s `--show-axes` / `--show-workplane` / `--highlight`)
-- [OCCTSwiftMesh](https://github.com/gsdali/OCCTSwiftMesh) `>= 1.0.0` (powers `simplify-mesh`)
-- [OCCTSwiftIO](https://github.com/gsdali/OCCTSwiftIO) `>= 1.0.0` (powers `graph-ml`'s ML feature export)
+- [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) `>= 1.0.1` (xcframework built against OCCT 8.0.0 GA)
+- [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) `>= 1.0.0` (powers `render-preview`)
+- [OCCTSwiftTools](https://github.com/SecondMouseAU/OCCTSwiftTools) `>= 1.0.0` (bridge layer used by `render-preview` for Shape→ViewportBody conversion)
+- [OCCTSwiftAIS](https://github.com/SecondMouseAU/OCCTSwiftAIS) `>= 1.0.0` (headless overlays for `render-preview`'s `--show-axes` / `--show-workplane` / `--highlight`)
+- [OCCTSwiftMesh](https://github.com/SecondMouseAU/OCCTSwiftMesh) `>= 1.0.0` (powers `simplify-mesh`)
+- [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) `>= 1.0.0` (powers `graph-ml`'s ML feature export)
