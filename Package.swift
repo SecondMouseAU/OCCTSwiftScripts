@@ -86,7 +86,7 @@ let package = Package(
         // orientation #170, concave/convex/edges(where:) #171) are unchanged.
         // 1.8.0 adds Exporter.writeBREP(allowInvalid:) for the load-brep /
         // import `--allow-invalid` flags (OCCTMCP #41).
-        occtDep("OCCTSwift", from: "1.12.6"),   // ≥1.12.6: kernel fixes — thread-safe fillet (#298) + free-bounds crash (#310)
+        occtDep("OCCTSwift", from: "1.12.7"),   // ≥1.12.7: kernel crash fixes (fillet #298, free-bounds #310, ShapeFix_Face null-context #317)
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
