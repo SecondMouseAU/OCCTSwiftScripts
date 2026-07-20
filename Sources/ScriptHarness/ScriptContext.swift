@@ -161,7 +161,7 @@ public final class ScriptContext: Sendable {
         try add(compound, id: id, color: color, name: name)
     }
 
-    // MARK: - Add TopologyGraph
+    // MARK: - Add BRepGraph
 
     /// Add a topology graph to the output. Exports as JSON and optionally SQLite.
     /// - Parameters:
@@ -170,7 +170,7 @@ public final class ScriptContext: Sendable {
     ///   - sourceBodyId: Optional body ID this graph was built from.
     ///   - sqlite: Whether to also export a SQLite database (default: true).
     public func addGraph(
-        _ graph: TopologyGraph,
+        _ graph: BRepGraph,
         id: String? = nil,
         sourceBodyId: String? = nil,
         sqlite: Bool = true
@@ -209,10 +209,10 @@ public final class ScriptContext: Sendable {
     }
 
     /// Build and export topology graphs for all shapes added so far.
-    /// Convenience method — builds a `TopologyGraph` per shape and exports each.
+    /// Convenience method — builds a `BRepGraph` per shape and exports each.
     public func addGraphsForAllShapes(sqlite: Bool = true) throws {
         for (shape, bodyID) in shapes.all {
-            guard let graph = TopologyGraph(shape: shape) else { continue }
+            guard let graph = BRepGraph(shape: shape) else { continue }
             try addGraph(graph, sourceBodyId: bodyID, sqlite: sqlite)
         }
     }

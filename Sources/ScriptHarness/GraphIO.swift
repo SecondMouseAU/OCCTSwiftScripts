@@ -46,16 +46,16 @@ public enum GraphIO {
 
     // MARK: - Graph
 
-    public static func buildGraph(from shape: Shape) throws -> TopologyGraph {
-        guard let g = TopologyGraph(shape: shape) else {
-            throw ScriptError.message("Failed to build TopologyGraph from shape")
+    public static func buildGraph(from shape: Shape) throws -> BRepGraph {
+        guard let g = BRepGraph(shape: shape) else {
+            throw ScriptError.message("Failed to build BRepGraph from shape")
         }
         return g
     }
 
     /// Rebuild a Shape from the graph's roots.
     /// Single root → that shape; multiple → wrapped in a compound.
-    public static func rebuildShape(from graph: TopologyGraph) -> Shape? {
+    public static func rebuildShape(from graph: BRepGraph) -> Shape? {
         let roots = graph.rootNodes
         let pieces = roots.compactMap { graph.shape(nodeKind: $0.kind, nodeIndex: $0.index) }
         guard !pieces.isEmpty else { return nil }
@@ -88,7 +88,7 @@ extension GraphIO {
         public let errorCount: Int
         public let warningCount: Int
 
-        public init(_ r: TopologyGraph.ValidationResult) {
+        public init(_ r: BRepGraph.ValidationResult) {
             self.isValid = r.isValid
             self.errorCount = r.errorCount
             self.warningCount = r.warningCount
@@ -107,7 +107,7 @@ extension GraphIO {
             public let faces: Int
         }
 
-        public init(nodesBefore: Int, result: TopologyGraph.CompactResult, output: String) {
+        public init(nodesBefore: Int, result: BRepGraph.CompactResult, output: String) {
             self.nodesBefore = nodesBefore
             self.nodesAfter = result.nodesAfter
             self.removed = Removed(
@@ -126,7 +126,7 @@ extension GraphIO {
         public let curveRewrites: Int
         public let output: String
 
-        public init(_ r: TopologyGraph.DeduplicateResult, output: String) {
+        public init(_ r: BRepGraph.DeduplicateResult, output: String) {
             self.canonicalSurfaces = r.canonicalSurfaces
             self.canonicalCurves = r.canonicalCurves
             self.surfaceRewrites = r.surfaceRewrites

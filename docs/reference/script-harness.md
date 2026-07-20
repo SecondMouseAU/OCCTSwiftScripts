@@ -208,7 +208,7 @@ Export a topology graph as JSON and optionally SQLite.
 
 ```swift
 try ctx.addGraph(
-    _ graph: TopologyGraph,
+    _ graph: BRepGraph,
     id: String? = nil,
     sourceBodyId: String? = nil,
     sqlite: Bool = true
@@ -219,7 +219,7 @@ try ctx.addGraph(
 
 | name | type | required | description |
 |------|------|:--------:|-------------|
-| `graph` | `TopologyGraph` | yes | A topology graph built from a shape |
+| `graph` | `BRepGraph` | yes | A topology graph built from a shape |
 | `id` | `String?` | no | Graph identifier; default `"graph-N"` |
 | `sourceBodyId` | `String?` | no | Body ID this graph was derived from (for reference) |
 | `sqlite` | `Bool` | no | Also write a SQLite database (default `true`) |
@@ -232,7 +232,7 @@ try ctx.addGraph(
 ```swift
 let shape = Shape.box(width: 10, height: 10, depth: 10)!
 try ctx.add(shape, id: "part")
-if let graph = TopologyGraph(shape: shape) {
+if let graph = BRepGraph(shape: shape) {
     try ctx.addGraph(graph, sourceBodyId: "part", sqlite: true)
 }
 ```
@@ -256,7 +256,7 @@ try ctx.addGraphsForAllShapes(sqlite: Bool = true) throws
 | `sqlite` | `Bool` | no | Also write SQLite databases (default `true`) |
 
 **What it does** — Convenience method that iterates all accumulated shapes, builds a
-`TopologyGraph` for each, and exports each to JSON + optional SQLite. Skips shapes that fail
+`BRepGraph` for each, and exports each to JSON + optional SQLite. Skips shapes that fail
 to build a graph. Each graph is linked to its source body ID in the manifest.
 
 **Example**

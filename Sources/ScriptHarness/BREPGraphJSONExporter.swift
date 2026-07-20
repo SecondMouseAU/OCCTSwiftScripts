@@ -1,12 +1,12 @@
 // BREPGraphJSONExporter.swift
 // ScriptHarness
 //
-// Serializes a TopologyGraph to a JSON file following the BREPGraph v1 schema.
+// Serializes a BRepGraph to a JSON file following the BREPGraph v1 schema.
 
 import Foundation
 import OCCTSwift
 
-/// Exports a `TopologyGraph` to a structured JSON file.
+/// Exports a `BRepGraph` to a structured JSON file.
 public enum BREPGraphJSONExporter {
 
     /// Export a topology graph to a JSON file.
@@ -14,7 +14,7 @@ public enum BREPGraphJSONExporter {
     ///   - graph: The topology graph to export.
     ///   - url: Destination file URL.
     ///   - description: Optional description for the metadata.
-    public static func export(_ graph: TopologyGraph, to url: URL, description: String? = nil) throws {
+    public static func export(_ graph: BRepGraph, to url: URL, description: String? = nil) throws {
         let doc = buildDocument(graph, description: description)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -24,7 +24,7 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Document Assembly
 
-    static func buildDocument(_ g: TopologyGraph, description: String?) -> GraphDocument {
+    static func buildDocument(_ g: BRepGraph, description: String?) -> GraphDocument {
         let s = g.stats
 
         let statsBlock = StatsBlock(
@@ -84,7 +84,7 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Nodes
 
-    static func buildNodes(_ g: TopologyGraph) -> NodesBlock {
+    static func buildNodes(_ g: BRepGraph) -> NodesBlock {
         // Vertices
         var vertices: [VertexNode] = []
         for i in 0..<g.vertexCount {
@@ -248,8 +248,8 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - References
 
-    static func buildReferences(_ g: TopologyGraph) -> ReferencesBlock {
-        func collectRefs(_ refKind: TopologyGraph.RefKind, count: Int) -> [RefEntry] {
+    static func buildReferences(_ g: BRepGraph) -> ReferencesBlock {
+        func collectRefs(_ refKind: BRepGraph.RefKind, count: Int) -> [RefEntry] {
             var entries: [RefEntry] = []
             for i in 0..<count {
                 guard let childKind = g.refChildNodeKind(refKind, refIndex: i) else { continue }
@@ -278,7 +278,7 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Adjacency (COO sparse)
 
-    static func buildAdjacency(_ g: TopologyGraph) -> AdjacencyBlock {
+    static func buildAdjacency(_ g: BRepGraph) -> AdjacencyBlock {
         var f2fSrc: [Int] = [], f2fTgt: [Int] = []
         var f2eSrc: [Int] = [], f2eTgt: [Int] = []
         var e2vSrc: [Int] = [], e2vTgt: [Int] = []
@@ -306,7 +306,7 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Assembly
 
-    static func buildAssembly(_ g: TopologyGraph) -> AssemblyBlock {
+    static func buildAssembly(_ g: BRepGraph) -> AssemblyBlock {
         var products: [ProductEntry] = []
         for i in 0..<g.productCount {
             let root = g.productShapeRoot(i)
@@ -338,7 +338,7 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Helpers
 
-    static func nodeKindName(_ kind: TopologyGraph.NodeKind) -> String {
+    static func nodeKindName(_ kind: BRepGraph.NodeKind) -> String {
         switch kind {
         case .solid: return "solid"
         case .shell: return "shell"
