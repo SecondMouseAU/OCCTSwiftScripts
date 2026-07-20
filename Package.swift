@@ -30,19 +30,6 @@ func occtDep(_ name: String, from version: String) -> Package.Dependency {
     return .package(url: "https://github.com/SecondMouseAU/\(name).git", from: Version(version)!)
 }
 
-// As occtDep, but pins to the package's minor line instead of an open major range. Used to cap a
-// transitive dependency whose newer minors pull deps we don't want in the graph — OCCTSwiftIO 1.1.0+
-// pulls in the heavy mesh-IO stack (SwiftX/SwiftDXF/SwiftJWW/SwiftPMX/ThreeMF/SwiftGLTF/…), which the
-// narrow GraphML/graphml usage here doesn't need and which breaks resolution for lean consumers that
-// have no root package to override from (ecosystem issue: OCCTSwiftScripts#69).
-func occtDepUpToNextMinor(_ name: String, from version: String) -> Package.Dependency {
-    let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
-    if isRealLocalSibling(manifestDir, name) {
-        return .package(path: "../\(name)")
-    }
-    return .package(url: "https://github.com/SecondMouseAU/\(name).git", .upToNextMinor(from: Version(version)!))
-}
-
 let package = Package(
     name: "OCCTSwiftScripts",
     platforms: [
@@ -128,9 +115,32 @@ let package = Package(
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
         // graphml verbs only — the rest of the package keeps its existing
         // ScriptManifest type (with the `graphs` field) from ScriptHarness.
-        // Capped to the 1.0.x minor line (occtDepUpToNextMinor): 1.1.0+ pulls in the
-        // heavy mesh-IO stack this narrow usage doesn't need (#69).
-        occtDepUpToNextMinor("OCCTSwiftIO", from: "1.0.0"),
+        //
+        // Was capped to the 1.0.x minor line (occtDepUpToNextMinor(from: "1.0.0"),
+        // #69) because OCCTSwiftIO 1.1.0+ folds in a MeshIO target (SwiftPMX /
+        // SwiftX / ThreeMF / SwiftGLTF, plus SwiftJWW / SwiftDXF for 2D vector
+        // formats) that lean consumers didn't want in the graph. Raised to an
+        // open floor (OCCTSwiftScripts#80): OCCTSwiftTools >=1.6.1 now requires
+        // OCCTSwiftIO >=1.7.0 directly, so any consumer depending on both
+        // OCCTSwiftScripts and OCCTSwiftTools at once (e.g. OCCTMCP) hit an
+        // unsatisfiable version conflict against our <1.1.0 cap. Checked
+        // OCCTSwiftIO 1.7.5's Package.swift for a narrower product that could
+        // keep the cap's spirit: it now ships two library products,
+        // `OCCTSwiftIO` and `MeshIO`, but the `OCCTSwiftIO` target itself
+        // still lists `MeshIO` as a plain (unconditional) target dependency —
+        // not a product a consumer can decline. So depending on just the
+        // `OCCTSwiftIO` product still resolves and checks out the full
+        // SwiftPMX/SwiftX/ThreeMF/SwiftGLTF stack; there's no BREP/STEP-only
+        // product to opt into instead. Floored at 1.7.5 rather than the bare
+        // 1.7.0 Tools needs: 1.7.5 is OCCTSwiftIO's own TopologyGraph ->
+        // BRepGraph rename (mirroring OCCTSwift's 1.15.0 rename above and
+        // OCCTSwiftTools 1.6.1 / OCCTSwiftAIS 1.3.1's), and 1.7.1-1.7.4 are
+        // pure OCCTSwift-floor repins for the same OCCT kernel crash/hang
+        // fixes (#298/#310/#317/#318/#323) already required transitively via
+        // our own OCCTSwift >=1.15.0 floor above — no reason to admit an
+        // OCCTSwiftIO minor that predates fixes we already require elsewhere
+        // in the graph.
+        occtDep("OCCTSwiftIO", from: "1.7.5"),
     ],
     targets: [
         .target(
