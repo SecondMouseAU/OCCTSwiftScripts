@@ -86,7 +86,14 @@ let package = Package(
         // orientation #170, concave/convex/edges(where:) #171) are unchanged.
         // 1.8.0 adds Exporter.writeBREP(allowInvalid:) for the load-brep /
         // import `--allow-invalid` flags (OCCTMCP #41).
-        occtDep("OCCTSwift", from: "1.12.9"),   // ≥1.12.9: OCCT kernel crash/hang fixes through #318 and #323 (patches 0003-0009)
+        // Bumped 1.12.9 -> 1.15.0 (OCCTSwiftScripts#78): v1.15.0 renamed the
+        // Swift wrapper class `TopologyGraph` -> `BRepGraph` (OCCTSwift#335) to
+        // match the C++ package it wraps. This repo has migrated its own
+        // `TopologyGraph` references to `BRepGraph`, and the bare `BRepGraph`
+        // symbol doesn't exist before v1.15.0 (only the deprecated typealias
+        // does, starting there) — the floor must track the rename, not just
+        // permit it via the open `from:` range.
+        occtDep("OCCTSwift", from: "1.15.0"),   // ≥1.15.0: BRepGraph rename (OCCTSwift#335); also carries kernel crash/hang fixes through #318/#323 (patches 0003-0009) from the prior 1.12.9 floor
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
@@ -117,7 +124,7 @@ let package = Package(
         // the `simplify-mesh` verb.
         occtDep("OCCTSwiftMesh", from: "1.0.0"),
         // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
-        // TopologyGraph.exportForML / exportJSON via extension after OCCTSwift
+        // BRepGraph.exportForML / exportJSON via extension after OCCTSwift
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
         // graphml verbs only — the rest of the package keeps its existing
         // ScriptManifest type (with the `graphs` field) from ScriptHarness.

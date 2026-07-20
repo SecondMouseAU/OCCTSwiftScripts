@@ -87,7 +87,7 @@ OCCTSwift            B-Rep kernel (~400+ methods), ISO drawings, FeatureReconstr
  ├─ OCCTSwiftTools      CADFileLoader (Shape → ViewportBody)            → render-preview
  ├─ OCCTSwiftAIS        Trihedron / WorkPlane / SubShape selection      → render-preview overlays
  ├─ OCCTSwiftMesh       meshoptimizer QEM decimation                    → simplify-mesh
- └─ OCCTSwiftIO         TopologyGraph.exportForML                       → graph-ml
+ └─ OCCTSwiftIO         BRepGraph.exportForML                           → graph-ml
         │
    OCCTSwiftScripts  ── ScriptHarness + DrawingComposer + occtkit (29 verbs)
         │

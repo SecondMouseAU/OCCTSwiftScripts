@@ -51,7 +51,7 @@ occtkit graph-validate shape.brep
 }
 ```
 
-**Drives** — `TopologyGraph.validate()` + `Shape.analyze()`.
+**Drives** — `BRepGraph.validate()` + `Shape.analyze()`.
 
 ---
 
@@ -88,7 +88,7 @@ occtkit graph-compact shape.brep shape_compact.brep
 }
 ```
 
-**Drives** — `TopologyGraph.compact()`.
+**Drives** — `BRepGraph.compact()`.
 
 ---
 
@@ -122,7 +122,7 @@ occtkit graph-dedup assembly.brep assembly_dedup.brep
 }
 ```
 
-**Drives** — `TopologyGraph.deduplicate()`.
+**Drives** — `BRepGraph.deduplicate()`.
 
 ---
 
@@ -218,7 +218,7 @@ occtkit graph-ml shape.brep --uv-samples 12 --edge-samples 24
 }
 ```
 
-**Drives** — `TopologyGraph.exportForML()` + `AAG` (Attributed Adjacency Graph).
+**Drives** — `BRepGraph.exportForML()` + `AAG` (Attributed Adjacency Graph).
 
 **Notes** — Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits). Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
 
@@ -237,8 +237,8 @@ Query B-rep graph adjacency and selection — return a focused neighbourhood rat
 | `<shape.brep>` | string | yes | Path to the BREP file. |
 | `--query` | string | yes | One of `face-neighbors` \| `edge-faces` \| `vertex-edges` \| `face-adjacency` \| `edges-class`. |
 | `--face` | integer | no | Face index (required for `face-neighbors`). Follows `shape.faces()` order. |
-| `--edge` | integer | no | Edge index (required for `edge-faces`). TopologyGraph index. |
-| `--vertex` | integer | no | Vertex index (required for `vertex-edges`). TopologyGraph index. |
+| `--edge` | integer | no | Edge index (required for `edge-faces`). BRepGraph index. |
+| `--vertex` | integer | no | Vertex index (required for `vertex-edges`). BRepGraph index. |
 | `--class` | string | no | Edge class filter (required for `edges-class`): one of `boundary` \| `non-manifold` \| `seam` \| `degenerate`. |
 
 **Returns** — Depends on `--query`:
@@ -268,6 +268,6 @@ occtkit graph-select shape.brep --query face-neighbors --face 2
 }
 ```
 
-**Drives** — `AAG` (face queries) and `TopologyGraph` (edge/vertex queries).
+**Drives** — `AAG` (face queries) and `BRepGraph` (edge/vertex queries).
 
-**Notes** — Face indices follow `shape.faces()` order (the `face[N]` scheme from `query-topology`). Edge and vertex indices are TopologyGraph indices. The correct secondary parameter to supply depends on `--query`: `--face` for `face-neighbors`, `--edge` for `edge-faces`, `--vertex` for `vertex-edges`, `--class` for `edges-class`; none needed for `face-adjacency`.
+**Notes** — Face indices follow `shape.faces()` order (the `face[N]` scheme from `query-topology`). Edge and vertex indices are BRepGraph indices. The correct secondary parameter to supply depends on `--query`: `--face` for `face-neighbors`, `--edge` for `edge-faces`, `--vertex` for `vertex-edges`, `--class` for `edges-class`; none needed for `face-adjacency`.

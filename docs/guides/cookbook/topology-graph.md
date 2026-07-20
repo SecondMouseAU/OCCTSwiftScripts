@@ -210,7 +210,7 @@ occtkit graph-select bracket_clean.brep --query edges-class --class boundary
 }
 ```
 
-Face indices follow `shape.faces()` order; edge and vertex indices are TopologyGraph indices.
+Face indices follow `shape.faces()` order; edge and vertex indices are BRepGraph indices.
 
 ---
 

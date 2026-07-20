@@ -113,10 +113,10 @@ try ctx.addCompound([a, b], id: "assembly", color: C.gray)         // compound
 These are consumed by `occtkit graph-query` and the viewport's graph tooling.
 
 ```swift
-public func addGraph(_ graph: TopologyGraph, id: String? = nil,
+public func addGraph(_ graph: BRepGraph, id: String? = nil,
                      sourceBodyId: String? = nil, sqlite: Bool = true) throws
 
-/// Build + export a TopologyGraph for every shape added so far.
+/// Build + export a BRepGraph for every shape added so far.
 public func addGraphsForAllShapes(sqlite: Bool = true) throws
 ```
 

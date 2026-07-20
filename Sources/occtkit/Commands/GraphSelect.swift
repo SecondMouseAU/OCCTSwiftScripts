@@ -10,7 +10,7 @@
 //
 // Index spaces: face queries run over the Attributed Adjacency Graph (AAG),
 // whose face indices follow `shape.faces()` order — the same `face[N]` scheme
-// `query-topology` emits. Edge/vertex queries run over the TopologyGraph
+// `query-topology` emits. Edge/vertex queries run over the BRepGraph
 // (`edge[M]` / `vertex[K]`). Convexity is a property of the dihedral between two
 // faces, so it is reported on face *adjacencies* (AAG edges), not on a lone edge.
 //
@@ -51,7 +51,7 @@ enum GraphSelectCommand: Subcommand {
           --query edges-class    --class K   edge indices matching: boundary | non-manifold | seam | degenerate
 
         Face indices follow shape.faces() order (the `face[N]` scheme query-topology emits);
-        edge/vertex indices are TopologyGraph indices (`edge[M]` / `vertex[K]`).
+        edge/vertex indices are BRepGraph indices (`edge[M]` / `vertex[K]`).
         """
 
     // MARK: responses

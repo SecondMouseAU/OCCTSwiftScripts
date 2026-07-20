@@ -1,7 +1,7 @@
 // BREPGraphSQLiteExporter.swift
 // ScriptHarness
 //
-// Serializes a TopologyGraph to a SQLite database with per-kind property tables,
+// Serializes a BRepGraph to a SQLite database with per-kind property tables,
 // references, precomputed adjacency, and built-in analysis views.
 
 import Foundation
@@ -11,7 +11,7 @@ import OCCTSwift
 import SQLite3
 #endif
 
-/// Exports a `TopologyGraph` to a SQLite database.
+/// Exports a `BRepGraph` to a SQLite database.
 public enum BREPGraphSQLiteExporter {
 
     /// Export a topology graph to a SQLite file.
@@ -19,7 +19,7 @@ public enum BREPGraphSQLiteExporter {
     ///   - graph: The topology graph to export.
     ///   - url: Destination `.sqlite` file URL.
     ///   - description: Optional description stored in metadata.
-    public static func export(_ graph: TopologyGraph, to url: URL, description: String? = nil) throws {
+    public static func export(_ graph: BRepGraph, to url: URL, description: String? = nil) throws {
         // Remove existing file
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
@@ -252,7 +252,7 @@ public enum BREPGraphSQLiteExporter {
 
     // MARK: - Metadata
 
-    private static func insertMeta(_ db: OpaquePointer, graph g: TopologyGraph, description: String?) throws {
+    private static func insertMeta(_ db: OpaquePointer, graph g: BRepGraph, description: String?) throws {
         let metaInsert = "INSERT INTO meta (key, value) VALUES (?, ?)"
         try insert(db, metaInsert, "schema_version", "1.0.0")
         try insert(db, metaInsert, "generator", "OCCTSwift/BREPGraph")
@@ -296,7 +296,7 @@ public enum BREPGraphSQLiteExporter {
 
     // MARK: - Nodes
 
-    private static func insertNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         // Vertices
         let nodeInsert = "INSERT INTO nodes (kind, idx, removed) VALUES (?, ?, ?)"
         let vtxInsert = "INSERT INTO vertex_props (idx, x, y, z, tolerance, edge_count) VALUES (?, ?, ?, ?, ?, ?)"
@@ -312,7 +312,7 @@ public enum BREPGraphSQLiteExporter {
             let pt = g.vertexPoint(i)
             let removed = g.isRemoved(nodeKind: .vertex, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.vertex.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.vertex.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -352,7 +352,7 @@ public enum BREPGraphSQLiteExporter {
         try insertCompSolidNodes(db, graph: g)
     }
 
-    private static func insertEdgeNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertEdgeNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = """
         INSERT INTO edge_props (idx, tolerance, degenerated, closed, has_curve, has_polygon_3d,
             same_parameter, same_range, max_continuity, range_first, range_last,
@@ -377,7 +377,7 @@ public enum BREPGraphSQLiteExporter {
             let removed = g.isRemoved(nodeKind: .edge, nodeIndex: i)
 
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.edge.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.edge.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -407,7 +407,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertFaceNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertFaceNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = """
         INSERT INTO face_props (idx, tolerance, has_surface, has_triangulation, natural_restriction,
             wire_count, outer_wire, vertex_ref_count, shell_count, compound_count)
@@ -429,7 +429,7 @@ public enum BREPGraphSQLiteExporter {
         for i in 0..<g.faceCount {
             let removed = g.isRemoved(nodeKind: .face, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.face.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.face.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -449,7 +449,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertWireNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertWireNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO wire_props (idx, closed, coedge_count, face_count) VALUES (?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -467,7 +467,7 @@ public enum BREPGraphSQLiteExporter {
         for i in 0..<g.wireCount {
             let removed = g.isRemoved(nodeKind: .wire, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.wire.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.wire.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -481,7 +481,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertCoEdgeNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertCoEdgeNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO coedge_props (idx, edge_idx, face_idx, seam_pair, has_pcurve, range_first, range_last) VALUES (?,?,?,?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -501,7 +501,7 @@ public enum BREPGraphSQLiteExporter {
             let r = g.coedgeRange(i)
 
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.coedge.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.coedge.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -519,7 +519,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertShellNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertShellNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO shell_props (idx, closed, solid_count, compound_count) VALUES (?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -537,7 +537,7 @@ public enum BREPGraphSQLiteExporter {
         for i in 0..<g.shellCount {
             let removed = g.isRemoved(nodeKind: .shell, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.shell.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.shell.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -551,7 +551,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertSolidNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertSolidNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO solid_props (idx, comp_solid_count, compound_count) VALUES (?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -569,7 +569,7 @@ public enum BREPGraphSQLiteExporter {
         for i in 0..<g.solidCount {
             let removed = g.isRemoved(nodeKind: .solid, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.solid.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.solid.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -582,7 +582,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertCompoundNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertCompoundNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO compound_props (idx, child_count, parent_count) VALUES (?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -600,7 +600,7 @@ public enum BREPGraphSQLiteExporter {
         for i in 0..<g.compoundCount {
             let removed = g.isRemoved(nodeKind: .compound, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.compound.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.compound.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -613,7 +613,7 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insertCompSolidNodes(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertCompSolidNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO comp_solid_props (idx, solid_count, compound_count) VALUES (?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -631,7 +631,7 @@ public enum BREPGraphSQLiteExporter {
         for i in 0..<g.compSolidCount {
             let removed = g.isRemoved(nodeKind: .compSolid, nodeIndex: i)
             sqlite3_reset(nodeStmt)
-            sqlite3_bind_int(nodeStmt, 1, Int32(TopologyGraph.NodeKind.compSolid.rawValue))
+            sqlite3_bind_int(nodeStmt, 1, Int32(BRepGraph.NodeKind.compSolid.rawValue))
             sqlite3_bind_int(nodeStmt, 2, Int32(i))
             sqlite3_bind_int(nodeStmt, 3, removed ? 1 : 0)
             sqlite3_step(nodeStmt)
@@ -646,7 +646,7 @@ public enum BREPGraphSQLiteExporter {
 
     // MARK: - References
 
-    private static func insertReferences(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertReferences(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = "INSERT INTO refs (ref_kind, ref_idx, child_kind, child_idx, orientation, removed) VALUES (?,?,?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -654,7 +654,7 @@ public enum BREPGraphSQLiteExporter {
         }
         defer { sqlite3_finalize(stmt) }
 
-        let refKinds: [(TopologyGraph.RefKind, Int)] = [
+        let refKinds: [(BRepGraph.RefKind, Int)] = [
             (.shell, g.shellRefCount), (.face, g.faceRefCount),
             (.wire, g.wireRefCount), (.coedge, g.coedgeRefCount),
             (.vertex, g.vertexRefCount), (.solid, g.solidRefCount),
@@ -678,7 +678,7 @@ public enum BREPGraphSQLiteExporter {
 
     // MARK: - Adjacency
 
-    private static func insertAdjacency(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertAdjacency(_ db: OpaquePointer, graph g: BRepGraph) throws {
         // Face adjacency
         var faStmt: OpaquePointer?
         sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO face_adjacency (face_a, face_b) VALUES (?,?)", -1, &faStmt, nil)
@@ -774,7 +774,7 @@ public enum BREPGraphSQLiteExporter {
 
     // MARK: - Assembly
 
-    private static func insertAssembly(_ db: OpaquePointer, graph g: TopologyGraph) throws {
+    private static func insertAssembly(_ db: OpaquePointer, graph g: BRepGraph) throws {
         for i in 0..<g.productCount {
             let root = g.productShapeRoot(i)
             let rootKindStr = root.map { "\($0.kind.rawValue)" } ?? "NULL"

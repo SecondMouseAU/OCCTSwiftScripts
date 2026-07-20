@@ -162,7 +162,7 @@ DSL selectors and B-rep GNN selection (no full graph export needed).
 **Input:** `graph-select <shape.brep> --query <type> [ids]`. Queries:
 `face-neighbors --face N` · `edge-faces --edge M` · `vertex-edges --vertex K` ·
 `face-adjacency` · `edges-class --class boundary|non-manifold|seam|degenerate`.
-Face indices follow `shape.faces()` order (AAG); edge/vertex indices are TopologyGraph indices.
+Face indices follow `shape.faces()` order (AAG); edge/vertex indices are BRepGraph indices.
 **Output:** per-query JSON tagged with `query`, e.g. `face-neighbors` returns
 `{ face, isPlanar, isVertical, isHorizontal, normal, neighbors[{face,convexity,sharedEdgeCount}] }`.
 
