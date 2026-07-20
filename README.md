@@ -269,4 +269,4 @@ The `occtkit` executable is a separate target — install via the `Makefile` abo
 - [OCCTSwiftTools](https://github.com/SecondMouseAU/OCCTSwiftTools) `>= 1.0.0` (bridge layer used by `render-preview` for Shape→ViewportBody conversion)
 - [OCCTSwiftAIS](https://github.com/SecondMouseAU/OCCTSwiftAIS) `>= 1.0.0` (headless overlays for `render-preview`'s `--show-axes` / `--show-workplane` / `--highlight`)
 - [OCCTSwiftMesh](https://github.com/SecondMouseAU/OCCTSwiftMesh) `>= 1.0.0` (powers `simplify-mesh`)
-- [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) `>= 1.0.0` (powers `graph-ml`'s ML feature export)
+- [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) `>= 1.7.5` (powers `graph-ml`'s ML feature export; floor raised from `>= 1.0.0, < 1.1.0` to stay compatible with OCCTSwiftTools' own `>= 1.7.0` requirement, see OCCTSwiftScripts#80 — no narrower product avoids OCCTSwiftIO's mesh-IO stack, see `Package.swift`)
