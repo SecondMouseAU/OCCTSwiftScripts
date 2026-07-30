@@ -80,7 +80,7 @@ let package = Package(
         // symbol doesn't exist before v1.15.0 (only the deprecated typealias
         // does, starting there) — the floor must track the rename, not just
         // permit it via the open `from:` range.
-        occtDep("OCCTSwift", from: "1.15.0"),   // ≥1.15.0: BRepGraph rename (OCCTSwift#335); also carries kernel crash/hang fixes through #318/#323 (patches 0003-0009) from the prior 1.12.9 floor
+        occtDep("OCCTSwift", from: "1.17.0"),   // ≥1.17.0: Pass 1a duplication/bug-fix audit (OCCTSwift#377/#380) — continuity enum consolidation (source-compatible via deprecated aliases), Surface.drawMesh/evaluateGrid now return SurfaceGrid (not used here), arc-length/Surface.normal/Curve2D.circle edge-case bug fixes; ≥1.15.0: BRepGraph rename (OCCTSwift#335); also carries kernel crash/hang fixes through #318/#323 (patches 0003-0009) from the prior 1.12.9 floor
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
