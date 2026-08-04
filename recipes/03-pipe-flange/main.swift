@@ -4,10 +4,14 @@
 // Outputs: one solid body: a raised-face pipe flange with a bolt circle.
 // Notes:   The flange is a surface of revolution. The half-section is drawn in the XY
 //          plane as (radius, axial) pairs with radius ≥ bore (so it never crosses the
-//          axis) and revolved a full turn about the Y axis. The bolt circle is cut with
-//          Shape.circularPatternCut (OCCTSwift v1.3.1, #169), which patterns a single hole
-//          tool around the axis and subtracts the whole compound in one call. A small
-//          all-edge chamfer breaks sharp corners; it degrades gracefully if it fails.
+//          axis), faced, and the face revolved a full turn about the Y axis.
+//          Shape.revolve(profile: wire, ...) revolves the curve itself and returns a
+//          shell (BRepPrimAPI_MakeRevol on a wire), not a solid; facing the wire first
+//          with Shape.face(from:) and revolving the face closes the ends into a solid
+//          (OCCTSwiftScripts #100). The bolt circle is cut with Shape.circularPatternCut
+//          (OCCTSwift v1.3.1, #169), which patterns a single hole tool around the axis
+//          and subtracts the whole compound in one call. A small all-edge chamfer breaks
+//          sharp corners; it degrades gracefully if it fails.
 //
 // Run:  swift run occtkit run recipes/03-pipe-flange/main.swift --format brep
 
@@ -41,9 +45,11 @@ let section = Wire.polygon([
     SIMD2(boreRadius, thickness + raisedHeight),   // raised face → bore
 ])!
 
-// ── Revolve a full turn about the Y axis (the bore axis) ──────────────────────
-var flange = Shape.revolve(profile: section, axisOrigin: .zero,
-                           axisDirection: SIMD3(0, 1, 0), angle: 2 * .pi)!
+// ── Face the half-section, then revolve the face a full turn about the Y axis
+//    (the bore axis). Revolving the wire directly would only sweep out the curve
+//    and return a shell; revolving the face closes the ends into a solid.
+let sectionFace = Shape.face(from: section)!
+var flange = sectionFace.revolved(axisOrigin: .zero, axisDirection: SIMD3(0, 1, 0))!
 
 // ── Bolt circle: one axial hole tool, patterned + subtracted around the Y axis ─
 let depth = thickness + raisedHeight + 2
