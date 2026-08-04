@@ -88,10 +88,34 @@ enum RunCommand: Subcommand {
         .appendingPathComponent(".occtswift-scripts/runner-cache")
     private static let workspaceDir: URL = cacheDir.appendingPathComponent("workspace")
 
-    private static func resolveScriptsDep() -> String {
+    /// The generated workspace manifest needs two things that must agree: the
+    /// dependency declaration, and the package identity the target refers to.
+    ///
+    /// SwiftPM derives a **path** dependency's identity from the checkout
+    /// directory's basename, not from the `name:` in its manifest. Hardcoding the
+    /// identity as "OCCTSwiftScripts" therefore broke `occtkit run` in every
+    /// checkout not literally named that: forks, second checkouts, and git
+    /// worktrees, plus any `OCCTKIT_SCRIPTS_PATH` pointing somewhere named
+    /// differently. Returning both together is what keeps them in step (#98).
+    struct ScriptsDep {
+        /// The `.package(...)` line to interpolate into `dependencies:`.
+        let declaration: String
+        /// The identity to pass as `package:` in the target's product dependency.
+        let identity: String
+    }
+
+    private static func pathDep(_ path: String) -> ScriptsDep {
+        ScriptsDep(
+            declaration: ".package(path: \"\(path)\")",
+            // Trailing slashes would otherwise yield an empty basename.
+            identity: URL(fileURLWithPath: path).standardizedFileURL.lastPathComponent
+        )
+    }
+
+    private static func resolveScriptsDep() -> ScriptsDep {
         if let p = ProcessInfo.processInfo.environment["OCCTKIT_SCRIPTS_PATH"],
            FileManager.default.fileExists(atPath: p + "/Package.swift") {
-            return ".package(path: \"\(p)\")"
+            return pathDep(p)
         }
         // argv[0] is typically <pkg>/.build/<cfg>/occtkit when run via `swift run`
         let exe = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
@@ -100,9 +124,15 @@ enum RunCommand: Subcommand {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         if FileManager.default.fileExists(atPath: candidate.appendingPathComponent("Package.swift").path) {
-            return ".package(path: \"\(candidate.path)\")"
+            return pathDep(candidate.path)
         }
-        return ".package(url: \"https://github.com/gsdali/OCCTSwiftScripts.git\", from: \"0.2.0\")"
+        // A URL dependency's identity is the last path component of the URL minus
+        // any .git suffix, so this one is "OCCTSwiftScripts" regardless of where
+        // the consumer checked anything out.
+        return ScriptsDep(
+            declaration: ".package(url: \"https://github.com/SecondMouseAU/OCCTSwiftScripts.git\", from: \"1.0.0\")",
+            identity: "OCCTSwiftScripts"
+        )
     }
 
     private static func ensureWorkspace() throws {
@@ -120,13 +150,13 @@ enum RunCommand: Subcommand {
             name: "OCCTSwiftUserScript",
             platforms: [.macOS(.v15)],
             dependencies: [
-                \(scriptsDep),
+                \(scriptsDep.declaration),
             ],
             targets: [
                 .executableTarget(
                     name: "Script",
                     dependencies: [
-                        .product(name: "ScriptHarness", package: "OCCTSwiftScripts"),
+                        .product(name: "ScriptHarness", package: "\(scriptsDep.identity)"),
                     ],
                     path: "Sources/Script",
                     swiftSettings: [.swiftLanguageMode(.v6)]
