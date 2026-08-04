@@ -11,7 +11,7 @@ consumers (notably [OCCTMCP](https://github.com/gsdali/OCCTMCP) and Python pipel
 JSON protocol.
 
 **Open-source boundary.** LGPL-2.1, depending only on open-source Swift packages (the OCCTSwift
-cohort). There are no closed-source transitive dependencies — 2D constraint solving (the former
+cohort). There are no closed-source transitive dependencies. 2D constraint solving (the former
 `solve-sketch` verb) was removed when the closed-source solver dependency was dropped; downstream
 consumers that need it wire their own solver outside `occtkit`.
 
@@ -19,11 +19,11 @@ consumers that need it wire their own solver outside `occtkit`.
 
 | Target | Kind | Role |
 |--------|------|------|
-| **ScriptHarness** | library | `ScriptContext` — accumulates geometry, writes BREP per `add()`, writes `manifest.json` on `emit()`. Also `BREPGraphJSONExporter` / `BREPGraphSQLiteExporter` and `GraphIO` (shared argv/BREP/JSON helpers used by every verb). Importable by external packages. |
-| **Script** | executable | `Sources/Script/main.swift` — the user-editable iteration scratchpad. |
+| **ScriptHarness** | library | `ScriptContext`: accumulates geometry, writes BREP per `add()`, writes `manifest.json` on `emit()`. Also `BREPGraphJSONExporter` / `BREPGraphSQLiteExporter` and `GraphIO` (shared argv/BREP/JSON helpers used by every verb). Importable by external packages. |
+| **Script** | executable | `Sources/Script/main.swift`, the user-editable iteration scratchpad. |
 | **DrawingComposer** | library | The multi-view ISO drawing orchestrator (`Composer.render(spec:shape:)`) behind `drawing-export`; usable directly without the CLI. |
-| **occtkit** | executable | The multi-call umbrella binary — 29 verbs, dispatched by `argv[0]` basename (installed symlinks) or first positional arg. |
-| Standalone verb targets | executables | `OCCTRunner`, `GraphValidate`, … — **deprecated**, preserved for downstream compatibility; each prints a stderr notice. |
+| **occtkit** | executable | The multi-call umbrella binary: 29 verbs, dispatched by `argv[0]` basename (installed symlinks) or first positional arg. |
+| Standalone verb targets | executables | `OCCTRunner`, `GraphValidate`, and friends: **deprecated**, preserved for downstream compatibility; each prints a stderr notice. |
 
 ## The script output pipeline
 
@@ -71,10 +71,10 @@ stdin or a file-path argv), and a generic **`--serve`** mode. In `--serve`, the 
 ```
 
 The subcommand's own stdout/stderr (and any inherited child-process output, e.g. `swift build`
-invoked by `run`) are captured *into* the envelope via per-request FD redirection — they do not leak
+invoked by `run`) are captured *into* the envelope via per-request FD redirection, so they do not leak
 to occtkit's own stdout. EOF on stdin → exit 0. This is implemented once in
 `Sources/occtkit/main.swift`, so every verb supports it identically, and it is how OCCTMCP launches
-`occtkit` as a long-lived service. Because of this, **verbs throw rather than `exit()`** — a failed
+`occtkit` as a long-lived service. Because of this, **verbs throw rather than `exit()`**. A failed
 request returns an error envelope and the loop continues.
 
 ## Where this sits in the ecosystem
@@ -96,5 +96,5 @@ OCCTSwift            B-Rep kernel (~400+ methods), ISO drawings, FeatureReconstr
 
 See the [OCCTSwift ecosystem map](https://github.com/gsdali/OCCTSwift/blob/main/docs/ecosystem.md)
 for the full family. Internal, durable project knowledge (policies, decisions, the relationship to
-the commercial OCCTStudio app) lives in the OKF bundle under `docs/knowledge/` — not part of this
+the commercial OCCTStudio app) lives in the OKF bundle under `okf/`, which is not part of this
 published site.
