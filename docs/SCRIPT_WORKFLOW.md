@@ -138,9 +138,12 @@ shape.subtracting(other)           // Cut
 shape.intersection(with: other)    // Common volume
 shape.split(by: tool)              // Returns [Shape]
 
-shape.filleted(radius: 1.0)       // All edges
+shape.filleted(radius: 1.0)       // All edges; same seam caveat as chamfered below
 shape.filleted(edges: [e1, e2], radius: 1.0)
-shape.chamfered(distance: 0.5)
+shape.chamfered(distance: 0.5)   // ALL edges at once; returns nil on a full revolve,
+                                 // whose periodic faces each carry an unblendable seam.
+                                 // Select edges instead: chamferedWithFullHistory(distance:edges:).
+                                 // See okf/decisions/revolve-seams-cannot-be-chamfered.md
 
 shape.shelled(thickness: 1.0)     // Hollow out
 shape.offset(by: 2.0)             // Offset surface

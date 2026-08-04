@@ -9,6 +9,11 @@
   made every check it performed decorative.
 * **Creation**: Recorded the wire-sweep-factories-are-not-symmetric decision.
 * **Creation**: Recorded the errexit-is-suppressed-in-or-context decision.
+* **Update**: Fixed recipe 03's chamfer, which had never applied (#103). `chamfered(distance:)`
+  bundles all edges into one operation and a full revolve always contributes unblendable seam
+  edges, so the call returned nil and a `??` fallback hid it. Now selects the OD and raised-face
+  rim explicitly.
+* **Creation**: Recorded the revolve-seams-cannot-be-chamfered decision.
 
 ## 2026-08-04
 
