@@ -42,6 +42,16 @@ SAVED="$TMP/saved-workspace"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
+# Mirror of escapedForManifest in Sources/occtkit/Commands/Run.swift: backslash
+# first, then quote, so the expected literal can be built without parsing the
+# generated manifest back out.
+escape_for_literal() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    printf '%s' "$s"
+}
+
 # The workspace cache is shared by every `occtkit run` on this machine and holds
 # a resolved dependency graph plus .build. Blowing it away would cost the
 # developer a full cold rebuild on their next real run, so it is moved aside and
@@ -72,15 +82,23 @@ printf 'import ScriptHarness\n' > "$script"
 # Job control on, so the whole process group can be signalled below.
 set -m
 
+# check_alias <basename> [path-suffix]
+#
+# Symlinks the repo at $TMP/<basename>, points OCCTKIT_SCRIPTS_PATH at it (plus
+# any suffix, used for the trailing-slash case), and asserts the generated
+# manifest's identity and dependency path both come back as <basename>.
 check_alias() {
-    local name="$1"
+    local name="$1" suffix="${2-}"          # ${2-} is the set -u safe form, bash 3.2 ok
     local alias_path="$TMP/$name"
     ln -sfn "$PWD" "$alias_path"
 
     rm -rf "$WORKSPACE"
-    OCCTKIT_SCRIPTS_PATH="$alias_path" "$OCCTKIT" run "$script" --output "$TMP/out" >/dev/null 2>&1 &
+    OCCTKIT_SCRIPTS_PATH="$alias_path$suffix" "$OCCTKIT" run "$script" --output "$TMP/out" >/dev/null 2>&1 &
     local runner=$!
 
+    # Poll for the manifest rather than bounding the run with `timeout`: that is
+    # GNU coreutils and absent on macOS, where CI runs. Do not "simplify" this
+    # into a `timeout` call.
     local i
     for i in $(seq 1 60); do
         [ -f "$MANIFEST" ] && break
@@ -95,42 +113,39 @@ check_alias() {
 
     [ -f "$MANIFEST" ] || fail "[$name] occtkit run did not generate $MANIFEST"
 
-    local identity deppath
-    identity="$(grep -oE 'package: "[^"]+"' "$MANIFEST" | head -1 | sed 's/package: "//; s/"$//')"
-    [ -n "$identity" ] || fail "[$name] no 'package: \"...\"' found in the generated manifest"
+    # Assert on the exact escaped literals rather than parsing them back out.
+    # A name containing `"` is emitted as `\"`, which no `[^"]+` pattern can
+    # extract correctly, and getting that wrong would make this check fail on
+    # correct output. Comparing against the expected literal tests the escaping
+    # itself, which is the point.
+    local esc_name esc_path
+    esc_name="$(escape_for_literal "$name")"
+    esc_path="$(escape_for_literal "$alias_path")"
 
-    deppath="$(grep -oE '\.package\(path: "[^"]+"\)' "$MANIFEST" | head -1 | sed 's/.*path: "//; s/")$//')"
-    [ -n "$deppath" ] || fail "[$name] manifest declares no path dependency; expected one via OCCTKIT_SCRIPTS_PATH"
+    grep -Fq "package: \"$esc_name\")" "$MANIFEST" || {
+        echo "  manifest lines:" >&2
+        grep -F 'package' "$MANIFEST" >&2
+        fail "[$name] expected identity literal 'package: \"$esc_name\"'; occtkit run will fail here"
+    }
+    grep -Fq ".package(path: \"$esc_path\")" "$MANIFEST" || {
+        echo "  manifest lines:" >&2
+        grep -F 'package' "$MANIFEST" >&2
+        fail "[$name] expected dependency literal '.package(path: \"$esc_path\")'"
+    }
 
-    [ "$identity" = "$name" ] || \
-        fail "[$name] manifest identity is '$identity' but the dependency path basename is '$name'; occtkit run will fail here"
-    [ "$(basename "$deppath")" = "$identity" ] || \
-        fail "[$name] dependency path '$deppath' and identity '$identity' disagree"
-
-    echo "  $name: identity '$identity' matches the dependency path basename"
+    echo "  $name: identity and dependency path both emitted correctly"
 }
 
 # A deliberately renamed directory: the #98 failure case.
 check_alias "deliberately-renamed"
 # Regression: a directory that IS named after the repo must still work.
 check_alias "OCCTSwiftScripts"
+# A trailing slash must not change the derived identity. This goes through the
+# same assertions as the others, including the dependency-path check, which holds
+# because the declaration is standardized before it is emitted.
+check_alias "trailing-slash-case" "/"
+# Quotes and backslashes are legal in APFS path components and must survive into
+# the generated manifest as valid Swift string literals on both sides.
+check_alias 'quote"and\backslash'
 
-# A trailing slash must not change the derived identity.
-ln -sfn "$PWD" "$TMP/trailing-slash-case"
-rm -rf "$WORKSPACE"
-OCCTKIT_SCRIPTS_PATH="$TMP/trailing-slash-case/" "$OCCTKIT" run "$script" --output "$TMP/out" >/dev/null 2>&1 &
-runner=$!
-for _ in $(seq 1 60); do
-    [ -f "$MANIFEST" ] && break
-    kill -0 "$runner" 2>/dev/null || break
-    sleep 0.5
-done
-kill -- -"$runner" 2>/dev/null || true
-wait "$runner" 2>/dev/null || true
-[ -f "$MANIFEST" ] || fail "[trailing slash] occtkit run did not generate $MANIFEST"
-identity="$(grep -oE 'package: "[^"]+"' "$MANIFEST" | head -1 | sed 's/package: "//; s/"$//')"
-[ "$identity" = "trailing-slash-case" ] || \
-    fail "[trailing slash] identity is '$identity', expected 'trailing-slash-case'"
-echo "  trailing-slash-case: trailing slash does not change the derived identity"
-
-echo "run-identity-check: 3 scenarios passed"
+echo "run-identity-check: 4 scenarios passed"

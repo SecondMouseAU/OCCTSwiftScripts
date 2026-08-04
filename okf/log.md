@@ -8,9 +8,11 @@
   `occtkit --verbs` flag, fixing a `make install` bug that silently omitted `graph-select`.
   The verb list appeared in ten places and five had gone stale; corrected them.
 * **Creation**: Recorded the single-source-verb-inventory decision.
-
-## 2026-08-04
-
+* **Update**: Fixed `occtkit run` failing in any checkout not named `OCCTSwiftScripts`
+  (#98). The generated workspace manifest hardcoded the package identity, but SwiftPM derives a
+  path dependency's identity from the directory basename. Added `Scripts/run-identity-check.sh`
+  and wired it into the `verbs` workflow.
+* **Creation**: Recorded the swiftpm-path-dependency-identity decision.
 * **Update**: Consolidated the two knowledge bundles into one. `okf/` is now the single
   knowledge store. Migrated the open-source-boundary policy, the OCCTStudio commercial-app
   relationship, and the OKF format reference out of the older `docs/knowledge/` bundle, then

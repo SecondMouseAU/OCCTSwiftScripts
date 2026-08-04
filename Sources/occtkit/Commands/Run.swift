@@ -133,7 +133,13 @@ enum RunCommand: Subcommand {
         )
     }
 
-    /// Escape a path for embedding in a generated Swift string literal.
+    /// Escape a string for embedding in a generated Swift string literal.
+    ///
+    /// Both `"` and `\` are legal in APFS path components, so every value that
+    /// reaches the generated manifest goes through this. Escaping happens at each
+    /// interpolation site rather than inside `ScriptsDep`, so `identity` keeps
+    /// comparing equal to the real directory basename. A half-applied escape is
+    /// worse than none, because it reads as handled.
     private static func escapedForManifest(_ s: String) -> String {
         s.replacingOccurrences(of: "\\", with: "\\\\")
          .replacingOccurrences(of: "\"", with: "\\\"")
@@ -183,7 +189,7 @@ enum RunCommand: Subcommand {
                 .executableTarget(
                     name: "Script",
                     dependencies: [
-                        .product(name: "ScriptHarness", package: "\(scriptsDep.identity)"),
+                        .product(name: "ScriptHarness", package: "\(escapedForManifest(scriptsDep.identity))"),
                     ],
                     path: "Sources/Script",
                     swiftSettings: [.swiftLanguageMode(.v6)]
