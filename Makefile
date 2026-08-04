@@ -11,6 +11,11 @@ BUILD   = .build/release/$(BIN)
 # (by which point `install: $(BUILD)` has forced a build), not on `make help`.
 # stderr is deliberately not suppressed: a failure here must be visible, and the
 # install recipe guards against an empty result rather than linking nothing.
+#
+# Recursive expansion means `install` invokes the binary three times: once for the
+# `test -n` guard, once for the `for` loop, once for `$(words ...)`. That is a
+# deliberate trade, three fast process launches against keeping each line readable;
+# hoisting into a shell variable would collapse the recipe into one opaque block.
 VERBS = $(shell $(BUILD) --verbs)
 
 .PHONY: build install uninstall clean help recipe recipes-test recipes-render verb-check

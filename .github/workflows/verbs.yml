@@ -1,0 +1,54 @@
+name: verbs
+
+# Asserts the verb inventory stays single-sourced from Registry.all: that
+# `occtkit --verbs` is non-empty and well-formed (the Makefile feeds it straight
+# into `ln`), and that the canonical per-verb reference and README agree with it.
+#
+# Deliberately a separate workflow from `recipes`, which runs
+# `continue-on-error: true` for its seed phase. This one must be able to fail the
+# build; the drift it guards against (OCCTSwiftScripts#82) shipped a broken
+# `make install` precisely because nothing checked it.
+#
+# macOS-only: the OCCTSwift dependency is a macOS xcframework.
+
+on:
+  push:
+    paths:
+      - 'Sources/occtkit/**'
+      - 'Scripts/verb-check.sh'
+      - 'Makefile'
+      - 'README.md'
+      - 'docs/reference/occtkit-verbs.md'
+      - 'Package.*'
+      - '.github/workflows/verbs.yml'
+  pull_request:
+    paths:
+      - 'Sources/occtkit/**'
+      - 'Scripts/verb-check.sh'
+      - 'Makefile'
+      - 'README.md'
+      - 'docs/reference/occtkit-verbs.md'
+      - 'Package.*'
+      - '.github/workflows/verbs.yml'
+  workflow_dispatch:
+
+jobs:
+  verbs:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build occtkit
+        run: swift build -c release --product occtkit
+
+      - name: Check verb inventory
+        env:
+          OCCTKIT: .build/release/occtkit
+        run: Scripts/verb-check.sh

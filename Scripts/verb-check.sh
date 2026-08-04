@@ -10,8 +10,13 @@
 #      make `make install` a silent no-op.
 #   2. `--verbs` prints something that is not a verb name, which would scatter junk
 #      symlinks across BINDIR.
-#   3. A name `--verbs` reports does not actually dispatch.
-#   4. Registry and the documented count in README.md disagree.
+#   3. `--verbs` reports the same name twice.
+#   4. docs/reference/occtkit-verbs.md, the canonical per-verb reference and the one
+#      remaining hand-maintained list, drifts from the registry in either direction.
+#   5. README.md's stated count disagrees with the registry.
+#
+# Run by CI (.github/workflows/verbs.yml) on any change to the registry, the
+# Makefile, or the documents above.
 #
 # Usage:
 #   Scripts/verb-check.sh
@@ -41,21 +46,31 @@ done <<< "$verbs"
 dupes="$(printf '%s\n' "$verbs" | sort | uniq -d)"
 [ -z "$dupes" ] || fail "duplicate verb names: $dupes"
 
-# 4. every reported verb actually dispatches. A registered verb run with no
-#    arguments reports a usage or input error; an unregistered one is reported
-#    as unknown by the dispatcher.
-while IFS= read -r v; do
-    [ -n "$v" ] || continue
-    out="$($OCCTKIT "$v" </dev/null 2>&1 || true)"
-    case "$out" in
-        *"Unknown subcommand"*) fail "'$v' is listed by --verbs but does not dispatch" ;;
-    esac
-done <<< "$verbs"
+# 4. the canonical per-verb reference documents exactly the registered verbs.
+#    docs/reference/occtkit-verbs.md is the one remaining hand-maintained list
+#    (CLAUDE.md, README.md and the okf/ indexes now defer to it), so it is the
+#    list that can still drift. Asserted as set equality, both directions.
+#
+#    An earlier version of this script instead ran every verb and grepped for
+#    "Unknown subcommand". That could never fail: --verbs is Registry.all mapped
+#    to .name, and Registry.find searches Registry.all by that same name.
+VERB_DOC="docs/reference/occtkit-verbs.md"
+[ -f "$VERB_DOC" ] || fail "$VERB_DOC not found (canonical per-verb reference)"
 
-# 5. README's stated count matches the registry
-readme_count="$(grep -oE 'Subcommands \([0-9]+ verbs\)' README.md | grep -oE '[0-9]+' || true)"
-if [ -n "$readme_count" ] && [ "$readme_count" != "$count" ]; then
-    fail "README.md says $readme_count verbs, occtkit --verbs reports $count"
-fi
+doc_verbs="$(grep -oE '^### `[a-z0-9-]+`' "$VERB_DOC" | tr -d '#` ' | sort)"
+[ -n "$doc_verbs" ] || fail "no '### \`verb\`' headings found in $VERB_DOC; has the format changed?"
 
-echo "verb-check: $count verbs, all dispatch, README agrees"
+missing="$(comm -23 <(printf '%s\n' "$verbs" | sort) <(printf '%s\n' "$doc_verbs"))"
+extra="$(comm -13 <(printf '%s\n' "$verbs" | sort) <(printf '%s\n' "$doc_verbs"))"
+[ -z "$missing" ] || fail "registered but undocumented in $VERB_DOC: $(echo $missing)"
+[ -z "$extra" ]   || fail "documented in $VERB_DOC but not registered: $(echo $extra)"
+
+# 5. README's stated count matches the registry. A missing pattern is a failure,
+#    not a skip: if the sentence is reworded, this check must break loudly rather
+#    than silently stop guarding the thing it exists to guard.
+readme_line="$(grep -oE 'Subcommands \([0-9]+ verbs\)' README.md || true)"
+[ -n "$readme_line" ] || fail "README.md has no 'Subcommands (N verbs)' line; update this check if the wording changed deliberately"
+readme_count="${readme_line//[!0-9]/}"
+[ "$readme_count" = "$count" ] || fail "README.md says $readme_count verbs, occtkit --verbs reports $count"
+
+echo "verb-check: $count verbs, $VERB_DOC in sync, README agrees"
