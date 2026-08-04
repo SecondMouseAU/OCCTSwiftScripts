@@ -52,6 +52,7 @@ See [`decisions/`](decisions/index.md) for recorded engineering decisions and th
 - [Search before building](policies/search-before-building.md)
 - [Open-source boundary](policies/open-source-boundary.md)
 - [Code structure](policies/code-structure.md)
+- [Issue labels and project-board tracking](policies/issue-tracking.md)
 
 ## History
 
