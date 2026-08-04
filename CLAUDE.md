@@ -19,7 +19,7 @@ reference; the bundle holds the standing policies, the public component surface,
 references. Record durable decisions and policies as OKF entries, not only in chat or commit
 messages.
 
-**Read `okf/policies/` before starting work. All four are mandatory:**
+**Read `okf/policies/` before starting work. All six are mandatory:**
 
 - [context-first](okf/policies/context-first.md): look OCCT / OCCTSwift documentation up via
   the `context` MCP, then context7 for external libraries, then other ecosystem repos' docs.
@@ -34,11 +34,14 @@ messages.
 - [writing-style](okf/policies/writing-style.md): **no em-dashes anywhere**, including code
   comments, markdown docs, changelogs, commit messages, and PR and issue bodies. The words
   `honest` / `honestly` and reflexive "you're right" affirmations are banned outright.
-
-A fifth policy, [open-source-boundary](okf/policies/open-source-boundary.md), governs
-dependencies: never propose a verb, dependency, or change that would make this repo depend on a
-closed-source project. Downstream closed-source consumers (the OCCTStudio app) wire their own
-proprietary pieces.
+- [code-structure](okf/policies/code-structure.md): new code defaults to one type, or one tight
+  family, per file, named with the repo's existing domain vocabulary. When extending a type in a
+  large file, add `<Type>+<Domain>.swift` rather than appending. A repo that already has blob
+  files remediates them as a scoped initiative, not drive-by. This repo has no blob problem
+  (largest file 912 lines), and this policy is what keeps it that way.
+- [open-source-boundary](okf/policies/open-source-boundary.md): never propose a verb,
+  dependency, or change that would make this repo depend on a closed-source project. Downstream
+  closed-source consumers (the OCCTStudio app) wire their own proprietary pieces.
 
 `okf/` is the only knowledge bundle. An earlier one at `docs/knowledge/` was consolidated into
 it and removed on 2026-08-04; see [`okf/log.md`](okf/log.md).
