@@ -6,7 +6,7 @@
   `value`, `parseVec3` and `vec3` into `GraphIO`, removing 44 copied helper definitions across
   `Sources/occtkit/Commands/`. Single-sourced the verb inventory from `Registry.all` via a new
   `occtkit --verbs` flag, fixing a `make install` bug that silently omitted `graph-select`.
-  Corrected the verb count in ten documents, which had drifted to four different answers.
+  The verb list appeared in ten places and five had gone stale; corrected them.
 * **Creation**: Recorded the single-source-verb-inventory decision.
 
 ## 2026-08-04

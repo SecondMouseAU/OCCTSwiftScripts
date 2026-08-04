@@ -125,7 +125,6 @@ enum BooleanCommand: Subcommand {
         return try parseFlags(args: args)
     }
 
-
     private static func parseFlags(args: [String]) throws -> Request {
         var op: String?, a: String?, b: String?, output: String?
         var i = 0
@@ -146,5 +145,4 @@ enum BooleanCommand: Subcommand {
         }
         return Request(op: op, a: a, b: b, outputPath: output)
     }
-
 }

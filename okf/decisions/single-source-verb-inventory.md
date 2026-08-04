@@ -19,10 +19,17 @@ convenience copy that must be checked against `occtkit --verbs` when verbs chang
 
 # Why
 
-The list had been duplicated across ten places (the Makefile, `CLAUDE.md`, `README.md`,
-`okf/index.md`, `okf/components/index.md`, three `docs/guides/` pages,
-`docs/reference/README.md`, and `context7.json`) and had drifted to four different answers:
-26, 27, 28 and 29.
+The list was duplicated across ten places, and **five of the ten had gone stale**:
+
+| Location | Said | |
+|---|---|---|
+| `README.md`, `okf/index.md`, `okf/components/index.md` | 26 | stale |
+| `CLAUDE.md` (enumerated list, no numeral) | 27 | stale |
+| `Makefile` VERBS (enumerated list, no numeral) | 28 | stale |
+| `docs/guides/architecture.md`, `docs/guides/getting-started.md`, `docs/guides/cookbook/occtkit-cli.md`, `docs/reference/README.md`, `context7.json` | 29 | correct |
+
+`Registry.all` had 29. `docs/reference/occtkit-verbs.md` documented all 29 without stating a
+count, which is why it became the canonical per-verb reference.
 
 The drift was not cosmetic. The Makefile's copy was missing `graph-select`, so `make install`
 silently never created that symlink and the verb was unreachable under its installed name.
