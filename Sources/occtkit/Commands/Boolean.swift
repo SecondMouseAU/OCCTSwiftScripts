@@ -1,4 +1,4 @@
-// Boolean — union / subtract / intersect / split between two BREPs.
+// Boolean: union / subtract / intersect / split between two BREPs.
 //
 // Part of the OCCTMCP-driver verb batch (OCCTSwiftScripts#20). Pure function:
 // reads two input BREPs, applies the requested boolean op, writes a single
@@ -113,31 +113,16 @@ enum BooleanCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
-            return try decodeJSON(data: try readFile(first))
+            return try GraphIO.decodeJSON(Request.self, from: try GraphIO.readFile(first))
         }
         if args.isEmpty || (args.first?.hasPrefix("-") != true && !args.contains("--op")) {
-            // bare `boolean` with no args, or a positional that isn't a .json — treat as stdin JSON
+            // bare `boolean` with no args, or a positional that isn't a .json: treat as stdin JSON
             // unless flags are present
             if !args.contains("--op") {
-                return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+                return try GraphIO.decodeJSON(Request.self, from: FileHandle.standardInput.readDataToEndOfFile())
             }
         }
         return try parseFlags(args: args)
-    }
-
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
-    private static func decodeJSON(data: Data) throws -> Request {
-        do {
-            return try JSONDecoder().decode(Request.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
     }
 
     private static func parseFlags(args: [String]) throws -> Request {
@@ -146,10 +131,10 @@ enum BooleanCommand: Subcommand {
         while i < args.count {
             let arg = args[i]
             switch arg {
-            case "--op":     op = try valueAfter(arg, at: &i, args: args)
-            case "--a":      a = try valueAfter(arg, at: &i, args: args)
-            case "--b":      b = try valueAfter(arg, at: &i, args: args)
-            case "--output": output = try valueAfter(arg, at: &i, args: args)
+            case "--op":     op = try GraphIO.valueAfter(arg, at: &i, args: args)
+            case "--a":      a = try GraphIO.valueAfter(arg, at: &i, args: args)
+            case "--b":      b = try GraphIO.valueAfter(arg, at: &i, args: args)
+            case "--output": output = try GraphIO.valueAfter(arg, at: &i, args: args)
             default:
                 throw ScriptError.message("Unknown flag: \(arg)")
             }
@@ -159,11 +144,5 @@ enum BooleanCommand: Subcommand {
             throw ScriptError.message("--op, --a, --b, and --output are all required")
         }
         return Request(op: op, a: a, b: b, outputPath: output)
-    }
-
-    private static func valueAfter(_ flag: String, at i: inout Int, args: [String]) throws -> String {
-        i += 1
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
     }
 }

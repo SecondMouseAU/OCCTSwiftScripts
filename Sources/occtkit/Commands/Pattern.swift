@@ -1,4 +1,4 @@
-// Pattern — mirror / linear / circular pattern of a BREP.
+// Pattern: mirror / linear / circular pattern of a BREP.
 //
 // Part of the OCCTMCP-driver verb batch (OCCTSwiftScripts#20). Pure function:
 // reads input BREP, generates pattern instances, writes one BREP per instance
@@ -151,7 +151,7 @@ enum PatternCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty || (args.first?.hasPrefix("-") == true && !args.contains("--kind")) {
             return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
@@ -159,20 +159,8 @@ enum PatternCommand: Subcommand {
         return try parseFlags(args: args)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         let kind = try parseKindFromJSON(raw)
         return Request(inputBrep: raw.inputBrep, outputDir: raw.outputDir, kind: kind)
     }
@@ -184,15 +172,15 @@ enum PatternCommand: Subcommand {
                 planeOrigin: try optVec3(raw.planeOrigin, name: "planeOrigin") ?? .zero,
                 planeNormal: try requireMirrorNormal(raw))
         case "linear":
-            guard let dir = raw.direction.map({ try? vec3($0, name: "direction") }) ?? nil,
+            guard let dir = raw.direction.map({ try? GraphIO.vec3($0, name: "direction") }) ?? nil,
                   let spacing = raw.spacing,
                   let count = raw.count else {
                 throw ScriptError.message("linear: direction, spacing, count are required")
             }
             return .linear(direction: dir, spacing: spacing, count: count)
         case "circular":
-            guard let axisOrigin = raw.axisOrigin.map({ try? vec3($0, name: "axisOrigin") }) ?? nil,
-                  let axisDir = raw.axisDirection.map({ try? vec3($0, name: "axisDirection") }) ?? nil,
+            guard let axisOrigin = raw.axisOrigin.map({ try? GraphIO.vec3($0, name: "axisOrigin") }) ?? nil,
+                  let axisDir = raw.axisDirection.map({ try? GraphIO.vec3($0, name: "axisDirection") }) ?? nil,
                   let totalCount = raw.totalCount else {
                 throw ScriptError.message("circular: axisOrigin, axisDirection, totalCount are required")
             }
@@ -204,7 +192,7 @@ enum PatternCommand: Subcommand {
     }
 
     private static func requireMirrorNormal(_ raw: JSONRequest) throws -> SIMD3<Double> {
-        if let pn = raw.planeNormal { return try vec3(pn, name: "planeNormal") }
+        if let pn = raw.planeNormal { return try GraphIO.vec3(pn, name: "planeNormal") }
         if let preset = raw.plane { return try presetPlaneNormal(preset) }
         throw ScriptError.message("mirror: either plane (xy|yz|zx) or planeNormal is required")
     }
@@ -232,16 +220,16 @@ enum PatternCommand: Subcommand {
         while i < args.count {
             let a = args[i]
             switch a {
-            case "--kind":             kind = try valueAfter(a, at: &i, args: args)
-            case "--output-dir":       outputDir = try valueAfter(a, at: &i, args: args)
-            case "--plane":            plane = try valueAfter(a, at: &i, args: args)
-            case "--direction":        direction = try parseVec3(try valueAfter(a, at: &i, args: args), name: a)
-            case "--spacing":          spacing = try parseDouble(try valueAfter(a, at: &i, args: args), name: a)
-            case "--count":            count = try parseInt(try valueAfter(a, at: &i, args: args), name: a)
-            case "--axis-origin":      axisOrigin = try parseVec3(try valueAfter(a, at: &i, args: args), name: a)
-            case "--axis-direction":   axisDirection = try parseVec3(try valueAfter(a, at: &i, args: args), name: a)
-            case "--total-count":      totalCount = try parseInt(try valueAfter(a, at: &i, args: args), name: a)
-            case "--total-angle":      totalAngle = try parseDouble(try valueAfter(a, at: &i, args: args), name: a)
+            case "--kind":             kind = try GraphIO.valueAfter(a, at: &i, args: args)
+            case "--output-dir":       outputDir = try GraphIO.valueAfter(a, at: &i, args: args)
+            case "--plane":            plane = try GraphIO.valueAfter(a, at: &i, args: args)
+            case "--direction":        direction = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--spacing":          spacing = try parseDouble(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--count":            count = try parseInt(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--axis-origin":      axisOrigin = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--axis-direction":   axisDirection = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--total-count":      totalCount = try parseInt(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--total-angle":      totalAngle = try parseDouble(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
             default: throw ScriptError.message("Unknown flag: \(a)")
             }
             i += 1
@@ -280,26 +268,14 @@ enum PatternCommand: Subcommand {
             guard parts.count == 2 else {
                 throw ScriptError.message("--plane must be 'ox,oy,oz;nx,ny,nz'")
             }
-            // origin parsed but not used for mirror normal — left for future point-pinned planes
-            _ = try parseVec3(parts[0], name: "--plane origin")
-            return try parseVec3(parts[1], name: "--plane normal")
+            // origin parsed but not used for mirror normal, left for future point-pinned planes
+            _ = try GraphIO.parseVec3(parts[0], name: "--plane origin")
+            return try GraphIO.parseVec3(parts[1], name: "--plane normal")
         }
         return try presetPlaneNormal(plane)
     }
 
     // MARK: - Helpers
-
-    private static func valueAfter(_ flag: String, at i: inout Int, args: [String]) throws -> String {
-        i += 1
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
-    private static func parseVec3(_ s: String, name: String) throws -> SIMD3<Double> {
-        let v = s.split(separator: ",").compactMap { Double($0) }
-        guard v.count == 3 else { throw ScriptError.message("\(name) expects x,y,z") }
-        return SIMD3(v[0], v[1], v[2])
-    }
 
     private static func parseDouble(_ s: String, name: String) throws -> Double {
         guard let d = Double(s) else { throw ScriptError.message("\(name) expects a number") }
@@ -311,13 +287,8 @@ enum PatternCommand: Subcommand {
         return n
     }
 
-    private static func vec3(_ a: [Double], name: String) throws -> SIMD3<Double> {
-        guard a.count == 3 else { throw ScriptError.message("\(name) must be [x,y,z]") }
-        return SIMD3(a[0], a[1], a[2])
-    }
-
     private static func optVec3(_ a: [Double]?, name: String) throws -> SIMD3<Double>? {
         guard let a else { return nil }
-        return try vec3(a, name: name)
+        return try GraphIO.vec3(a, name: name)
     }
 }

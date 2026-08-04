@@ -1,4 +1,4 @@
-// InspectAssembly — walk an XCAF document's assembly tree and report
+// InspectAssembly: walk an XCAF document's assembly tree and report
 // hierarchy + per-component metadata.
 //
 // Part of the OCCTMCP-driver XCAF batch (OCCTSwiftScripts#23). Pure read.
@@ -69,7 +69,7 @@ enum InspectAssemblyCommand: Subcommand {
         let req = try parseRequest(args: args)
 
         if (req.inputPath as NSString).pathExtension.lowercased() == "brep" {
-            // BREP has no XCAF — emit a degenerate single-node response.
+            // BREP has no XCAF: emit a degenerate single-node response.
             let shape = try GraphIO.loadBREP(at: req.inputPath)
             let bb = shape.bounds
             _ = bb
@@ -213,7 +213,7 @@ enum InspectAssemblyCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--depth") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputPath = args.first, !inputPath.hasPrefix("-") else {
@@ -237,20 +237,8 @@ enum InspectAssemblyCommand: Subcommand {
         return Request(inputPath: inputPath, depth: depth)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(inputPath: raw.inputPath, depth: raw.depth)
     }
 }

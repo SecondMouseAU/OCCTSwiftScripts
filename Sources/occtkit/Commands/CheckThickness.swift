@@ -1,4 +1,4 @@
-// CheckThickness — wall-thickness analysis. Reports min / max / mean
+// CheckThickness: wall-thickness analysis. Reports min / max / mean
 // thickness across UV-grid-sampled faces and flags thin regions.
 //
 // Part of the OCCTMCP-driver engineering-analysis batch (OCCTSwiftScripts#21).
@@ -18,7 +18,7 @@
 //   Face.uvBounds, Face.point(atU:v:), Face.normal(atU:v:),
 //   Shape.intersectLine(origin:direction:) -> [CSIntersection]
 //
-// All primitives in the issue spec are present upstream — no upstream
+// All primitives in the issue spec are present upstream, so no upstream
 // dependency for this verb.
 //
 // Two input modes:
@@ -146,7 +146,7 @@ enum CheckThicknessCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--min-acceptable"), !args.contains("--sampling-density") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
@@ -178,20 +178,8 @@ enum CheckThicknessCommand: Subcommand {
                        samplingDensity: samplingDensity)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputBrep: raw.inputBrep,
             minAcceptable: raw.minAcceptable,

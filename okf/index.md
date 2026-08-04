@@ -10,7 +10,7 @@ timestamp: 2026-06-22
 # OCCTSwiftScripts
 
 > A script harness for rapid iteration on OCCTSwift parametric geometry, the OCCTSwift equivalent of
-> CadQuery / OpenSCAD, plus **occtkit**, a single multi-call CLI bundling ~26 headless verbs
+> CadQuery / OpenSCAD, plus **occtkit**, a single multi-call CLI bundling 29 headless verbs
 > (topology graph, DXF / ISO-128 drawing export, feature recognition, analysis, mesh, XCAF). Every
 > verb accepts flag- or JSON-form input and a generic `--serve` JSONL mode used by OCCTMCP.
 

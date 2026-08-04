@@ -19,7 +19,7 @@ consumers that need it wire their own solver outside `occtkit`.
 
 | Target | Kind | Role |
 |--------|------|------|
-| **ScriptHarness** | library | `ScriptContext`: accumulates geometry, writes BREP per `add()`, writes `manifest.json` on `emit()`. Also `BREPGraphJSONExporter` / `BREPGraphSQLiteExporter` and `GraphIO` (shared argv/BREP/JSON helpers used by every verb). Importable by external packages. |
+| **ScriptHarness** | library | `ScriptContext`: accumulates geometry, writes BREP per `add()`, writes `manifest.json` on `emit()`. Also `BREPGraphJSONExporter` / `BREPGraphSQLiteExporter` and `GraphIO` (shared helpers used by every verb: argv and flag-value parsing, BREP load/write, graph to shape rebuild, request-file reading, JSON decode and emit). Importable by external packages. |
 | **Script** | executable | `Sources/Script/main.swift`, the user-editable iteration scratchpad. |
 | **DrawingComposer** | library | The multi-view ISO drawing orchestrator (`Composer.render(spec:shape:)`) behind `drawing-export`; usable directly without the CLI. |
 | **occtkit** | executable | The multi-call umbrella binary: 29 verbs, dispatched by `argv[0]` basename (installed symlinks) or first positional arg. |

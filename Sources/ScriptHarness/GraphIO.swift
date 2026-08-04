@@ -21,6 +21,27 @@ public enum GraphIO {
         return args[index]
     }
 
+    /// Read the flag value at `i`, throwing if the flag was the last token.
+    /// Use when the caller has already advanced past the flag itself.
+    public static func value(_ args: [String], at i: Int, flag: String) throws -> String {
+        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
+        return args[i]
+    }
+
+    /// Read the value following `flag`, advancing `i` past it.
+    /// Throws if `flag` is the last token.
+    public static func valueAfter(_ flag: String, at i: inout Int, args: [String]) throws -> String {
+        i += 1
+        return try value(args, at: i, flag: flag)
+    }
+
+    /// Parse an `x,y,z` flag value into a vector.
+    public static func parseVec3(_ s: String, name: String) throws -> SIMD3<Double> {
+        let v = s.split(separator: ",").compactMap { Double($0) }
+        guard v.count == 3 else { throw ScriptError.message("\(name) expects x,y,z") }
+        return SIMD3(v[0], v[1], v[2])
+    }
+
     // MARK: - BREP I/O
 
     public static func loadBREP(at path: String) throws -> Shape {
@@ -61,6 +82,34 @@ public enum GraphIO {
         guard !pieces.isEmpty else { return nil }
         if pieces.count == 1 { return pieces[0] }
         return Shape.compound(pieces)
+    }
+
+    // MARK: - Input
+
+    /// Convert a decoded JSON `[x, y, z]` array into a vector.
+    public static func vec3(_ a: [Double], name: String) throws -> SIMD3<Double> {
+        guard a.count == 3 else { throw ScriptError.message("\(name) must be [x,y,z]") }
+        return SIMD3(a[0], a[1], a[2])
+    }
+
+    /// Read a request file from disk, throwing rather than returning nil so the
+    /// `--serve` loop reports a failure envelope instead of exiting.
+    public static func readFile(_ path: String) throws -> Data {
+        guard let bytes = FileManager.default.contents(atPath: path) else {
+            throw ScriptError.message("Failed to read request at \(path)")
+        }
+        return bytes
+    }
+
+    /// Decode `data` into `T`, wrapping any decoding failure in a `ScriptError`.
+    /// Commands whose wire schema differs from their internal request type decode
+    /// the wire type here and map the result themselves.
+    public static func decodeJSON<T: Decodable>(_ type: T.Type = T.self, from data: Data) throws -> T {
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Output

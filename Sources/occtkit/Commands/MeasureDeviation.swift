@@ -1,4 +1,4 @@
-// MeasureDeviation — directed + symmetric surface deviation (one-sided /
+// MeasureDeviation: directed + symmetric surface deviation (one-sided /
 // symmetric Hausdorff) between two BREPs.
 //
 // Where measure-distance returns the *minimum* gap (≈0 for an overlapping
@@ -11,7 +11,7 @@
 // Mesh-based: both inputs are typically meshes (an STL source vs a STEP
 // reconstruction), and meshing once + a KD-tree is far cheaper than N per-point
 // BRep extrema. The per-sample distance is exact point-to-triangle, so the only
-// approximation is the tessellation — tightened by a finer --deflection.
+// approximation is the tessellation, tightened by a finer --deflection.
 //
 // Two input modes:
 //   1. Flag form:
@@ -215,7 +215,7 @@ enum MeasureDeviationCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if args.count == 1, args[0].hasSuffix(".json") {
-            return try decodeJSON(data: try readFile(args[0]))
+            return try decodeJSON(data: try GraphIO.readFile(args[0]))
         }
         if args.isEmpty {
             return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
@@ -248,20 +248,8 @@ enum MeasureDeviationCommand: Subcommand {
         return Request(a: args[0], b: args[1], deflection: deflection, maxSamples: maxSamples)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(a: raw.a, b: raw.b, deflection: raw.deflection,
                        maxSamples: raw.maxSamples ?? 20_000)
     }

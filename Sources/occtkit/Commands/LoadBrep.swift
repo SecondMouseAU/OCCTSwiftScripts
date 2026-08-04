@@ -1,4 +1,4 @@
-// LoadBrep — load a .brep, write a single-body ScriptManifest, return body stats.
+// LoadBrep: load a .brep, write a single-body ScriptManifest, return body stats.
 //
 // Part of the OCCTMCP-driver I/O batch (OCCTSwiftScripts#19). Equivalent to a
 // one-line script that does ctx.add(loadBREP(path), id: ...) + ctx.emit(...),
@@ -97,7 +97,7 @@ enum LoadBrepCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--emit-manifest") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
@@ -134,20 +134,8 @@ enum LoadBrepCommand: Subcommand {
                        allowInvalid: allowInvalid)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(inputBrep: raw.inputBrep, emitManifest: raw.emitManifest,
                        id: raw.id, color: raw.color, allowInvalid: raw.allowInvalid ?? false)
     }

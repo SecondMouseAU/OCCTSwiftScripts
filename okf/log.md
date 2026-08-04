@@ -2,6 +2,15 @@
 
 ## 2026-08-04
 
+* **Update**: Deduplication pass for issue #82. Moved `readFile`, `decodeJSON`, `valueAfter`,
+  `value`, `parseVec3` and `vec3` into `GraphIO`, removing 44 copied helper definitions across
+  `Sources/occtkit/Commands/`. Single-sourced the verb inventory from `Registry.all` via a new
+  `occtkit --verbs` flag, fixing a `make install` bug that silently omitted `graph-select`.
+  The verb list appeared in ten places and five had gone stale; corrected them.
+* **Creation**: Recorded the single-source-verb-inventory decision.
+
+## 2026-08-04
+
 * **Update**: Consolidated the two knowledge bundles into one. `okf/` is now the single
   knowledge store. Migrated the open-source-boundary policy, the OCCTStudio commercial-app
   relationship, and the OKF format reference out of the older `docs/knowledge/` bundle, then

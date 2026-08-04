@@ -1,4 +1,4 @@
-// QueryTopology — find faces / edges / vertices matching criteria, return
+// QueryTopology: find faces / edges / vertices matching criteria, return
 // stable IDs for downstream calls.
 //
 // Part of the OCCTMCP-driver introspection batch (OCCTSwiftScripts#18).
@@ -18,7 +18,7 @@
 //                                offsetCurve | other
 //   minArea / maxArea           (face only)
 //   minLength / maxLength       (edge only)
-//   normalDirection + normalTolerance (face only) — match faces whose normal
+//   normalDirection + normalTolerance (face only): match faces whose normal
 //                                at the UV midpoint is within tolerance
 //                                radians of the given vector
 //
@@ -220,7 +220,7 @@ enum QueryTopologyCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
@@ -263,20 +263,8 @@ enum QueryTopologyCommand: Subcommand {
         return Request(inputBrep: inputBrep, entity: entity, filter: filter, limit: limit)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(inputBrep: raw.inputBrep, entity: raw.entity,
                        filter: raw.filter ?? Filter(), limit: raw.limit)
     }
