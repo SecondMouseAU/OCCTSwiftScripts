@@ -1,4 +1,4 @@
-// AnalyzeClearance — pairwise interference / minimum-clearance check between
+// AnalyzeClearance: pairwise interference / minimum-clearance check between
 // two or more BREPs.
 //
 // Part of the OCCTMCP-driver engineering-analysis batch (OCCTSwiftScripts#21).
@@ -118,7 +118,7 @@ enum AnalyzeClearanceCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            args.count == 1 {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         var inputs: [String] = []
@@ -153,20 +153,8 @@ enum AnalyzeClearanceCommand: Subcommand {
                        maxContacts: maxContacts, computeContacts: computeContacts)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputs: raw.inputs,
             minClearance: raw.minClearance,

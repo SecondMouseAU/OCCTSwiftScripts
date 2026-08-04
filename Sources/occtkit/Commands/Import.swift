@@ -1,10 +1,10 @@
-// Import — multi-format CAD import, write a manifest for OCCTSwiftViewport.
+// Import: multi-format CAD import, write a manifest for OCCTSwiftViewport.
 //
 // Part of the OCCTMCP-driver I/O batch (OCCTSwiftScripts#19). Side effect:
 // writes <emit-manifest>/<id>.brep per top-level body + <emit-manifest>/
 // manifest.json so OCCTSwiftViewport's ScriptWatcher picks it up.
 //
-// V1 supports STEP / IGES / STL / OBJ — these are the OCCT-native formats.
+// V1 supports STEP / IGES / STL / OBJ, the OCCT-native formats.
 // glTF / FBX / 3DS are intentionally deferred: they're not OCCT formats; if
 // they end up wanted, the right place is an upstream OCCTSwift loader.
 //
@@ -268,7 +268,7 @@ enum ImportCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--emit-manifest") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputPath = args.first, !inputPath.hasPrefix("-") else {
@@ -316,20 +316,8 @@ enum ImportCommand: Subcommand {
         return args[i]
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputPath: raw.inputPath,
             emitManifest: raw.emitManifest,

@@ -3,7 +3,10 @@ BINDIR  = $(PREFIX)/bin
 BIN     = occtkit
 BUILD   = .build/release/$(BIN)
 
-VERBS = run graph-validate graph-compact graph-dedup graph-query graph-ml feature-recognize dxf-export drawing-export reconstruct compose-sheet-metal transform boolean pattern metrics query-topology measure-distance measure-deviation load-brep import check-thickness analyze-clearance heal mesh render-preview inspect-assembly set-metadata simplify-mesh
+# The verb list comes from the built binary (`occtkit --verbs`, backed by
+# Registry.all) rather than a second hand-maintained copy here. A duplicated
+# list had already drifted and silently dropped graph-select from `make install`.
+VERBS = $(shell $(BUILD) --verbs 2>/dev/null)
 
 .PHONY: build install uninstall clean help recipe recipes-test recipes-render
 
@@ -41,8 +44,11 @@ install: $(BUILD)
 	@echo "Installed to $(BINDIR)/$(BIN)"
 
 uninstall:
+	@# Remove every symlink in BINDIR that points at the occtkit binary, rather
+	@# than replaying a verb list. This still works when the build tree is gone,
+	@# and it cleans up verbs removed from Registry.all since install time.
+	@find $(BINDIR) -maxdepth 1 -type l -lname '$(BIN)' -exec rm -f {} + 2>/dev/null || true
 	@rm -f $(BINDIR)/$(BIN)
-	@for v in $(VERBS); do rm -f $(BINDIR)/$$v; done
 	@echo "Removed $(BIN) and verb symlinks from $(BINDIR)"
 
 clean:

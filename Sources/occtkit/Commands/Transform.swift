@@ -1,4 +1,4 @@
-// Transform — apply translation / rotation / uniform scale to a BREP.
+// Transform: apply translation / rotation / uniform scale to a BREP.
 //
 // Part of the OCCTMCP-driver verb batch (OCCTSwiftScripts#20). Pure function:
 // reads input BREP, applies the requested ops in declared order
@@ -18,7 +18,7 @@
 //        "rotateAxisAngle": [x,y,z,radians] | "rotateEulerXyz": [x,y,z],
 //        "scale": s | [x,y,z] }
 //
-// Stdout: { "outputPath": "...", "trsf": [16 floats — column-major 4x4] }.
+// Stdout: { "outputPath": "...", "trsf": [16 floats, column-major 4x4] }.
 //
 // Notes:
 //   - OCCTSwift's `scaled(by: Double)` is uniform-only. A non-uniform `--scale x,y,z`
@@ -143,7 +143,7 @@ enum TransformCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         // JSON path: first arg is a file ending .json, OR no positional arg at all (stdin).
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
-            return try decodeJSONRequest(data: try readFile(first))
+            return try decodeJSONRequest(data: try GraphIO.readFile(first))
         }
         if args.isEmpty || (args.first?.hasPrefix("-") == true && !args.contains("--output")) {
             return try decodeJSONRequest(data: FileHandle.standardInput.readDataToEndOfFile())
@@ -151,31 +151,19 @@ enum TransformCommand: Subcommand {
         return try parseFlagRequest(args: args)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSONRequest(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         var req = Request(inputBrep: raw.inputBrep, outputPath: raw.outputPath,
                           translate: nil, rotateAxisAngle: nil,
                           rotateEulerXyz: nil, scale: nil)
-        if let t = raw.translate { req.translate = try vec3(t, name: "translate") }
+        if let t = raw.translate { req.translate = try GraphIO.vec3(t, name: "translate") }
         if let r = raw.rotateAxisAngle {
             guard r.count == 4 else {
                 throw ScriptError.message("rotateAxisAngle must be [x,y,z,radians]")
             }
             req.rotateAxisAngle = (SIMD3(r[0], r[1], r[2]), r[3])
         }
-        if let e = raw.rotateEulerXyz { req.rotateEulerXyz = try vec3(e, name: "rotateEulerXyz") }
+        if let e = raw.rotateEulerXyz { req.rotateEulerXyz = try GraphIO.vec3(e, name: "rotateEulerXyz") }
         if let s = raw.scale {
             switch s {
             case .uniform(let d): req.scale = d
@@ -207,18 +195,18 @@ enum TransformCommand: Subcommand {
             let a = args[i]
             switch a {
             case "--output":
-                output = try valueAfter(a, at: &i, args: args)
+                output = try GraphIO.valueAfter(a, at: &i, args: args)
             case "--translate":
-                translate = try parseVec3(try valueAfter(a, at: &i, args: args), name: a)
+                translate = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
             case "--rotate-axis-angle":
-                let s = try valueAfter(a, at: &i, args: args)
+                let s = try GraphIO.valueAfter(a, at: &i, args: args)
                 let v = s.split(separator: ",").compactMap { Double($0) }
                 guard v.count == 4 else { throw ScriptError.message("\(a) expects x,y,z,radians") }
                 rotateAxisAngle = (SIMD3(v[0], v[1], v[2]), v[3])
             case "--rotate-euler-xyz":
-                rotateEulerXyz = try parseVec3(try valueAfter(a, at: &i, args: args), name: a)
+                rotateEulerXyz = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
             case "--scale":
-                let s = try valueAfter(a, at: &i, args: args)
+                let s = try GraphIO.valueAfter(a, at: &i, args: args)
                 let v = s.split(separator: ",").compactMap { Double($0) }
                 if v.count == 1 {
                     scale = v[0]
@@ -244,23 +232,6 @@ enum TransformCommand: Subcommand {
                           rotateEulerXyz: rotateEulerXyz, scale: scale)
         try validateRotationExclusivity(req)
         return req
-    }
-
-    private static func valueAfter(_ flag: String, at i: inout Int, args: [String]) throws -> String {
-        i += 1
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
-    private static func parseVec3(_ s: String, name: String) throws -> SIMD3<Double> {
-        let v = s.split(separator: ",").compactMap { Double($0) }
-        guard v.count == 3 else { throw ScriptError.message("\(name) expects x,y,z") }
-        return SIMD3(v[0], v[1], v[2])
-    }
-
-    private static func vec3(_ a: [Double], name: String) throws -> SIMD3<Double> {
-        guard a.count == 3 else { throw ScriptError.message("\(name) must be [x,y,z]") }
-        return SIMD3(a[0], a[1], a[2])
     }
 
     private static func validateRotationExclusivity(_ r: Request) throws {

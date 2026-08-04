@@ -1,4 +1,4 @@
-// RenderPreview — render a PNG of one or more BREPs at a named camera angle.
+// RenderPreview: render a PNG of one or more BREPs at a named camera angle.
 //
 // Part of the OCCTMCP-driver verb batch (OCCTSwiftScripts#24). Wraps
 // OCCTSwiftViewport's OffscreenRenderer (closing OCCTSwiftViewport#18).
@@ -89,7 +89,7 @@ enum RenderPreviewCommand: Subcommand {
         /// World origin (0, 0, 0). Useful when the model is positioned away
         /// from origin and you want a fixed world reference.
         case origin
-        /// Union bbox centre. Centred on the model — but for parts whose
+        /// Union bbox centre. Centred on the model, but for parts whose
         /// bbox spans the origin, two of the three arrows hide inside the
         /// geometry. Pre-#axes-position-flag default.
         case center
@@ -195,7 +195,7 @@ enum RenderPreviewCommand: Subcommand {
                 let (kind, idx, label) = subShapeKey(ref)
                 guard let sub = source.subShape(type: kind, index: idx) else {
                     FileHandle.standardError.write(Data(
-                        "warn: --highlight \(label) — sub-shape not found on source\n".utf8))
+                        "warn: --highlight \(label): sub-shape not found on source\n".utf8))
                     continue
                 }
                 let (highlightBody, _) = OCCTSwiftTools.CADFileLoader.shapeToBodyAndMetadata(
@@ -208,7 +208,7 @@ enum RenderPreviewCommand: Subcommand {
         let cameraState = makeCameraState(spec: req.camera, center: center, diagonal: diagonal)
 
         // OffscreenRenderer is @MainActor-isolated. main.swift's dispatch() is
-        // already @MainActor, so when this verb runs we're on the main actor —
+        // already @MainActor, so when this verb runs we're on the main actor,
         // but the Subcommand protocol's `run(args:)` requirement is
         // nonisolated, so we hop in via assumeIsolated to call the renderer.
         let outURL = URL(fileURLWithPath: req.outputPath)
@@ -314,7 +314,7 @@ enum RenderPreviewCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--output") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
 
@@ -340,55 +340,55 @@ enum RenderPreviewCommand: Subcommand {
             let a = args[i]
             switch a {
             case "--output":
-                i += 1; output = try v(args, i, "--output")
+                i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
             case "--camera":
                 i += 1
-                let s = try v(args, i, "--camera")
+                let s = try GraphIO.value(args, at: i, flag: "--camera")
                 guard let p = CameraSpec.Preset(rawValue: s) else {
                     throw ScriptError.message("--camera must be iso|front|back|top|bottom|left|right (got \(s))")
                 }
                 cameraPreset = p
             case "--camera-position":
-                i += 1; cameraPosition = try parseFloat3(try v(args, i, "--camera-position"), name: a)
+                i += 1; cameraPosition = try parseFloat3(try GraphIO.value(args, at: i, flag: "--camera-position"), name: a)
             case "--camera-target":
-                i += 1; cameraTarget = try parseFloat3(try v(args, i, "--camera-target"), name: a)
+                i += 1; cameraTarget = try parseFloat3(try GraphIO.value(args, at: i, flag: "--camera-target"), name: a)
             case "--camera-up":
-                i += 1; cameraUp = try parseFloat3(try v(args, i, "--camera-up"), name: a)
+                i += 1; cameraUp = try parseFloat3(try GraphIO.value(args, at: i, flag: "--camera-up"), name: a)
             case "--width":
                 i += 1
-                guard let n = Int(try v(args, i, "--width")) else { throw ScriptError.message("--width expects an integer") }
+                guard let n = Int(try GraphIO.value(args, at: i, flag: "--width")) else { throw ScriptError.message("--width expects an integer") }
                 width = n
             case "--height":
                 i += 1
-                guard let n = Int(try v(args, i, "--height")) else { throw ScriptError.message("--height expects an integer") }
+                guard let n = Int(try GraphIO.value(args, at: i, flag: "--height")) else { throw ScriptError.message("--height expects an integer") }
                 height = n
             case "--display-mode":
                 i += 1
-                displayMode = try parseDisplayMode(try v(args, i, "--display-mode"))
+                displayMode = try parseDisplayMode(try GraphIO.value(args, at: i, flag: "--display-mode"))
             case "--background":
                 i += 1
-                background = parseBackground(try v(args, i, "--background"))
+                background = parseBackground(try GraphIO.value(args, at: i, flag: "--background"))
             case "--show-axes":
                 showAxes = true
             case "--axes-position":
                 i += 1
-                axesPosition = try parseAxesPosition(try v(args, i, "--axes-position"))
+                axesPosition = try parseAxesPosition(try GraphIO.value(args, at: i, flag: "--axes-position"))
             case "--show-workplane":
                 i += 1
-                let s = try v(args, i, "--show-workplane")
+                let s = try GraphIO.value(args, at: i, flag: "--show-workplane")
                 guard let p = WorkPlanePreset(rawValue: s) else {
                     throw ScriptError.message("--show-workplane must be xy|yz|xz (got \(s))")
                 }
                 workPlane = p
             case "--highlight":
                 i += 1
-                let s = try v(args, i, "--highlight")
+                let s = try GraphIO.value(args, at: i, flag: "--highlight")
                 highlights = try s.split(separator: ",").map {
                     try parseTopologyRef(String($0).trimmingCharacters(in: .whitespaces))
                 }
             case "--highlight-color":
                 i += 1
-                highlightColor = parseBackground(try v(args, i, "--highlight-color"))
+                highlightColor = parseBackground(try GraphIO.value(args, at: i, flag: "--highlight-color"))
             default:
                 if a.hasPrefix("-") { throw ScriptError.message("Unknown flag: \(a)") }
                 inputs.append(a)
@@ -494,31 +494,14 @@ enum RenderPreviewCommand: Subcommand {
         }
     }
 
-    private static func v(_ args: [String], _ i: Int, _ flag: String) throws -> String {
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
     private static func parseFloat3(_ s: String, name: String) throws -> SIMD3<Float> {
         let v = s.split(separator: ",").compactMap { Float($0) }
         guard v.count == 3 else { throw ScriptError.message("\(name) expects x,y,z") }
         return SIMD3(v[0], v[1], v[2])
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         var camera: CameraSpec = .preset(.iso)
         if let p = raw.cameraPosition, let t = raw.cameraTarget, p.count == 3, t.count == 3 {
             let up = (raw.cameraUp?.count == 3) ?

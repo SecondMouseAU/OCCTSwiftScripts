@@ -5,9 +5,9 @@
 
 A script harness for rapid iteration on [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) parametric geometry. Edit a Swift script using the **full OCCTSwift API**, run it, and see results instantly in the [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) demo app.
 
-This is the OCCTSwift equivalent of CadQuery or OpenSCAD — write parametric, constraint-based CAD code and get visual + file feedback immediately.
+This is the OCCTSwift equivalent of CadQuery or OpenSCAD: write parametric, constraint-based CAD code and get visual + file feedback immediately.
 
-Part of the [OCCTSwift ecosystem](https://github.com/SecondMouseAU/OCCTSwift/blob/main/docs/ecosystem.md) — see the ecosystem map for how this package fits with the kernel, viewport, and sibling layers. SemVer-stable from v1.0.0.
+Part of the [OCCTSwift ecosystem](https://github.com/SecondMouseAU/OCCTSwift/blob/main/docs/ecosystem.md); see the ecosystem map for how this package fits with the kernel, viewport, and sibling layers. SemVer-stable from v1.0.0.
 
 ## Quick Start
 
@@ -41,7 +41,7 @@ echo '{"outputDir":"/tmp/out","outputName":"shaft","features":[{"kind":"revolve"
 occtkit run my_script.swift --format brep,graph-sqlite
 
 # service mode: read JSONL `{"args":[...]}` requests on stdin, get one JSONL
-# envelope per request — `{"ok":true|false,"exit":N,"stdout":"...","stderr":"...","error":"..."?}`.
+# envelope per request: `{"ok":true|false,"exit":N,"stdout":"...","stderr":"...","error":"..."?}`.
 # The subcommand's own stdout/stderr (and inherited child-process output) are
 # captured *into* the envelope, not leaked.
 printf '{"args":["a.brep"]}\n{"args":["b.brep"]}\n' | occtkit graph-validate --serve
@@ -50,12 +50,13 @@ printf '{"args":["a.brep"]}\n{"args":["b.brep"]}\n' | occtkit graph-validate --s
 make uninstall
 ```
 
-Subcommands (26 verbs as of v0.8.1):
+Subcommands (29 verbs). `occtkit --verbs` prints the authoritative list; the per-verb reference
+is [`docs/reference/occtkit-verbs.md`](docs/reference/occtkit-verbs.md).
 
 | Domain | Verbs |
 |---|---|
 | Script host | `run` |
-| Topology graph | `graph-validate`, `graph-compact`, `graph-dedup`, `graph-query`, `graph-ml` |
+| Topology graph | `graph-validate`, `graph-compact`, `graph-dedup`, `graph-query`, `graph-ml`, `graph-select` |
 | Drawings & export | `dxf-export`, `drawing-export` |
 | Composition | `compose-sheet-metal`, `reconstruct` |
 | Construction | `transform`, `boolean`, `pattern` |
@@ -66,11 +67,11 @@ Subcommands (26 verbs as of v0.8.1):
 | Render | `render-preview` |
 | XCAF | `inspect-assembly`, `set-metadata` |
 
-`occtkit --help` lists them with one-line summaries. Each verb accepts both flag-form and JSON-form (stdin or file path) input, plus a generic `--serve` mode that reads JSONL `{"args":[...]}` requests and emits JSONL envelopes — used by OCCTMCP and any other JSON-driven consumer.
+`occtkit --help` lists them with one-line summaries. Each verb accepts both flag-form and JSON-form (stdin or file path) input, plus a generic `--serve` mode that reads JSONL `{"args":[...]}` requests and emits JSONL envelopes, used by OCCTMCP and any other JSON-driven consumer.
 
 > **Note**: 2D constraint solving (previously the `solve-sketch` verb) has been removed from occtkit to keep this project free of closed-source dependencies. Downstream consumers that need constraint-based sketch solving should wire up their own solver (e.g., via a separate CLI) and call it outside occtkit.
 
-**`drawing-export`** produces a complete ISO 128-30 multi-view technical drawing as DXF R12: ISO 5457 sheet border + centring marks, ISO 7200 title block (with material / weight / revision / sheet number / etc.), ISO 5456-2 first/third-angle projection symbol, HLR orthographic views, section views (auto-hatched per ISO 128-50), cutting-plane lines + labels (ISO 128-40), auto-centerlines (revolution axes) + auto-centermarks (circular features), ISO 6410 cosmetic threads, ISO 1302 surface-finish symbols, ISO 1101 GD&T feature-control frames, detail views, and user-specified linear/radial/diameter/angular dimensions. ISO 5455 standard scales auto-snap. Reads a JSON spec on stdin or from an argv path. See `Sources/occtkit/Drawing/Spec.swift` for the full schema. Implementation orchestrates OCCTSwift v0.147+ primitives — see CLAUDE.md for the exact API set.
+**`drawing-export`** produces a complete ISO 128-30 multi-view technical drawing as DXF R12: ISO 5457 sheet border + centring marks, ISO 7200 title block (with material / weight / revision / sheet number / etc.), ISO 5456-2 first/third-angle projection symbol, HLR orthographic views, section views (auto-hatched per ISO 128-50), cutting-plane lines + labels (ISO 128-40), auto-centerlines (revolution axes) + auto-centermarks (circular features), ISO 6410 cosmetic threads, ISO 1302 surface-finish symbols, ISO 1101 GD&T feature-control frames, detail views, and user-specified linear/radial/diameter/angular dimensions. ISO 5455 standard scales auto-snap. Reads a JSON spec on stdin or from an argv path. See `Sources/occtkit/Drawing/Spec.swift` for the full schema. Implementation orchestrates OCCTSwift v0.147+ primitives; see CLAUDE.md for the exact API set.
 
 **`reconstruct`** builds a BREP from a JSON `[FeatureSpec]` payload via OCCTSwift's `FeatureReconstructor`. Request schema `{outputDir, outputName?, features:[…]}` where each feature has `kind` (`revolve`/`extrude`/`hole`/`thread`/`fillet`/`chamfer`) and snake_case fields. Closes #3.
 
@@ -98,9 +99,9 @@ The script has access to the **entire OCCTSwift API** (~400+ methods):
 | **Patterns** | `.linearPattern(direction:spacing:count:)`, `.circularPattern(...)` |
 | **Analysis** | `.volume`, `.surfaceArea`, `.centerOfMass`, `.bounds`, `.distance(to:)` |
 | **Healing** | `.healed()`, `.fixed(tolerance:)`, `.unified(...)`, `.simplified(...)` |
-| **Curves** | `Curve2D`, `Curve3D` — bezier, bspline, approximate, intersect |
+| **Curves** | `Curve2D`, `Curve3D`: bezier, bspline, approximate, intersect |
 | **Surfaces** | `Surface.plane`, `.bezier`, `.bspline`, `.pipe`, `.revolution`, `.extrusion` |
-| **2D Solvers** | `Curve2D.GccAna` — tangent circles/lines, constraint solvers |
+| **2D Solvers** | `Curve2D.GccAna`: tangent circles/lines, constraint solvers |
 | **File I/O** | `Shape.load(from:)`, `.loadSTEP`, `.loadBREP`, `Document` (XDE assembly) |
 | **GD&T** | `Document.dimensions`, `.geomTolerances`, `.datums` |
 
@@ -121,7 +122,7 @@ Sources/Script/main.swift    ──swift run──>  ~/.occtswift-scripts/output
 
 1. `ScriptContext` writes each body as a `.brep` file (~1ms each)
 2. `emit()` writes a combined `output.step` for external tool interop (ezdxf, FreeCAD, etc.)
-3. `emit()` writes `manifest.json` last — the file watcher triggers on this
+3. `emit()` writes `manifest.json` last, and the file watcher triggers on this
 
 ## API Reference
 
@@ -157,11 +158,11 @@ try ctx.addCompound([shape1, shape2], id: "assembly", color: C.gray)
 
 ### ScriptContext.add (Wire)
 
-Same parameters as Shape (minus roughness/metallic). Wire is converted to a Shape internally — BREP preserves wire topology, displayed as wireframe edges.
+Same parameters as Shape (minus roughness/metallic). Wire is converted to a Shape internally; BREP preserves wire topology, displayed as wireframe edges.
 
 ### ScriptContext.add (Edge)
 
-Same as Wire — single edge converted and preserved.
+Same as Wire: single edge converted and preserved.
 
 ### ScriptContext.emit
 
@@ -216,7 +217,7 @@ try ctx.emit(description: "Parametric L-bracket")
 
 ## Examples / Recipes
 
-The [`recipes/`](recipes/) cookbook holds self-contained, parametric worked examples —
+The [`recipes/`](recipes/) cookbook holds self-contained, parametric worked examples:
 copy a folder, tweak the parameters, run:
 
 | # | Recipe | What it shows |
@@ -239,7 +240,7 @@ See [`recipes/README.md`](recipes/README.md) for the full index and contributor 
 
 ## Output Directory
 
-`~/.occtswift-scripts/output/` — cleaned on each run.
+`~/.occtswift-scripts/output/`: cleaned on each run.
 
 - **BREP files**: loaded by viewport app, preserves exact B-Rep topology
 - **output.step**: combined geometry for external tools (FreeCAD, ezdxf, STEPUtils, etc.)
@@ -258,7 +259,7 @@ See [`recipes/README.md`](recipes/README.md) for the full index and contributor 
 .product(name: "DrawingComposer", package: "OCCTSwiftScripts"),
 ```
 
-The `occtkit` executable is a separate target — install via the `Makefile` above when you want the command-line surface.
+The `occtkit` executable is a separate target; install via the `Makefile` above when you want the command-line surface.
 
 ## Requirements
 
@@ -269,4 +270,4 @@ The `occtkit` executable is a separate target — install via the `Makefile` abo
 - [OCCTSwiftTools](https://github.com/SecondMouseAU/OCCTSwiftTools) `>= 1.0.0` (bridge layer used by `render-preview` for Shape→ViewportBody conversion)
 - [OCCTSwiftAIS](https://github.com/SecondMouseAU/OCCTSwiftAIS) `>= 1.0.0` (headless overlays for `render-preview`'s `--show-axes` / `--show-workplane` / `--highlight`)
 - [OCCTSwiftMesh](https://github.com/SecondMouseAU/OCCTSwiftMesh) `>= 1.0.0` (powers `simplify-mesh`)
-- [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) `>= 1.7.5` (powers `graph-ml`'s ML feature export; floor raised from `>= 1.0.0, < 1.1.0` to stay compatible with OCCTSwiftTools' own `>= 1.7.0` requirement, see OCCTSwiftScripts#80 — no narrower product avoids OCCTSwiftIO's mesh-IO stack, see `Package.swift`)
+- [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) `>= 1.7.5` (powers `graph-ml`'s ML feature export; floor raised from `>= 1.0.0, < 1.1.0` to stay compatible with OCCTSwiftTools' own `>= 1.7.0` requirement, see OCCTSwiftScripts#80; no narrower product avoids OCCTSwiftIO's mesh-IO stack, see `Package.swift`)

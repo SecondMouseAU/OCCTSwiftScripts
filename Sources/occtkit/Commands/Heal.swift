@@ -1,4 +1,4 @@
-// Heal — heal imported / non-watertight geometry via OCCTSwift's ShapeFixer.
+// Heal: heal imported / non-watertight geometry via OCCTSwift's ShapeFixer.
 //
 // Part of the OCCTMCP-driver engineering-analysis batch (OCCTSwiftScripts#21).
 // Writes a new BREP (does not mutate the input). Returns before/after stats
@@ -6,7 +6,7 @@
 //
 // OCCTSwift v0.156's `ShapeFixer` exposes precision tuning
 // (setPrecision / setMaxTolerance / setMinTolerance) and a single perform()
-// pass — not the per-fix toggles the issue's spec sketches (`--fix-small-edges`
+// pass, not the per-fix toggles the issue's spec sketches (`--fix-small-edges`
 // / `--fix-small-faces` / `--fix-gaps` / `--fix-self-intersection` /
 // `--fix-orientation` / `--unify-domain`). The verb accepts those flags for
 // forward compatibility but currently maps them onto precision tuning;
@@ -159,7 +159,7 @@ enum HealCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--output") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
@@ -172,22 +172,22 @@ enum HealCommand: Subcommand {
         var i = 1
         while i < args.count {
             switch args[i] {
-            case "--output":            i += 1; output = try v(args, i, "--output")
+            case "--output":            i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
             case "--tolerance":
                 i += 1
-                guard let d = Double(try v(args, i, "--tolerance")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--tolerance")) else {
                     throw ScriptError.message("--tolerance expects a number")
                 }
                 tolerance = d
             case "--max-tolerance":
                 i += 1
-                guard let d = Double(try v(args, i, "--max-tolerance")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--max-tolerance")) else {
                     throw ScriptError.message("--max-tolerance expects a number")
                 }
                 maxTol = d
             case "--min-tolerance":
                 i += 1
-                guard let d = Double(try v(args, i, "--min-tolerance")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--min-tolerance")) else {
                     throw ScriptError.message("--min-tolerance expects a number")
                 }
                 minTol = d
@@ -218,25 +218,8 @@ enum HealCommand: Subcommand {
         )
     }
 
-    private static func v(_ args: [String], _ i: Int, _ flag: String) throws -> String {
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputBrep: raw.inputBrep, outputPath: raw.outputPath,
             tolerance: raw.tolerance, maxTolerance: raw.maxTolerance,

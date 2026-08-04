@@ -1,4 +1,4 @@
-// SetMetadata — write document- or component-level XCAF metadata onto an
+// SetMetadata: write document- or component-level XCAF metadata onto an
 // OCAF document and save it.
 //
 // Part of the OCCTMCP-driver XCAF batch (OCCTSwiftScripts#23). Writes a
@@ -143,7 +143,7 @@ enum SetMetadataCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--output") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputPath = args.first, !inputPath.hasPrefix("-") else {
@@ -159,35 +159,35 @@ enum SetMetadataCommand: Subcommand {
         var i = 1
         while i < args.count {
             switch args[i] {
-            case "--output":         i += 1; output = try v(args, i, "--output")
+            case "--output":         i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
             case "--scope":
                 i += 1
-                let raw = try v(args, i, "--scope")
+                let raw = try GraphIO.value(args, at: i, flag: "--scope")
                 guard let s = Scope(rawValue: raw) else {
                     throw ScriptError.message("--scope must be document|component (got \(raw))")
                 }
                 scope = s
             case "--component-id":
                 i += 1
-                let raw = try v(args, i, "--component-id")
+                let raw = try GraphIO.value(args, at: i, flag: "--component-id")
                 guard let n = Int64(raw) else {
                     throw ScriptError.message("--component-id expects an int64")
                 }
                 componentId = n
-            case "--title":          i += 1; title = try v(args, i, "--title")
-            case "--drawn-by":       i += 1; drawnBy = try v(args, i, "--drawn-by")
-            case "--material":       i += 1; material = try v(args, i, "--material")
+            case "--title":          i += 1; title = try GraphIO.value(args, at: i, flag: "--title")
+            case "--drawn-by":       i += 1; drawnBy = try GraphIO.value(args, at: i, flag: "--drawn-by")
+            case "--material":       i += 1; material = try GraphIO.value(args, at: i, flag: "--material")
             case "--weight":
                 i += 1
-                guard let d = Double(try v(args, i, "--weight")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--weight")) else {
                     throw ScriptError.message("--weight expects a number")
                 }
                 weight = d
-            case "--revision":       i += 1; revision = try v(args, i, "--revision")
-            case "--part-number":    i += 1; partNumber = try v(args, i, "--part-number")
+            case "--revision":       i += 1; revision = try GraphIO.value(args, at: i, flag: "--revision")
+            case "--part-number":    i += 1; partNumber = try GraphIO.value(args, at: i, flag: "--part-number")
             case "--custom-attr":
                 i += 1
-                let pair = try v(args, i, "--custom-attr")
+                let pair = try GraphIO.value(args, at: i, flag: "--custom-attr")
                 guard let eq = pair.firstIndex(of: "=") else {
                     throw ScriptError.message("--custom-attr expects key=value (got \(pair))")
                 }
@@ -207,25 +207,8 @@ enum SetMetadataCommand: Subcommand {
         )
     }
 
-    private static func v(_ args: [String], _ i: Int, _ flag: String) throws -> String {
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputPath: raw.inputPath, outputPath: raw.outputPath,
             scope: raw.scope ?? .document, componentId: raw.componentId,

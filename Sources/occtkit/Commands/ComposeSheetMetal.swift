@@ -1,9 +1,9 @@
-// ComposeSheetMetal — JSON sheet-metal spec → BREP via OCCTSwift.SheetMetal.
+// ComposeSheetMetal: JSON sheet-metal spec → BREP via OCCTSwift.SheetMetal.
 //
 // Closes OCCTSwiftScripts#10. Wraps the SheetMetal namespace shipped in
 // OCCTSwift v0.151 (closing OCCTSwift#85). Kept as a dedicated verb rather
 // than folded into `reconstruct` because SheetMetal lives in its own
-// namespace upstream — `FeatureReconstructor.build` does not dispatch
+// namespace upstream: `FeatureReconstructor.build` does not dispatch
 // SheetMetal entries, and the upstream split anticipates the reverse
 // direction (bent BRep → flat pattern) that does not fit FeatureSpec's
 // one-way contract.
@@ -14,7 +14,7 @@
 //   thickness   sheet thickness; matches upstream `Builder(thickness:)`
 //   flanges     [{ id, profile: [[x,y], ...], origin: [x,y,z],
 //                  uAxis:  [x,y,z], vAxis?: [x,y,z], normal: [x,y,z] }]
-//                — vAxis defaults to cross(normal, uAxis) per upstream.
+//                  vAxis defaults to cross(normal, uAxis) per upstream.
 //   bends       [{ from, to, radius }]   (optional; default [])
 //
 // Stdout: { "shape": "<path>", "flanges": <int>, "bends": <int> }
@@ -72,12 +72,7 @@ enum ComposeSheetMetalCommand: Subcommand {
             data = FileHandle.standardInput.readDataToEndOfFile()
         }
 
-        let request: Request
-        do {
-            request = try JSONDecoder().decode(Request.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let request = try GraphIO.decodeJSON(Request.self, from: data)
 
         let flanges = try request.flanges.map(buildFlange)
         let bends = (request.bends ?? []).map {

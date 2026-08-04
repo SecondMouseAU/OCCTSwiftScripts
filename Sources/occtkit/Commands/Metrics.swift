@@ -1,4 +1,4 @@
-// Metrics — volume / surface area / center of mass / bounding box / principal axes.
+// Metrics: volume / surface area / center of mass / bounding box / principal axes.
 //
 // Part of the OCCTMCP-driver introspection batch (OCCTSwiftScripts#18).
 // Pure read: input BREP -> JSON envelope on stdout. No file output.
@@ -115,7 +115,7 @@ enum MetricsCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         // Flag form
@@ -138,20 +138,8 @@ enum MetricsCommand: Subcommand {
         return Request(inputBrep: inputBrep, metrics: metrics)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(inputBrep: raw.inputBrep,
                        metrics: raw.metrics.map(Set.init))
     }

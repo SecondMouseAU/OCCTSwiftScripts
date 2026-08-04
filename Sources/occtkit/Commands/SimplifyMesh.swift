@@ -1,4 +1,4 @@
-// SimplifyMesh — QEM mesh decimation via OCCTSwiftMesh.
+// SimplifyMesh: QEM mesh decimation via OCCTSwiftMesh.
 //
 // Closes the second half of #22. OCCTSwift#92 was closed as out-of-scope
 // (mesh-domain algorithms ruled out of OCCT-core wrapper); the work moved
@@ -115,7 +115,7 @@ enum SimplifyMeshCommand: Subcommand {
         )
         guard let result = inputMesh.simplified(options) else {
             throw ScriptError.message(
-                "Simplification failed — check options (need exactly one of --target-triangle-count / --target-reduction; values must be in valid ranges)")
+                "Simplification failed: check options (need exactly one of --target-triangle-count / --target-reduction; values must be in valid ranges)")
         }
         let afterMeanAR = meanAspectRatio(of: result.mesh)
 
@@ -223,7 +223,7 @@ enum SimplifyMeshCommand: Subcommand {
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--output") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
@@ -240,16 +240,16 @@ enum SimplifyMeshCommand: Subcommand {
         var i = 1
         while i < args.count {
             switch args[i] {
-            case "--output":          i += 1; output = try v(args, i, "--output")
+            case "--output":          i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
             case "--target-triangle-count":
                 i += 1
-                guard let n = Int(try v(args, i, "--target-triangle-count")) else {
+                guard let n = Int(try GraphIO.value(args, at: i, flag: "--target-triangle-count")) else {
                     throw ScriptError.message("--target-triangle-count expects an integer")
                 }
                 targetTriangleCount = n
             case "--target-reduction":
                 i += 1
-                guard let d = Double(try v(args, i, "--target-reduction")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--target-reduction")) else {
                     throw ScriptError.message("--target-reduction expects a number")
                 }
                 targetReduction = d
@@ -259,19 +259,19 @@ enum SimplifyMeshCommand: Subcommand {
             case "--no-preserve-topology":          preserveTopology = false
             case "--max-hausdorff-distance":
                 i += 1
-                guard let d = Double(try v(args, i, "--max-hausdorff-distance")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--max-hausdorff-distance")) else {
                     throw ScriptError.message("--max-hausdorff-distance expects a number")
                 }
                 maxHausdorff = d
             case "--linear-deflection":
                 i += 1
-                guard let d = Double(try v(args, i, "--linear-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--linear-deflection")) else {
                     throw ScriptError.message("--linear-deflection expects a number")
                 }
                 linearDeflection = d
             case "--angular-deflection":
                 i += 1
-                guard let d = Double(try v(args, i, "--angular-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--angular-deflection")) else {
                     throw ScriptError.message("--angular-deflection expects a number")
                 }
                 angularDeflection = d
@@ -289,25 +289,8 @@ enum SimplifyMeshCommand: Subcommand {
         )
     }
 
-    private static func v(_ args: [String], _ i: Int, _ flag: String) throws -> String {
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputBrep: raw.inputBrep, outputPath: raw.outputPath,
             targetTriangleCount: raw.targetTriangleCount,

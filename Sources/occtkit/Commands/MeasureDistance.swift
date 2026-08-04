@@ -1,4 +1,4 @@
-// MeasureDistance — minimum distance / contacts between two BREPs (or a
+// MeasureDistance: minimum distance / contacts between two BREPs (or a
 // BREP and a point).
 //
 // Part of the OCCTMCP-driver introspection batch (OCCTSwiftScripts#18).
@@ -15,7 +15,7 @@
 //      Refs supported (v1):
 //        - omitted               -> whole shape
 //        - "point:x,y,z"         -> a point in space (synthesised as a vertex)
-//      Sub-entity refs ("face[N]", "edge[N]", "vertex[N]") are deferred —
+//      Sub-entity refs ("face[N]", "edge[N]", "vertex[N]") are deferred:
 //      the shape-vs-shape distance over the parent BREPs already returns
 //      contacts that include sub-entity provenance via the underlying
 //      DistanceSolution. Callers can use query-topology to identify which
@@ -120,11 +120,11 @@ enum MeasureDistanceCommand: Subcommand {
            args.count == 1 || args[1].hasPrefix("-") == false {
             // .json with no other positional likely means JSON file
             if args.count == 1 {
-                return try decodeJSON(data: try readFile(first))
+                return try decodeJSON(data: try GraphIO.readFile(first))
             }
         }
         if args.count == 1, args[0].hasSuffix(".json") {
-            return try decodeJSON(data: try readFile(args[0]))
+            return try decodeJSON(data: try GraphIO.readFile(args[0]))
         }
         if args.isEmpty {
             return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
@@ -157,20 +157,8 @@ enum MeasureDistanceCommand: Subcommand {
                        computeContacts: computeContacts)
     }
 
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(a: raw.a, b: raw.b, fromRef: raw.fromRef, toRef: raw.toRef,
                        computeContacts: raw.computeContacts ?? false)
     }

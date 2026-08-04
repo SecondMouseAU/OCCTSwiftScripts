@@ -1,4 +1,4 @@
-// Mesh — generate a triangle mesh from a BREP via BRepMesh_IncrementalMesh.
+// Mesh: generate a triangle mesh from a BREP via BRepMesh_IncrementalMesh.
 //
 // Part of the OCCTMCP-driver mesh batch (OCCTSwiftScripts#22). Pure read.
 // Returns triangle data inline up to a 100K-triangle threshold; above that
@@ -12,12 +12,12 @@
 //     (collinear or repeated vertices).
 //   - nonManifoldEdges: undirected edges shared by != 2 triangles.
 //
-// `simplify-mesh` (the second half of #22) is deferred — mesh decimation /
+// `simplify-mesh` (the second half of #22) is deferred. Mesh decimation /
 // QEM was filed against OCCTSwift core as OCCTSwift#92 but closed as
 // out-of-scope; mesh-domain algorithms (decimation, smoothing, repair,
 // remeshing) now live in a sibling repo `OCCTSwiftMesh` that vendors
 // meshoptimizer (BSD-2-Clause). The v0.1.0 implementation is tracked at
-// gsdali/OCCTSwiftMesh#1 — once it ships, this verb's sibling
+// gsdali/OCCTSwiftMesh#1. Once it ships, this verb's sibling
 // `simplify-mesh` adds OCCTSwiftMesh as a SPM dep and wraps
 // Mesh.simplified(_:) per the API spec preserved in
 // OCCTSwiftMesh's docs/INITIAL_IMPLEMENTATION.md.
@@ -214,7 +214,7 @@ enum MeshCommand: Subcommand {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
            !args.contains("--linear-deflection") && !args.contains("--angular-deflection") &&
             !args.contains("--output") {
-            return try decodeJSON(data: try readFile(first))
+            return try decodeJSON(data: try GraphIO.readFile(first))
         }
         if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
@@ -230,18 +230,18 @@ enum MeshCommand: Subcommand {
             switch args[i] {
             case "--linear-deflection":
                 i += 1
-                guard let d = Double(try v(args, i, "--linear-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--linear-deflection")) else {
                     throw ScriptError.message("--linear-deflection expects a number")
                 }
                 linear = d
             case "--angular-deflection":
                 i += 1
-                guard let d = Double(try v(args, i, "--angular-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--angular-deflection")) else {
                     throw ScriptError.message("--angular-deflection expects a number")
                 }
                 angular = d
             case "--parallel":               parallel = true
-            case "--output":                 i += 1; output = try v(args, i, "--output")
+            case "--output":                 i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
             case "--no-return-geometry":     returnGeometry = false
             case "--return-geometry":        returnGeometry = true
             default: throw ScriptError.message("Unknown flag: \(args[i])")
@@ -254,25 +254,8 @@ enum MeshCommand: Subcommand {
         )
     }
 
-    private static func v(_ args: [String], _ i: Int, _ flag: String) throws -> String {
-        guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
-        return args[i]
-    }
-
-    private static func readFile(_ path: String) throws -> Data {
-        guard let bytes = FileManager.default.contents(atPath: path) else {
-            throw ScriptError.message("Failed to read request at \(path)")
-        }
-        return bytes
-    }
-
     private static func decodeJSON(data: Data) throws -> Request {
-        let raw: JSONRequest
-        do {
-            raw = try JSONDecoder().decode(JSONRequest.self, from: data)
-        } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
-        }
+        let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         return Request(
             inputBrep: raw.inputBrep,
             linearDeflection: raw.linearDeflection ?? 0.1,

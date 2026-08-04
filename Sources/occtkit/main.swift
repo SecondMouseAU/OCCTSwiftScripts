@@ -1,4 +1,4 @@
-// occtkit — multi-call dispatcher for the OCCTSwift script suite.
+// occtkit: multi-call dispatcher for the OCCTSwift script suite.
 //
 // Dispatch order:
 //   1. argv[0] basename matches a subcommand → use it (busybox-style symlinks).
@@ -13,7 +13,7 @@
 //    "stderr": "<captured>", "error": "<msg>"?}
 //
 // `error` is present only when ok=false. Exactly one envelope object is
-// emitted per stdin request line — including for malformed requests, build
+// emitted per stdin request line, including for malformed requests, build
 // failures, and `Run` invocations whose inner subprocess wrote to inherited
 // stdout/stderr (those streams are captured into the envelope, not leaked
 // to occtkit's own stdout). EOF on stdin → exit 0.
@@ -27,7 +27,7 @@ import Glibc
 
 @MainActor
 func printHelp() {
-    var msg = "occtkit — OCCTSwift script suite\n\nUSAGE:\n  occtkit <subcommand> [args...]\n  occtkit <subcommand> --serve   (read JSONL requests on stdin)\n\nSUBCOMMANDS:\n"
+    var msg = "occtkit: OCCTSwift script suite\n\nUSAGE:\n  occtkit <subcommand> [args...]\n  occtkit <subcommand> --serve   (read JSONL requests on stdin)\n\nSUBCOMMANDS:\n"
     for cmd in Registry.all {
         msg += "  \(cmd.name.padding(toLength: 20, withPad: " ", startingAt: 0))\(cmd.summary)\n"
     }
@@ -113,7 +113,7 @@ func emitResponse(_ response: ServeResponse) {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]
     if let data = try? encoder.encode(response) {
-        // Write directly to FD 1 — the FileHandle.standardOutput cache may
+        // Write directly to FD 1: the FileHandle.standardOutput cache may
         // be holding the saved-FD reference if we're called during cleanup.
         data.withUnsafeBytes { buf in
             _ = write(STDOUT_FILENO, buf.baseAddress, buf.count)
@@ -207,6 +207,15 @@ if let direct = Registry.find(exe) {
 }
 
 let rest = Array(argv.dropFirst())
+
+// `--verbs` prints one registered verb name per line. This is the single source
+// of truth the Makefile reads to create and remove the busybox-style symlinks,
+// so the install list cannot drift from `Registry.all`.
+if rest.first == "--verbs" {
+    print(Registry.verbNames.joined(separator: "\n"))
+    exit(0)
+}
+
 guard let first = rest.first, !first.hasPrefix("-") else {
     printHelp()
     exit(rest.first == "--help" || rest.first == "-h" ? 0 : (rest.isEmpty ? 0 : 1))
