@@ -28,8 +28,9 @@ never crosses the axis. The section is faced with `Shape.face(from:)`, and the *
 what closes the result into a solid rather than a shell (see Gotchas). The bolt circle
 is cut with `Shape.circularPatternCut`: a single cylindrical hole tool is built at the
 bolt-circle radius (oriented along Y), then patterned `boltCount` times around the axis
-and subtracted as one compound. Finally a small all-edge chamfer breaks the sharp
-corners; it falls back to the un-chamfered body if the blend fails.
+and subtracted as one compound. Finally a chamfer breaks the OD and the raised-face rim,
+selected by geometry (radius from the axis, plus `isCircle` to exclude the revolve's seam
+edges) rather than by chamfering every edge; see Gotchas.
 
 ## OCCTSwift APIs used
 
@@ -38,7 +39,8 @@ corners; it falls back to the un-chamfered body if the blend fails.
 - `Shape.revolved(axisOrigin:axisDirection:)`: surface of revolution (on the faced section)
 - `Shape.cylinder(at:direction:radius:height:)`: the bolt-hole tool
 - `Shape.circularPatternCut(tool:axisPoint:axisDirection:count:angle:)`: the bolt circle (OCCTSwift v1.3.1)
-- `Shape.chamfered(distance:)`: edge break (optional)
+- `Shape.edges(where:)`: select the OD and raised-face rim edges geometrically
+- `Shape.chamferedWithFullHistory(distance:edges:)`: chamfer just those edges
 
 ## Gotchas
 
@@ -52,8 +54,20 @@ corners; it falls back to the un-chamfered body if the blend fails.
   position. Revolving an XY profile about Z would sweep a flat disk, not a solid.
 - Keep every profile radius `≥ boreRadius`: a profile that touches or crosses the axis
   produces a degenerate or self-intersecting revolution.
-- `chamfered(distance:)` blends **all** edges. On a flange with many bolt-hole edges this
-  can be slow or fail; the recipe guards it with `?? flange` so the body still emits.
+- `Shape.chamfered(distance:)` blends **all** edges, and cannot build a chamfer at all on
+  this shape (OCCTSwiftScripts #103): the revolve produces a seam edge on every periodic
+  cylindrical face it creates, the bore, the OD, the raised-face wall, and each of the
+  eight bolt holes, and `BRepFilletAPI_MakeChamfer` cannot resolve a blend on a seam,
+  where both "adjacent" faces are really the same face. That failure held at every
+  distance tested, from 1 mm down to 0.001 mm, so it is not a size problem, and it is not
+  fixed by using a smaller chamfer. The recipe instead selects only the OD and the
+  raised-face rim edges with `Shape.edges(where:)` and chamfers those with
+  `Shape.chamferedWithFullHistory(distance:edges:)`, which avoids every seam. The step's
+  base (where the disk-front annulus meets the raised-face wall) is left alone: it is a
+  reentrant corner, so chamfering it adds material instead of breaking a corner, and
+  chamfering it together with the rim exhausts the 2mm-tall wall and fails outright.
+  A failed chamfer here is not swallowed: the recipe force-unwraps the result, so a
+  regression crashes loudly instead of silently shipping an un-chamfered body.
 - Use `circularPatternCut`, **not** `circularPattern`, for the bolt circle. `circularPattern`
   patterns the whole *body*, applied to a holed flange it produces overlapping flange copies
   (≈8× the volume) with the holes filled in. `circularPatternCut` patterns the *tool* and
