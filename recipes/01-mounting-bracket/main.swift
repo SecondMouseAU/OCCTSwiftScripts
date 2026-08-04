@@ -3,10 +3,21 @@
 // Inputs:  none (edit the parameter block below)
 // Outputs: one solid body: an L-bracket with a filleted inside corner and four
 //          through-holes (two per leg).
-// Notes:   The inside corner is rounded by filleting the solid's concave edge, found
-//          geometrically with Shape.concaveEdges() (OCCTSwift v1.3.1, #171) rather than
-//          by a fragile edge index. Fillet before drilling so concaveEdges() returns only
-//          the reentrant corner. Holes are drilled through the leg thickness with a small
+// Notes:   The reentrant corner at (thickness, thickness) extrudes to exactly one
+//          concave edge, a straight line parallel to the extrusion axis. That is the
+//          edge this recipe fillets. It is NOT the edge `Shape.concaveEdges()` finds:
+//          on this shape that call returns two different edges instead, the top-cap
+//          boundary segments at z = width where each wall meets the end face, each
+//          running the leg length rather than the extrusion width (OCCTSwiftScripts
+//          #105). Those two are bounded by the 5 mm leg thickness and a fillet there
+//          fails above roughly that radius, which is why `filletRadius = 8` used to
+//          silently no-op behind a `?? prism` fallback. The true inside-corner edge has
+//          no such limit (its bound is legLength − thickness, 45 mm here), so this
+//          recipe selects it explicitly with `Shape.edges(where:)`: a line parallel to
+//          the extrusion axis positioned at (thickness, thickness), the same
+//          geometric-selection approach recipe 03 uses for the pipe flange (#103).
+//          Fillet before drilling so the selector only ever sees the corner edge, not a
+//          drilled hole's rim. Holes are drilled through the leg thickness with a small
 //          overshoot so the cut faces stay clean.
 //
 // Run:  swift run occtkit run recipes/01-mounting-bracket/main.swift --format brep
@@ -18,7 +29,8 @@ import ScriptHarness
 let legLength: Double  = 50    // length of each leg, measured from the heel (mm)
 let thickness: Double  = 5     // material thickness of each leg (mm)
 let width: Double      = 40    // bracket width (extrusion depth, mm)
-let filletRadius: Double = 8   // inside-corner radius (mm)
+let filletRadius: Double = 8   // inside-corner radius (mm); fits comfortably under the
+                                // legLength − thickness = 45 mm geometric limit (see below)
 let holeRadius: Double  = 3.5  // mounting-hole radius (mm)
 
 let ctx = ScriptContext(metadata: ManifestMetadata(
@@ -37,7 +49,19 @@ let lProfile = Wire.polygon([
 
 // ── Extrude to a solid prism, then round the concave (inside-corner) edge ─────
 let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: width)!
-var bracket = prism.filleted(edges: prism.concaveEdges(), radius: filletRadius) ?? prism
+
+// The inside corner is the one straight edge parallel to the extrusion axis (Z) that
+// sits at (thickness, thickness): select it geometrically rather than trusting
+// concaveEdges(), which picks the wrong edges on this shape (see the header note).
+let insideCorner = prism.edges { edge in
+    guard edge.isLine else { return false }
+    let b = edge.bounds
+    let runsFullWidth = abs((b.max.z - b.min.z) - width) < 1e-6
+        && abs(b.max.x - b.min.x) < 1e-6 && abs(b.max.y - b.min.y) < 1e-6
+    guard runsFullWidth else { return false }
+    return abs(b.min.x - thickness) < 1e-6 && abs(b.min.y - thickness) < 1e-6
+}
+var bracket = prism.filleted(edges: insideCorner, radius: filletRadius)!
 
 // ── Four through-holes: two in the base leg (drill along Y), two in the upright
 //    leg (drill along X). Start just outside the entry face and over-run the exit.
