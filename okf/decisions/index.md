@@ -8,3 +8,6 @@ that need standalone rationale.
 
 * [Single-source verb inventory](single-source-verb-inventory.md): `Registry.all` is the only
   verb list; `occtkit --verbs` feeds the Makefile and the docs point at the reference page.
+* [SwiftPM path dependency identity](swiftpm-path-dependency-identity.md): a path dep's
+  identity is the directory basename, so generated manifests derive declaration and identity from
+  one value.

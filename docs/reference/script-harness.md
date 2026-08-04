@@ -440,7 +440,14 @@ output directory on completion.
 **Workspace resolution**: ScriptHarness dependency is auto-detected in order:
 1. `$OCCTKIT_SCRIPTS_PATH` environment variable (if set and contains `Package.swift`)
 2. Auto-detect from running binary's `argv[0]` (works for `swift run occtkit ...`)
-3. Remote fallback: `from: "0.2.0"` tag from GitHub
+3. Remote fallback: `SecondMouseAU/OCCTSwiftScripts` `from: "1.0.0"`
+
+**The checkout directory may be named anything.** For the two path-based branches SwiftPM derives
+the dependency's identity from the directory basename, not from the `name:` in its manifest, so the
+generated manifest computes both the declaration and the identity from a single value. A fork, a
+second checkout, a git worktree, or an `OCCTKIT_SCRIPTS_PATH` pointing at a differently-named
+directory all work. This was not true before #98, which hardcoded the identity as
+`OCCTSwiftScripts`.
 
 **Example**
 

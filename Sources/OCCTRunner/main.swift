@@ -131,7 +131,7 @@ func ensureWorkspace() throws {
             .macOS(.v15)
         ],
         dependencies: [
-            .package(url: "https://github.com/gsdali/OCCTSwiftScripts.git", from: "0.3.0"),
+            .package(url: "https://github.com/SecondMouseAU/OCCTSwiftScripts.git", from: "1.0.0"),
         ],
         targets: [
             .executableTarget(
