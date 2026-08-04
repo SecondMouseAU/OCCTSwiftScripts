@@ -69,7 +69,7 @@ guard var blade = Shape.loft(profiles: profiles, solid: true) else { fatalError(
 let hubR = rootChord * 0.55
 let hub = Shape.cylinder(at: SIMD3(0, 0, -12), direction: SIMD3(0, 0, 1),
                          radius: hubR, height: 14)!
-blade = blade.union(hub) ?? blade
+blade = blade.union(hub)!
 
 try ctx.add(blade, color: C.steel, name: "Fan blade")
 
