@@ -29,8 +29,8 @@ what closes the result into a solid rather than a shell (see Gotchas). The bolt 
 is cut with `Shape.circularPatternCut`: a single cylindrical hole tool is built at the
 bolt-circle radius (oriented along Y), then patterned `boltCount` times around the axis
 and subtracted as one compound. Finally a chamfer breaks the OD and the raised-face rim,
-selected by geometry (radius from the axis, plus `isCircle` to exclude the revolve's seam
-edges) rather than by chamfering every edge; see Gotchas.
+selected by geometry (a circle concentric with the revolve axis, at a known radius) rather
+than by chamfering every edge; see Gotchas.
 
 ## OCCTSwift APIs used
 
@@ -68,6 +68,17 @@ edges) rather than by chamfering every edge; see Gotchas.
   chamfering it together with the rim exhausts the 2mm-tall wall and fails outright.
   A failed chamfer here is not swallowed: the recipe force-unwraps the result, so a
   regression crashes loudly instead of silently shipping an un-chamfered body.
+- **The selector tests concentricity, not "some point at radius R".** It uses
+  `centerOfCurvature(at:)` to require the circle's centre on the revolve axis, and
+  `1 / curvature(at:)` for its true radius. Sampling one point and measuring its distance from
+  the axis answers a weaker question, and would leave the exclusion of bolt-hole circles resting
+  on the y-coordinate gate rather than on the geometry itself.
+- **Excluding seams by `isCircle` alone only works for a polygonal profile.** A revolve's seam
+  edges are the profile edges themselves, so with this straight-sided half-section they are
+  lines. Put an arc or a fillet in the profile and the seam becomes circular, at which point
+  `isCircle` stops excluding it. `Edge.isSeam(on:)` is the direct test if a variant ever needs
+  one. Here the concentricity requirement excludes seams regardless, since a seam lies in a
+  plane through the axis rather than on a circle around it.
 - Use `circularPatternCut`, **not** `circularPattern`, for the bolt circle. `circularPattern`
   patterns the whole *body*, applied to a holed flange it produces overlapping flange copies
   (≈8× the volume) with the holes filled in. `circularPatternCut` patterns the *tool* and

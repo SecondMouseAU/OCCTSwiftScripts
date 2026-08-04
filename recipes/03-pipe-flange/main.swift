@@ -36,6 +36,11 @@ let raisedHeight: Double    = 2    // raised-face height above the disk (mm)
 let boltCircleRadius: Double = 60   // bolt-circle radius (mm)
 let boltCount: Int          = 8    // number of bolt holes
 let boltRadius: Double      = 7    // bolt-hole radius (mm)
+// Must stay below both `raisedHeight` and `thickness`: the chamfer is cut into those
+// walls, and one taller than the wall it breaks exhausts the material and fails. The
+// failure is now a hard crash rather than a silent no-op (see the chamfer step below),
+// so this is a real constraint, not a preference.
+let chamferDistance: Double = 1    // edge-break size on the OD and raised-face rim (mm)
 
 let ctx = ScriptContext(metadata: ManifestMetadata(
     name: "Pipe flange",
@@ -76,18 +81,31 @@ flange = flange.circularPatternCut(tool: holeTool, axisPoint: .zero,
 //    exhausts the 2mm-tall wall and fails outright. Select by geometry, not raw edge
 //    index, so the recipe still finds the right edges if the parameters change
 //    (same reasoning as recipe 01's concaveEdges() selection).
-func nearAxisRadius(_ edge: borrowing Edge) -> Double? {
-    guard edge.isCircle, let bounds = edge.parameterBounds,
-          let p = edge.point(at: (bounds.first + bounds.last) / 2) else { return nil }
-    return (p.x * p.x + p.z * p.z).squareRoot()
+//
+// The test is "is this a circle concentric with the revolve axis, of radius R", not
+// "does some point on this edge lie at radius R". Sampling a single point would answer
+// the weaker question: a bolt-hole circle spans radius 53 to 67 here, so it would alias
+// onto `raisedRadius` the moment `boltCircleRadius` dropped to 55, leaving only the
+// incidental y-gate to exclude it. `centerOfCurvature` pins the circle to the axis and
+// `1 / curvature` gives its true radius, so the predicate says what it means.
+func axisCircleRadius(_ edge: Edge) -> Double? {
+    guard edge.isCircle,
+          let bounds = edge.parameterBounds else { return nil }
+    let mid = (bounds.first + bounds.last) / 2
+    guard let centre = edge.centerOfCurvature(at: mid),
+          let k = edge.curvature(at: mid), k > 1e-9 else { return nil }
+    // Revolve axis is Y, so a concentric circle's centre sits on x = z = 0.
+    guard abs(centre.x) < 1e-6, abs(centre.z) < 1e-6 else { return nil }
+    return 1 / k
 }
-let chamferTargets = flange.edges(where: { edge in
-    guard let r = nearAxisRadius(edge) else { return false }
+let chamferTargets = flange.edges { edge in
+    guard let r = axisCircleRadius(edge) else { return false }
     if abs(r - outerRadius) < 1e-3 { return true }                                          // OD, front + back
     if abs(r - raisedRadius) < 1e-3 && edge.bounds.min.y > thickness + 1e-3 { return true }  // raised-face rim
     return false
-})
-flange = flange.chamferedWithFullHistory(distance: 1.0, edges: chamferTargets.map(\.index))!.result
+}
+flange = flange.chamferedWithFullHistory(distance: chamferDistance,
+                                         edges: chamferTargets.map(\.index))!.result
 
 try ctx.add(flange, color: C.brass, name: "Pipe flange")
 
