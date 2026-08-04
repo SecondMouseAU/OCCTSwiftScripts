@@ -19,7 +19,7 @@ enum GraphMLCommand: Subcommand {
         let faces: [Face]
         let edges: [Edge]
         // Convexity-attributed face-adjacency (the gAAG edge attribute used by
-        // B-rep GNNs). Face indices follow shape.faces() order — the `face[N]`
+        // B-rep GNNs). Face indices follow shape.faces() order: the `face[N]`
         // scheme query-topology emits. Added OCCTSwiftScripts#55.
         let faceAdjacency: [FaceAdjacency]
         let sampling: Sampling

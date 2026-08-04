@@ -2,21 +2,21 @@
 import PackageDescription
 import Foundation
 
-// Prefer a local sibling checkout (../<name>) when present, else the published URL — so the whole
+// Prefer a local sibling checkout (../<name>) when present, else the published URL, so the whole
 // OCCT ecosystem SHARES the single OCCTSwift/Libraries/OCCT.xcframework instead of each repo
 // extracting its own 1.3 GB copy. CI / fresh clones (no sibling) use the URL pin. `#filePath`-relative
 // so it's independent of build CWD.
-// Only trust a sibling checkout when THIS manifest is a real local dev clone — never when this
+// Only trust a sibling checkout when THIS manifest is a real local dev clone, never when this
 // manifest is itself a transitively-resolved SwiftPM checkout under a consumer's `.build/`. SwiftPM
 // lays every dependency's checkout out flat under one shared `.build/checkouts/` directory, so once
 // e.g. `.build/checkouts/OCCTSwiftIO` exists, `../OCCTSwiftIO` relative to
-// `.build/checkouts/OCCTSwiftScripts` spuriously "exists" too — flipping this manifest's own
+// `.build/checkouts/OCCTSwiftScripts` spuriously "exists" too, flipping this manifest's own
 // declaration from url to path *during* the resolution process that created that checkout. SwiftPM
 // then sees a non-deterministic manifest and reports the whole graph unresolvable ("exhausted
 // attempts to resolve the dependencies graph") for every lean consumer that pulls this package in
-// transitively — the actual mechanism behind ecosystem issue #69, beyond the OCCTSwiftIO version cap.
+// transitively: the actual mechanism behind ecosystem issue #69, beyond the OCCTSwiftIO version cap.
 // Same guard OCCTSwiftIO adopted (2026-06-23, "don't path-link siblings when resolved under a
-// consumer's .build") — kept as `/.build/` here for consistency across the fleet.
+// consumer's .build"), kept as `/.build/` here for consistency across the fleet.
 private func isRealLocalSibling(_ manifestDir: String, _ name: String) -> Bool {
     guard !manifestDir.contains("/.build/") else { return false }
     return FileManager.default.fileExists(atPath: manifestDir + "/../\(name)/Package.swift")
@@ -40,7 +40,7 @@ let package = Package(
         // are .iOS(.v18)); OCCTSwift itself only needs v15. The executable
         // targets (occtkit, Script, the legacy Graph* tools) shell out via
         // Foundation.Process and aren't iOS-buildable, but SPM only compiles
-        // a target when something reachable requires it — an iOS app linking
+        // a target when something reachable requires it: an iOS app linking
         // a library product never pulls the executables in. See #52.
         .iOS(.v18)
     ],
@@ -62,8 +62,8 @@ let package = Package(
         // Floored at v1.7.1 = OCCT 8.0.0p1. v1.7.0 realigned BRepGraph to OCCT's
         // redesigned graph model (definitions vs references/usages, persistent
         // UIDs, controlled layers); v1.7.1 made the derived graph reads real
-        // again — `adjacentFaces`/`faces(of:)`/`edges(of:)`/`sharedEdges`,
-        // `faceSameDomain`, `faceIsNaturalRestriction` — plus durable
+        // again: `adjacentFaces`/`faces(of:)`/`edges(of:)`/`sharedEdges`,
+        // `faceSameDomain`, `faceIsNaturalRestriction`: plus durable
         // UID/RefUID/ItemUID accessors. Behaviour changes vs the old model are
         // confined to the BRepGraph domain (see OCCTSwift docs/CHANGELOG v1.7.0):
         // edgeMaxContinuity/setEdgeRegularity are now no-ops (use
@@ -78,9 +78,9 @@ let package = Package(
         // match the C++ package it wraps. This repo has migrated its own
         // `TopologyGraph` references to `BRepGraph`, and the bare `BRepGraph`
         // symbol doesn't exist before v1.15.0 (only the deprecated typealias
-        // does, starting there) — the floor must track the rename, not just
+        // does, starting there): the floor must track the rename, not just
         // permit it via the open `from:` range.
-        occtDep("OCCTSwift", from: "1.17.0"),   // ≥1.17.0: Pass 1a duplication/bug-fix audit (OCCTSwift#377/#380) — continuity enum consolidation (source-compatible via deprecated aliases), Surface.drawMesh/evaluateGrid now return SurfaceGrid (not used here), arc-length/Surface.normal/Curve2D.circle edge-case bug fixes; ≥1.15.0: BRepGraph rename (OCCTSwift#335); also carries kernel crash/hang fixes through #318/#323 (patches 0003-0009) from the prior 1.12.9 floor
+        occtDep("OCCTSwift", from: "1.17.0"),   // ≥1.17.0: Pass 1a duplication/bug-fix audit (OCCTSwift#377/#380), continuity enum consolidation (source-compatible via deprecated aliases), Surface.drawMesh/evaluateGrid now return SurfaceGrid (not used here), arc-length/Surface.normal/Curve2D.circle edge-case bug fixes; ≥1.15.0: BRepGraph rename (OCCTSwift#335); also carries kernel crash/hang fixes through #318/#323 (patches 0003-0009) from the prior 1.12.9 floor
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
@@ -91,7 +91,7 @@ let package = Package(
         // RenderPreview, which legitimately needs Viewport, so the Tools dep
         // stays. We don't separately depend on OCCTSwiftIO because
         // OCCTSwiftIO's ScriptManifest is missing the `graphs` field our
-        // local Sources/ScriptHarness/Manifest.swift carries — the
+        // local Sources/ScriptHarness/Manifest.swift carries, the
         // topology-graph descriptors that ScriptContext.addGraph() and
         // addGraphsForAllShapes() emit. Swapping would silently lose that
         // metadata for downstream OCCTSwiftViewport ScriptWatcher consumers.
@@ -100,7 +100,7 @@ let package = Package(
         // then.
         occtDep("OCCTSwiftTools", from: "1.1.1"),
         // OCCTSwiftAIS v1.0.0 graduated alongside OCCTSwift v1.0.0. Used
-        // here for the headless-friendly subset only — Trihedron / WorkPlane
+        // here for the headless-friendly subset only, Trihedron / WorkPlane
         // / Axis / PointCloud scene objects (each emits ViewportBody arrays
         // via makeBodies()) and the SubShape ↔ ViewportBody plumbing for
         // highlight overlays. Selection / Manipulator / SwiftUI surfaces
@@ -113,7 +113,7 @@ let package = Package(
         // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
         // BRepGraph.exportForML / exportJSON via extension after OCCTSwift
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
-        // graphml verbs only — the rest of the package keeps its existing
+        // graphml verbs only: the rest of the package keeps its existing
         // ScriptManifest type (with the `graphs` field) from ScriptHarness.
         //
         // Was capped to the 1.0.x minor line (occtDepUpToNextMinor(from: "1.0.0"),
@@ -127,7 +127,7 @@ let package = Package(
         // OCCTSwiftIO 1.7.5's Package.swift for a narrower product that could
         // keep the cap's spirit: it now ships two library products,
         // `OCCTSwiftIO` and `MeshIO`, but the `OCCTSwiftIO` target itself
-        // still lists `MeshIO` as a plain (unconditional) target dependency —
+        // still lists `MeshIO` as a plain (unconditional) target dependency:
         // not a product a consumer can decline. So depending on just the
         // `OCCTSwiftIO` product still resolves and checks out the full
         // SwiftPMX/SwiftX/ThreeMF/SwiftGLTF stack; there's no BREP/STEP-only
@@ -137,7 +137,7 @@ let package = Package(
         // OCCTSwiftTools 1.6.1 / OCCTSwiftAIS 1.3.1's), and 1.7.1-1.7.4 are
         // pure OCCTSwift-floor repins for the same OCCT kernel crash/hang
         // fixes (#298/#310/#317/#318/#323) already required transitively via
-        // our own OCCTSwift >=1.15.0 floor above — no reason to admit an
+        // our own OCCTSwift >=1.15.0 floor above, no reason to admit an
         // OCCTSwiftIO minor that predates fixes we already require elsewhere
         // in the graph.
         occtDep("OCCTSwiftIO", from: "1.7.5"),

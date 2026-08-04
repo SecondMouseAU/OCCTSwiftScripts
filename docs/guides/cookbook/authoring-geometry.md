@@ -8,7 +8,7 @@ nav_order: 2
 
 This page walks through building a real part end-to-end with the OCCTSwift API: sketch a
 profile, extrude it to a solid, round the inside corner, then drill mounting holes. The
-worked example is [recipe 01 — mounting bracket](https://github.com/gsdali/OCCTSwiftScripts/tree/main/recipes/01-mounting-bracket).
+worked example is [recipe 01, mounting bracket](https://github.com/gsdali/OCCTSwiftScripts/tree/main/recipes/01-mounting-bracket).
 
 ![Mounting bracket](images/mounting-bracket.png)
 
@@ -18,7 +18,7 @@ For full API details see the [script harness reference](../../reference/script-h
 
 ## The part
 
-An L-shaped mounting bracket — two equal legs, a rounded inside corner, four through-holes
+An L-shaped mounting bracket, two equal legs, a rounded inside corner, four through-holes
 (two per leg). Five parameters drive everything:
 
 | Parameter      | Default | Description                          |
@@ -31,7 +31,7 @@ An L-shaped mounting bracket — two equal legs, a rounded inside corner, four t
 
 ---
 
-## Step 1 — Sketch the cross-section (`Wire.polygon`)
+## Step 1: Sketch the cross-section (`Wire.polygon`)
 
 The L profile lives in the XY plane. Six vertices define it; the seventh closes back to
 the origin implicitly. The reentrant (inside) corner sits at `(thickness, thickness)`.
@@ -61,12 +61,12 @@ let lProfile = Wire.polygon([
 ])!
 ```
 
-`Wire.polygon` returns `Wire?` — the force-unwrap is fine here because the coordinates are
+`Wire.polygon` returns `Wire?`: the force-unwrap is fine here because the coordinates are
 compile-time constants. In production code prefer `guard let`.
 
 ---
 
-## Step 2 — Extrude to a solid (`Shape.extrude`)
+## Step 2: Extrude to a solid (`Shape.extrude`)
 
 ```swift
 let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: width)!
@@ -77,7 +77,7 @@ normalises it. The result is a closed solid prism ready for modification.
 
 ---
 
-## Step 3 — Fillet the inside corner (`concaveEdges` + `filleted`)
+## Step 3: Fillet the inside corner (`concaveEdges` + `filleted`)
 
 **Fillet before drilling.** `concaveEdges()` classifies *every* concave edge on the solid.
 After drilling, the rim of each hole can read as concave too, so the selection would pick
@@ -90,13 +90,13 @@ var bracket = prism.filleted(edges: prism.concaveEdges(), radius: filletRadius) 
 
 `filleted(edges:radius:)` returns `Shape?`; the `?? prism` fallback keeps the script
 runnable if the fillet degenerates (e.g. `filletRadius` exceeds `legLength − thickness`).
-`concaveEdges()` is geometry-based — it tracks the corner as parameters change, with no
+`concaveEdges()` is geometry-based; it tracks the corner as parameters change, with no
 fragile edge-index bookkeeping. Pass `concaveEdges(angle:)` to tighten the threshold if a
 near-flat junction sneaks in.
 
 ---
 
-## Step 4 — Drill four through-holes (`Shape.drilled`)
+## Step 4: Drill four through-holes (`Shape.drilled`)
 
 Two holes go through the base leg (drilled along +Y); two go through the upright leg
 (drilled along +X).
@@ -124,17 +124,17 @@ known-good; use `guard let` if you are working with user-supplied parameters.
 
 ---
 
-## Step 5 — Emit
+## Step 5: Emit
 
 ```swift
 try ctx.add(bracket, color: C.steel, name: "Mounting bracket")
 
 print("Bracket volume: \(bracket.volume ?? 0) mm³")
-try ctx.emit(description: "L-bracket — \(legLength)mm legs, \(width)mm wide, 4× Ø\(holeRadius * 2) holes")
+try ctx.emit(description: "L-bracket, \(legLength)mm legs, \(width)mm wide, 4× Ø\(holeRadius * 2) holes")
 ```
 
 `ctx.emit()` writes the BREP/STEP/manifest bundle that the `occtkit run` harness picks up.
-`bracket.volume` is `Double?` (nil for non-solids or analysis failures) — the null-coalesce
+`bracket.volume` is `Double?` (nil for non-solids or analysis failures): the null-coalesce
 keeps the print from crashing on a degenerate result.
 
 ---
@@ -174,6 +174,6 @@ The complete, unabbreviated script is
 
 ## See also
 
-- [Script iteration](script-iteration.md) — the edit → build → live-viewport loop
-- [Sweeps, lofts & patterns](sweeps-lofts-patterns.md) — helix sweeps, lofts, linear/circular patterns
-- [Script harness reference](../../reference/script-harness.md) — full API surface
+- [Script iteration](script-iteration.md): the edit → build → live-viewport loop
+- [Sweeps, lofts & patterns](sweeps-lofts-patterns.md): helix sweeps, lofts, linear/circular patterns
+- [Script harness reference](../../reference/script-harness.md): full API surface

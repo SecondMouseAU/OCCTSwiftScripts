@@ -5,7 +5,7 @@
 // (PaperSize, Orientation, ProjectionAngle, TitleBlock fields). Translation
 // to upstream types happens via the `upstream` accessors.
 //
-// `shape` and `output` are optional — they're populated by the CLI wrapper
+// `shape` and `output` are optional, they're populated by the CLI wrapper
 // (`occtkit drawing-export`) but unused when `Composer.render(spec:shape:)`
 // is called directly with a live `Shape` from in-process consumers.
 

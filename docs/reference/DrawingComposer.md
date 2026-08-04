@@ -8,7 +8,7 @@ parent: Reference
 
 `DrawingComposer` turns a `DrawingSpec` + a live `Shape` into a fully populated
 `DXFWriter` (a complete multi-view ISO technical drawing). It is the in-process library
-behind the `occtkit drawing-export` verb — for iOS apps and library consumers that can't
+behind the `occtkit drawing-export` verb: for iOS apps and library consumers that can't
 subprocess. The CLI and the library run the **same** composition logic; the CLI only adds
 the BREP load and the DXF write.
 
@@ -97,13 +97,13 @@ public struct DrawingComposerResult: Sendable {
 
 ## `DrawingSpec` schema
 
-`DrawingSpec` is `Codable` — the same JSON the `drawing-export` verb reads. Source:
+`DrawingSpec` is `Codable`: the same JSON the `drawing-export` verb reads. Source:
 [`Spec.swift`](https://github.com/SecondMouseAU/OCCTSwiftScripts/blob/main/Sources/DrawingComposer/Spec.swift).
 
 ```swift
 public struct DrawingSpec: Codable, Sendable {
-    public var shape: String?              // path to BREP — CLI only (ignored by render(spec:shape:))
-    public var output: String?             // path for output DXF — CLI only
+    public var shape: String?              // path to BREP, CLI only (ignored by render(spec:shape:))
+    public var output: String?             // path for output DXF, CLI only
     public var sheet: SheetSpec
     public var title: TitleBlockSpec?      // omitted → no title block
     public var views: [ViewSpec]           // typically 3 orthographic views

@@ -1,6 +1,6 @@
-# 07 — Sheet-metal U-channel
+# 07: Sheet-metal U-channel
 
-A folded sheet-metal U-channel — a base plate with two walls bent up on opposite edges —
+A folded sheet-metal U-channel: a base plate with two walls bent up on opposite edges:
 built with OCCTSwift's `SheetMetal` composition API.
 
 ![Sheet-metal U-channel](output.png)
@@ -26,20 +26,20 @@ the XY plane; the two walls sit on the `y = 0` and `y = depth` edges, run the fu
 
 ## OCCTSwift APIs used
 
-- `SheetMetal.Flange(id:profile:origin:normal:uAxis:vAxis:)` — each face
-- `SheetMetal.Bend(from:to:radius:)` — base→wall folds
-- `SheetMetal.Builder(thickness:).build(flanges:bends:)` — fold into one solid
-- `Shape.volume` — sanity print
+- `SheetMetal.Flange(id:profile:origin:normal:uAxis:vAxis:)`: each face
+- `SheetMetal.Bend(from:to:radius:)`: base→wall folds
+- `SheetMetal.Builder(thickness:).build(flanges:bends:)`: fold into one solid
+- `Shape.volume`: sanity print
 
 ## Gotchas
 
 - **Set `vAxis` explicitly.** It defaults to `cross(normal, uAxis)`, which points *downward*
-  for some edges — a wall would then fold below the base and the bend fillet fails. Give
+  for some edges: a wall would then fold below the base and the bend fillet fails. Give
   every wall `vAxis = (0,0,1)`.
 - **Walls must span the full base edge.** Narrowing a wall (corner relief) or insetting its
-  origin makes the bend fillet fail — the builder rounds the whole shared edge.
+  origin makes the bend fillet fail: the builder rounds the whole shared edge.
 - **No shared corners.** The builder folds chains and *opposite* flanges (U-channel,
-  Z-bracket), but two walls meeting at a corner fail the corner fillet — so a four-wall tray
+  Z-bracket), but two walls meeting at a corner fail the corner fillet, so a four-wall tray
   / closed box is not buildable this way today. A U-channel is the robust canonical part.
 - The `build` call `throws`; surface `SheetMetal.BuildError` (it is `CustomStringConvertible`)
   rather than force-unwrapping.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# new-recipe.sh — scaffold a new recipe folder (invoked by `make recipe NAME=widget`).
+# new-recipe.sh: scaffold a new recipe folder (invoked by `make recipe NAME=widget`).
 #
 # Creates recipes/NN-<name>/ with a skeleton main.swift + README.md, where NN is the
 # next available two-digit number (max existing + 1). output.png / output.brep are left
@@ -31,10 +31,10 @@ mkdir -p "$dir"
 title="$(echo "$slug" | tr '-' ' ')"
 
 cat > "$dir/main.swift" <<EOF
-// Recipe ${nn} — ${title}
+// Recipe ${nn}, ${title}
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — TODO describe the part.
+// Outputs: one solid body, TODO describe the part.
 // Notes:   TODO any gotchas (orientation, axis choice, profile placement).
 //
 // Run:  swift run occtkit run recipes/${nn}-${slug}/main.swift --format brep
@@ -60,7 +60,7 @@ try ctx.emit(description: "${title}")
 EOF
 
 cat > "$dir/README.md" <<EOF
-# ${nn} — ${title}
+# ${nn}: ${title}
 
 TODO one-line description.
 
@@ -78,7 +78,7 @@ TODO 3–8 sentences.
 
 ## OCCTSwift APIs used
 
-- \`Shape.box(width:height:depth:)\` — TODO
+- \`Shape.box(width:height:depth:)\`: TODO
 
 ## Gotchas
 

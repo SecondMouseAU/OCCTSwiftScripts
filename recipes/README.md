@@ -1,8 +1,8 @@
 # OCCTSwiftScripts recipes
 
-A cookbook of worked, parametric CAD examples — the OCCTSwift answer to CadQuery /
+A cookbook of worked, parametric CAD examples: the OCCTSwift answer to CadQuery /
 OpenSCAD examples. Each recipe is **self-contained**: open one folder, read three files,
-understand the pattern. No shared utilities, no cross-recipe imports — copy a folder and
+understand the pattern. No shared utilities, no cross-recipe imports, copy a folder and
 tweak the parameters.
 
 ## Recipes
@@ -18,7 +18,7 @@ tweak the parameters.
 | 07 | [Sheet-metal U-channel](07-sheet-metal-channel/) | <img src="07-sheet-metal-channel/output.png" width="160"> | `SheetMetal` flanges + bends → fold |
 
 > Previews are locally-generated artifacts (`make recipes-render`). If an image is
-> missing, the recipe still builds — PNGs are never a CI gate.
+> missing, the recipe still builds, PNGs are never a CI gate.
 
 ## Running a recipe
 
@@ -34,12 +34,12 @@ for diff-ability and CI reference comparison.
 
 ## Each recipe ships
 
-- **`main.swift`** — ~30–60 lines: an `Inputs/Outputs/Notes` header, all parameters as named
+- **`main.swift`**: ~30–60 lines: an `Inputs/Outputs/Notes` header, all parameters as named
   `let` constants up top, one `ctx.add(...)`, and a final `ctx.emit(...)`.
-- **`README.md`** — one-line description, parameters table, algorithm, "OCCTSwift APIs used",
+- **`README.md`**: one-line description, parameters table, algorithm, "OCCTSwift APIs used",
   gotchas, and the preview image.
-- **`output.png`** — 800×600 isometric, dark background (via `render-preview`).
-- **`output.brep`** — the reference body (CI compares volume + bounding box within tolerance).
+- **`output.png`**: 800×600 isometric, dark background (via `render-preview`).
+- **`output.brep`**: the reference body (CI compares volume + bounding box within tolerance).
 
 ## Tooling
 
@@ -56,10 +56,10 @@ during the seed batch).
 
 The following are tracked for later additions (order/selection open):
 
-- M8×40 bolt (hex head + helical thread) — deferred: cutting a helical thread groove via
+- M8×40 bolt (hex head + helical thread), deferred: cutting a helical thread groove via
   boolean is unreliable in the current OCCT build (the cut/fuse of a helical sweep against a
   coaxial cylinder fails). Awaiting a robust thread approach / helper.
-- Finger-jointed lid box (2D profile composition — no wire booleans yet)
+- Finger-jointed lid box (2D profile composition, no wire booleans yet)
 - Planetary gear set (XCAF assembly via `Document`)
-- Closed sheet-metal box / tray — needs four-wall corner folding, which the `SheetMetal`
+- Closed sheet-metal box / tray: needs four-wall corner folding, which the `SheetMetal`
   builder doesn't support yet (corner fillets fail); see [07](07-sheet-metal-channel/).

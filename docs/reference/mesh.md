@@ -18,7 +18,7 @@ Triangle tessellation from B-rep solids via BRepMesh_IncrementalMesh, and QEM-ba
 
 Generate a triangle mesh from a BREP; report counts and quality metrics.
 
-**Input** — flag-form, JSON-form (stdin or file path).
+**Input**: flag-form, JSON-form (stdin or file path).
 
 **Parameters**
 
@@ -31,7 +31,7 @@ Generate a triangle mesh from a BREP; report counts and quality metrics.
 | `outputPath` / `--output` | string | no | Write mesh to `.stl` or `.obj` file. Omit to return inline geometry (up to 100K triangles). |
 | `returnGeometry` / `--return-geometry` | boolean | no | Inline triangle geometry in response (default true). Ignored if triangle count exceeds 100K or `--output` is supplied. |
 
-**Returns** — JSON envelope with `triangleCount`, `vertexCount`, quality metrics (`minAspectRatio`, `meanAspectRatio`, `degenerateTriangles`, `nonManifoldEdges`), optional inline `geometry` (vertices/indices arrays as `[Float]`/`[UInt32]`), and optional `outputPath`.
+**Returns**: JSON envelope with `triangleCount`, `vertexCount`, quality metrics (`minAspectRatio`, `meanAspectRatio`, `degenerateTriangles`, `nonManifoldEdges`), optional inline `geometry` (vertices/indices arrays as `[Float]`/`[UInt32]`), and optional `outputPath`.
 
 **Example**
 
@@ -56,9 +56,9 @@ occtkit mesh part.brep --linear-deflection 0.05 --parallel
 }
 ```
 
-**Drives** — `Shape.mesh(parameters:)` (OCCTSwift BRepMesh_IncrementalMesh wrapper); `Exporter.writeSTL` / `writeOBJ` for file output.
+**Drives**: `Shape.mesh(parameters:)` (OCCTSwift BRepMesh_IncrementalMesh wrapper); `Exporter.writeSTL` / `writeOBJ` for file output.
 
-**Notes** — Aspect ratio ≥ 1 (longest-edge / shortest-edge per triangle); lower is better. Degenerate triangles have near-zero shortest edge (collinear or repeated vertices). Non-manifold edges are undirected edges shared by != 2 triangles. When triangle count exceeds 100K threshold or `--output` is supplied, inline geometry is suppressed and a file path is returned instead.
+**Notes**: Aspect ratio ≥ 1 (longest-edge / shortest-edge per triangle); lower is better. Degenerate triangles have near-zero shortest edge (collinear or repeated vertices). Non-manifold edges are undirected edges shared by != 2 triangles. When triangle count exceeds 100K threshold or `--output` is supplied, inline geometry is suppressed and a file path is returned instead.
 
 ---
 
@@ -66,7 +66,7 @@ occtkit mesh part.brep --linear-deflection 0.05 --parallel
 
 Decimate a mesh to a target triangle count via QEM (quadric error metrics).
 
-**Input** — flag-form, JSON-form (stdin or file path).
+**Input**: flag-form, JSON-form (stdin or file path).
 
 **Parameters**
 
@@ -82,7 +82,7 @@ Decimate a mesh to a target triangle count via QEM (quadric error metrics).
 | `linearDeflection` / `--linear-deflection` | number | no | Linear chord deviation for initial tessellation (default 0.1). |
 | `angularDeflection` / `--angular-deflection` | number | no | Angular deviation for initial tessellation in radians (default 0.5). |
 
-**Returns** — JSON envelope with `beforeTriangleCount`, `afterTriangleCount`, `qualityDelta` (meanAspectRatioDelta, hausdorffDistance in input mesh units), and `outputPath`.
+**Returns**: JSON envelope with `beforeTriangleCount`, `afterTriangleCount`, `qualityDelta` (meanAspectRatioDelta, hausdorffDistance in input mesh units), and `outputPath`.
 
 **Example**
 
@@ -101,6 +101,6 @@ occtkit simplify-mesh part.brep --target-reduction 0.7 --preserve-boundary --out
 }
 ```
 
-**Drives** — `Mesh.simplified(_:)` (OCCTSwiftMesh QEM decimator via vendored meshoptimizer).
+**Drives**: `Mesh.simplified(_:)` (OCCTSwiftMesh QEM decimator via vendored meshoptimizer).
 
-**Notes** — Exactly one of `--target-triangle-count` or `--target-reduction` must be supplied; the verb will throw if both/neither are present or values are out of valid ranges. Mean aspect ratio delta is post-mesh minus pre-mesh, so positive values indicate quality improvement. Hausdorff distance measures geometric deviation between original and decimated meshes.
+**Notes**: Exactly one of `--target-triangle-count` or `--target-reduction` must be supplied; the verb will throw if both/neither are present or values are out of valid ranges. Mean aspect ratio delta is post-mesh minus pre-mesh, so positive values indicate quality improvement. Hausdorff distance measures geometric deviation between original and decimated meshes.

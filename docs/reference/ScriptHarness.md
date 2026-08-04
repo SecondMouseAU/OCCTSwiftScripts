@@ -32,8 +32,8 @@ public final class ScriptContext: Sendable {
 
 The init resolves the output directory (and **cleans** it):
 
-1. iCloud Drive — `~/Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output/` if present, else
-2. Local — `~/.occtswift-scripts/output/`.
+1. iCloud Drive, `~/Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output/` if present, else
+2. Local, `~/.occtswift-scripts/output/`.
 
 (On iOS/sandboxed platforms it writes into the app's Documents directory.)
 
@@ -138,7 +138,7 @@ public func emit(description: String? = nil) throws
 ```
 
 Call **last**. It writes (in order): a combined `output.step` (only when `exportSTEP` and
-there are shapes), then `manifest.json` **last** — so a partial failure leaves the prior
+there are shapes), then `manifest.json` **last**: so a partial failure leaves the prior
 frame intact and the watcher only triggers on a complete frame.
 
 ```swift
@@ -223,6 +223,6 @@ public enum ScriptError: Error, LocalizedError {
 }
 ```
 
-Fallible OCCTSwift factories return optionals — unwrap with `guard let`/`if let` in real
+Fallible OCCTSwift factories return optionals, unwrap with `guard let`/`if let` in real
 code, or a trailing `!` only in throwaway scripts. `ScriptContext.add` throws
 `ScriptError.conversionFailed` when a Wire/Edge/compound conversion fails.

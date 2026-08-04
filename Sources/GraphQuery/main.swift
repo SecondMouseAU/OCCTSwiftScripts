@@ -1,4 +1,4 @@
-// GraphQuery — emit a JSON topology summary from a BREPGraph SQLite database.
+// GraphQuery: emit a JSON topology summary from a BREPGraph SQLite database.
 //
 // Reads the analysis views written by BREPGraphSQLiteExporter
 // (topology_summary, free_edges, open_wires, faces_with_holes,
@@ -88,7 +88,7 @@ do {
     guard sqlite3_prepare_v2(db, "SELECT * FROM topology_summary", -1, &summaryStmt, nil) == SQLITE_OK,
           sqlite3_step(summaryStmt) == SQLITE_ROW else {
         sqlite3_finalize(summaryStmt)
-        throw ScriptError.message("topology_summary view missing or empty — is this a BREPGraph SQLite file?")
+        throw ScriptError.message("topology_summary view missing or empty, is this a BREPGraph SQLite file?")
     }
     let summary = Query.Summary(
         solids:           Int(sqlite3_column_int64(summaryStmt, 0)),

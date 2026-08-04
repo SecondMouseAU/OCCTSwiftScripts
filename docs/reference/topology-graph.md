@@ -6,7 +6,7 @@ nav_order: 2
 
 # Topology graph
 
-Low-level B-rep graph operations that work directly on an absolute BREP file path. Use these when you need raw topology analysis, graph compaction, ML export, or local adjacency queries — they operate on the pure topology without scene or geometry enrichment.
+Low-level B-rep graph operations that work directly on an absolute BREP file path. Use these when you need raw topology analysis, graph compaction, ML export, or local adjacency queries; they operate on the pure topology without scene or geometry enrichment.
 
 ## Entries
 
@@ -18,7 +18,7 @@ Low-level B-rep graph operations that work directly on an absolute BREP file pat
 
 Validate a BREP shape's topology graph and surface a structured health record.
 
-**Input** — flag-form (positional BREP path).
+**Input**: flag-form (positional BREP path).
 
 **Parameters**
 
@@ -26,7 +26,7 @@ Validate a BREP shape's topology graph and surface a structured health record.
 |------|------|:--------:|-------------|
 | `<shape.brep>` | string | yes | Path to the BREP file to validate. |
 
-**Returns** — Topology validity report with `isValid` / `errorCount` / `warningCount` and a `healthRecord` containing shape type, free-edge count, small-edge count, small-face count, and self-intersection status.
+**Returns**: Topology validity report with `isValid` / `errorCount` / `warningCount` and a `healthRecord` containing shape type, free-edge count, small-edge count, small-face count, and self-intersection status.
 
 **Example**
 
@@ -51,7 +51,7 @@ occtkit graph-validate shape.brep
 }
 ```
 
-**Drives** — `BRepGraph.validate()` + `Shape.analyze()`.
+**Drives**: `BRepGraph.validate()` + `Shape.analyze()`.
 
 ---
 
@@ -59,7 +59,7 @@ occtkit graph-validate shape.brep
 
 Compact a graph by dropping unreferenced nodes; writes the rebuilt BREP to `<out.brep>`.
 
-**Input** — flag-form (positional BREP paths).
+**Input**: flag-form (positional BREP paths).
 
 **Parameters**
 
@@ -68,7 +68,7 @@ Compact a graph by dropping unreferenced nodes; writes the rebuilt BREP to `<out
 | `<in.brep>` | string | yes | Path to the source BREP file. |
 | `<out.brep>` | string | yes | Path where the compacted BREP will be written. |
 
-**Returns** — Node counts before and after (total nodes, then per-type removal counts: vertices, edges, faces), plus the output path.
+**Returns**: Node counts before and after (total nodes, then per-type removal counts: vertices, edges, faces), plus the output path.
 
 **Example**
 
@@ -88,7 +88,7 @@ occtkit graph-compact shape.brep shape_compact.brep
 }
 ```
 
-**Drives** — `BRepGraph.compact()`.
+**Drives**: `BRepGraph.compact()`.
 
 ---
 
@@ -96,7 +96,7 @@ occtkit graph-compact shape.brep shape_compact.brep
 
 Deduplicate shared surface and curve geometry in a BREP's topology graph; writes the rebuilt BREP to `<out.brep>`.
 
-**Input** — flag-form (positional BREP paths).
+**Input**: flag-form (positional BREP paths).
 
 **Parameters**
 
@@ -105,7 +105,7 @@ Deduplicate shared surface and curve geometry in a BREP's topology graph; writes
 | `<in.brep>` | string | yes | Path to the source BREP file. |
 | `<out.brep>` | string | yes | Path where the deduplicated BREP will be written. |
 
-**Returns** — Deduplication statistics: count of canonical surfaces and curves, and count of references rewritten to point to those canonicals.
+**Returns**: Deduplication statistics: count of canonical surfaces and curves, and count of references rewritten to point to those canonicals.
 
 **Example**
 
@@ -122,7 +122,7 @@ occtkit graph-dedup assembly.brep assembly_dedup.brep
 }
 ```
 
-**Drives** — `BRepGraph.deduplicate()`.
+**Drives**: `BRepGraph.deduplicate()`.
 
 ---
 
@@ -130,7 +130,7 @@ occtkit graph-dedup assembly.brep assembly_dedup.brep
 
 Emit a JSON topology summary from a BREPGraph SQLite database.
 
-**Input** — flag-form (positional SQLite path).
+**Input**: flag-form (positional SQLite path).
 
 **Parameters**
 
@@ -138,7 +138,7 @@ Emit a JSON topology summary from a BREPGraph SQLite database.
 |------|------|:--------:|-------------|
 | `<graph.sqlite>` | string | yes | Path to the BREPGraph SQLite file (produced by `ScriptContext.addGraph()` with `sqlite: true`). |
 
-**Returns** — Topology summary (solid/shell/face/wire/edge/vertex/coedge counts, boundary/non-manifold/degenerate edge counts, open shell count), edge and vertex valence statistics (max, mean, count), and computed counts (free edges, open wires, faces with holes).
+**Returns**: Topology summary (solid/shell/face/wire/edge/vertex/coedge counts, boundary/non-manifold/degenerate edge counts, open shell count), edge and vertex valence statistics (max, mean, count), and computed counts (free edges, open wires, faces with holes).
 
 **Example**
 
@@ -172,9 +172,9 @@ occtkit graph-query graph-0.sqlite
 }
 ```
 
-**Drives** — SQLite query over `topology_summary` / `free_edges` / `open_wires` / `faces_with_holes` / `face_valence` / `vertex_valence` views.
+**Drives**: SQLite query over `topology_summary` / `free_edges` / `open_wires` / `faces_with_holes` / `face_valence` / `vertex_valence` views.
 
-**Notes** — Requires a BREPGraph SQLite file produced by `ScriptContext.addGraph(..., sqlite: true)`. JSON-form SQLite queries are not supported.
+**Notes**: Requires a BREPGraph SQLite file produced by `ScriptContext.addGraph(..., sqlite: true)`. JSON-form SQLite queries are not supported.
 
 ---
 
@@ -182,7 +182,7 @@ occtkit graph-query graph-0.sqlite
 
 Export a BREP's topology graph and UV/edge samples as ML-friendly JSON.
 
-**Input** — flag-form with optional sample-count tuning.
+**Input**: flag-form with optional sample-count tuning.
 
 **Parameters**
 
@@ -192,7 +192,7 @@ Export a BREP's topology graph and UV/edge samples as ML-friendly JSON.
 | `--uv-samples` | integer | no | Face UV grid density (default 16, produces 16×16 grid per face). |
 | `--edge-samples` | integer | no | Edge curve sample count (default 32). |
 
-**Returns** — ML-ready JSON containing vertex positions, edge boundary/manifold flags, face adjacency indices, face-to-face / face-to-edge / edge-to-vertex COO matrices, per-face UV grid with positions/normals/Gaussian/mean curvatures, per-edge curve samples, and an attributed face-adjacency block with convexity per dihedral + shared-edge count.
+**Returns**: ML-ready JSON containing vertex positions, edge boundary/manifold flags, face adjacency indices, face-to-face / face-to-edge / edge-to-vertex COO matrices, per-face UV grid with positions/normals/Gaussian/mean curvatures, per-edge curve samples, and an attributed face-adjacency block with convexity per dihedral + shared-edge count.
 
 **Example**
 
@@ -218,17 +218,17 @@ occtkit graph-ml shape.brep --uv-samples 12 --edge-samples 24
 }
 ```
 
-**Drives** — `BRepGraph.exportForML()` + `AAG` (Attributed Adjacency Graph).
+**Drives**: `BRepGraph.exportForML()` + `AAG` (Attributed Adjacency Graph).
 
-**Notes** — Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits). Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
+**Notes**: Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits). Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
 
 ---
 
 ## `graph-select`
 
-Query B-rep graph adjacency and selection — return a focused neighbourhood rather than a full graph dump.
+Query B-rep graph adjacency and selection, return a focused neighbourhood rather than a full graph dump.
 
-**Input** — flag-form with required `--query` and optional adjacency/class selector flags.
+**Input**: flag-form with required `--query` and optional adjacency/class selector flags.
 
 **Parameters**
 
@@ -241,12 +241,12 @@ Query B-rep graph adjacency and selection — return a focused neighbourhood rat
 | `--vertex` | integer | no | Vertex index (required for `vertex-edges`). BRepGraph index. |
 | `--class` | string | no | Edge class filter (required for `edges-class`): one of `boundary` \| `non-manifold` \| `seam` \| `degenerate`. |
 
-**Returns** — Depends on `--query`:
-- `face-neighbors` — adjacent face indices with convexity and shared-edge count per adjacency.
-- `edge-faces` — face indices on both sides of the edge, plus start/end vertices and boundary/manifold flags.
-- `vertex-edges` — edge indices incident to the vertex.
-- `face-adjacency` — full attributed face-adjacency graph (gAAG) for the shape.
-- `edges-class` — indices of all edges matching the given class.
+**Returns**: Depends on `--query`:
+- `face-neighbors`: adjacent face indices with convexity and shared-edge count per adjacency.
+- `edge-faces`: face indices on both sides of the edge, plus start/end vertices and boundary/manifold flags.
+- `vertex-edges`: edge indices incident to the vertex.
+- `face-adjacency`: full attributed face-adjacency graph (gAAG) for the shape.
+- `edges-class`: indices of all edges matching the given class.
 
 **Example**
 
@@ -268,6 +268,6 @@ occtkit graph-select shape.brep --query face-neighbors --face 2
 }
 ```
 
-**Drives** — `AAG` (face queries) and `BRepGraph` (edge/vertex queries).
+**Drives**: `AAG` (face queries) and `BRepGraph` (edge/vertex queries).
 
-**Notes** — Face indices follow `shape.faces()` order (the `face[N]` scheme from `query-topology`). Edge and vertex indices are BRepGraph indices. The correct secondary parameter to supply depends on `--query`: `--face` for `face-neighbors`, `--edge` for `edge-faces`, `--vertex` for `vertex-edges`, `--class` for `edges-class`; none needed for `face-adjacency`.
+**Notes**: Face indices follow `shape.faces()` order (the `face[N]` scheme from `query-topology`). Edge and vertex indices are BRepGraph indices. The correct secondary parameter to supply depends on `--query`: `--face` for `face-neighbors`, `--edge` for `edge-faces`, `--vertex` for `vertex-edges`, `--class` for `edges-class`; none needed for `face-adjacency`.

@@ -1,7 +1,7 @@
-// Recipe 06 — Twisted fan blade
+// Recipe 06: Twisted fan blade
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — a single tapered, twisted fan/propeller blade on a hub boss.
+// Outputs: one solid body: a single tapered, twisted fan/propeller blade on a hub boss.
 // Notes:   The blade is a loft through several NACA-symmetric airfoil sections stacked along
 //          the span (Z). Each section is scaled (chord taper) and rotated in its own plane
 //          (twist) before lofting. Every section is built from the SAME number of points in
@@ -74,4 +74,4 @@ blade = blade.union(hub) ?? blade
 try ctx.add(blade, color: C.steel, name: "Fan blade")
 
 print("span \(span) mm, \(sections) sections, blade volume: \(blade.volume ?? 0) mm³")
-try ctx.emit(description: "Twisted fan blade — \(sections) airfoil sections, span \(span) mm")
+try ctx.emit(description: "Twisted fan blade, \(sections) airfoil sections, span \(span) mm")

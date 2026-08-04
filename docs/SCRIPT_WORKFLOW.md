@@ -3,7 +3,7 @@ title: Script workflow (in depth)
 nav_order: 6
 ---
 
-# OCCTSwiftScripts — Workflow Guide
+# OCCTSwiftScripts: Workflow Guide
 
 This document describes how to use the OCCTSwift script harness to develop parametric geometry, produce 2D/3D gallery views, and promote script code into a reusable app library.
 
@@ -17,7 +17,7 @@ The script harness gives you a CadQuery/OpenSCAD-style workflow for OCCTSwift:
 4. **Export** BREP + STEP files for external validation (ezdxf, FreeCAD, STEPUtils)
 5. **Promote** validated geometry code into a shared library for app integration
 
-You have access to the **full OCCTSwift API** — ~400+ methods across Shape, Wire, Edge, Face, Curve2D, Curve3D, Surface, Document, and more.
+You have access to the **full OCCTSwift API**: ~400+ methods across Shape, Wire, Edge, Face, Curve2D, Curve3D, Surface, Document, and more.
 
 ---
 
@@ -51,7 +51,7 @@ try ctx.emit(description: "JIS 60kg rail profile")
 // Solid shapes (shaded + wireframe in viewport)
 try ctx.add(shape, id: "bracket", color: C.steel, name: "Main bracket")
 
-// Wire profiles / sketches (wireframe only — for 2D profile inspection)
+// Wire profiles / sketches (wireframe only: for 2D profile inspection)
 try ctx.add(wire, id: "profile", color: C.yellow, name: "Cross-section sketch")
 
 // Edges (wireframe only)
@@ -234,7 +234,7 @@ try Exporter.writeSTEP(shape: shape, to: url, modelType: .asIs)
 
 ---
 
-## 3. Gallery Pattern — 2D + 3D Views
+## 3. Gallery Pattern: 2D + 3D Views
 
 A gallery function produces multiple visual outputs from a single part:
 a 3D solid, a 2D cross-section, HLR projected views, and dimension annotations.
@@ -291,7 +291,7 @@ print("Height: \(totalHeight?.value ?? 0) mm")
 let baseWidth = LengthDimension(from: SIMD3(-72.5,0,0), to: SIMD3(72.5,0,0))
 print("Base width: \(baseWidth?.value ?? 0) mm")
 
-try ctx.emit(description: "NEM 120 — profile + rail + HLR views")
+try ctx.emit(description: "NEM 120, profile + rail + HLR views")
 ```
 
 ### Gallery Output Structure
@@ -342,8 +342,8 @@ OCCTSwift provides four dimension types that can be created programmatically:
 | `AngleDimension` | `(face1: Shape, face2: Shape)` | Dihedral angle |
 
 Each dimension provides:
-- `.value` — the measured quantity (mm or radians)
-- `.geometry` — a `DimensionGeometry` struct with attachment points, text position, etc.
+- `.value`: the measured quantity (mm or radians)
+- `.geometry`: a `DimensionGeometry` struct with attachment points, text position, etc.
 
 The `DimensionGeometry` can be rendered as leader lines + markers via the viewport's
 `MeasurementOverlay` system, or printed to console for verification.
@@ -571,7 +571,7 @@ enum RailGallery {
 
         return Curve2DGallery.GalleryResult(
             bodies: bodies,
-            description: "\(result.metadata.name) — " +
+            description: "\(result.metadata.name), " +
                 "H=\(result.dimensions.totalHeight)mm " +
                 "W=\(result.dimensions.baseWidth)mm"
         )

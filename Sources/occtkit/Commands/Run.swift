@@ -1,11 +1,11 @@
-// Run subcommand — execute an arbitrary user .swift file as an OCCTSwift script.
+// Run subcommand, execute an arbitrary user .swift file as an OCCTSwift script.
 //
 // Maintains a cached SPM workspace under ~/.occtswift-scripts/runner-cache,
 // copies the user's source in, builds and runs.
 //
 // Workspace ScriptHarness dependency resolution order:
-//   1. $OCCTKIT_SCRIPTS_PATH (path-based dep) — explicit override
-//   2. Auto-detect package root from argv[0] (path-based dep) — works when
+//   1. $OCCTKIT_SCRIPTS_PATH (path-based dep), explicit override
+//   2. Auto-detect package root from argv[0] (path-based dep), works when
 //      running via `swift run occtkit ...` from a built tree
 //   3. Remote `from: "0.2.0"` (last published tag at time of writing)
 //

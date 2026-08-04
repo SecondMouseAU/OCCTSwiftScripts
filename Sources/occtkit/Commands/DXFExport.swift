@@ -1,4 +1,4 @@
-// DXFExport — project a BREP shape and write a DXF R12 drawing.
+// DXFExport: project a BREP shape and write a DXF R12 drawing.
 //
 // Wraps Exporter.writeDXF(shape:to:viewDirection:deflection:) (OCCTSwift v0.138+).
 // The shape is projected along the view direction (default +Z, i.e. top-down)

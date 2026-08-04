@@ -1,4 +1,4 @@
-# GitHub Pages (Jekyll) config for the OCCTSwiftScripts docs site — served from /docs on main.
+# GitHub Pages (Jekyll) config for the OCCTSwiftScripts docs site: served from /docs on main.
 #
 # Theme: just-the-docs (left sidebar nav + search). Pinned to v0.3.3, the last release
 # compatible with GitHub Pages' native (no-Actions) build, which pins Jekyll 3.9.

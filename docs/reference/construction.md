@@ -18,7 +18,7 @@ Pure functions that modify BREP geometry: translate, rotate, scale, apply boolea
 
 Apply translation, rotation (axis-angle or Euler XYZ), and/or uniform scale to a BREP.
 
-**Input** — flag-form, JSON-form (stdin or file path), or both. Supports `--serve`.
+**Input**: flag-form, JSON-form (stdin or file path), or both. Supports `--serve`.
 
 **Parameters**
 
@@ -30,7 +30,7 @@ Apply translation, rotation (axis-angle or Euler XYZ), and/or uniform scale to a
 | `--rotate-euler-xyz` / `rotateEulerXyz` | number[3] | no | Euler rotation `[rx, ry, rz]` in radians; extrinsic XYZ order. |
 | `--scale` / `scale` | number | no | Uniform scale factor (non-uniform rejected). |
 
-**Returns** — `{ "outputPath": "...", "trsf": [16 floats] }` where `trsf` is the column-major 4×4 transformation matrix. Transforms compose in order: translate → rotateAxisAngle → rotateEulerXyz → scale.
+**Returns**: `{ "outputPath": "...", "trsf": [16 floats] }` where `trsf` is the column-major 4×4 transformation matrix. Transforms compose in order: translate → rotateAxisAngle → rotateEulerXyz → scale.
 
 **Example**
 
@@ -41,9 +41,9 @@ occtkit transform in.brep --output out.brep --translate 10,20,30 --rotate-axis-a
 { "ok": true, "outputs": ["out.brep"], "trsf": [2.0, 0, 0, 0, ...] }
 ```
 
-**Drives** — `OCCTSwift.Shape.translated` / `.rotated` / `.scaled`.
+**Drives**: `OCCTSwift.Shape.translated` / `.rotated` / `.scaled`.
 
-**Notes** — OCCTSwift's `scaled(by:)` is uniform-only; non-uniform `--scale x,y,z` fails with a clear error. Euler XYZ decomposes to three sequential axis-angle rotations (around X, then Y, then Z).
+**Notes**: OCCTSwift's `scaled(by:)` is uniform-only; non-uniform `--scale x,y,z` fails with a clear error. Euler XYZ decomposes to three sequential axis-angle rotations (around X, then Y, then Z).
 
 ---
 
@@ -51,7 +51,7 @@ occtkit transform in.brep --output out.brep --translate 10,20,30 --rotate-axis-a
 
 Boolean set operation (union, subtract, intersect, split) between two BREPs.
 
-**Input** — flag-form, JSON-form (stdin or file path), or both. Supports `--serve`.
+**Input**: flag-form, JSON-form (stdin or file path), or both. Supports `--serve`.
 
 **Parameters**
 
@@ -62,7 +62,7 @@ Boolean set operation (union, subtract, intersect, split) between two BREPs.
 | `--b` / `b` | string | yes | Path to the second (tool) BREP. |
 | `--output` / `outputPath` | string | yes | Output BREP path. |
 
-**Returns** — `{ "outputPath": "...", "volume": <double|null>, "isValid": <bool>, "warnings": [<string>...] }`. Volume is `null` for non-solid results (compounds, open shells). Split wraps its pieces in a compound; downstream consumers decompose via `Shape.subShapes` if needed.
+**Returns**: `{ "outputPath": "...", "volume": <double|null>, "isValid": <bool>, "warnings": [<string>...] }`. Volume is `null` for non-solid results (compounds, open shells). Split wraps its pieces in a compound; downstream consumers decompose via `Shape.subShapes` if needed.
 
 **Example**
 
@@ -73,9 +73,9 @@ occtkit boolean --op union --a base.brep --b tool.brep --output result.brep
 { "ok": true, "outputPath": "result.brep", "volume": 1250.5, "isValid": true, "warnings": [] }
 ```
 
-**Drives** — `OCCTSwift.Shape.union` / `.subtracting` / `.intersection` / `.split`.
+**Drives**: `OCCTSwift.Shape.union` / `.subtracting` / `.intersection` / `.split`.
 
-**Notes** — Split that produces a single piece emits a warning. Non-manifold inputs and non-intersecting geometries surface as errors.
+**Notes**: Split that produces a single piece emits a warning. Non-manifold inputs and non-intersecting geometries surface as errors.
 
 ---
 
@@ -83,7 +83,7 @@ occtkit boolean --op union --a base.brep --b tool.brep --output result.brep
 
 Mirror through a plane, or create a linear or circular pattern, decomposing the result into individual BREP files.
 
-**Input** — flag-form, JSON-form (stdin or file path), or both. Supports `--serve`.
+**Input**: flag-form, JSON-form (stdin or file path), or both. Supports `--serve`.
 
 **Parameters**
 
@@ -102,7 +102,7 @@ Mirror through a plane, or create a linear or circular pattern, decomposing the 
 | `--total-count` / `totalCount` | integer | no | (circular only) Total number of instances (≥ 1). |
 | `--total-angle` / `totalAngle` | number | no | (circular only) Total rotation in radians. Defaults to 0 (complete circle: 2π / totalCount per instance). |
 
-**Returns** — `{ "outputPaths": ["pattern_0.brep", "pattern_1.brep", ...], "totalCount": <int> }`. Each pattern instance is written as `pattern_N.brep` in the output directory.
+**Returns**: `{ "outputPaths": ["pattern_0.brep", "pattern_1.brep", ...], "totalCount": <int> }`. Each pattern instance is written as `pattern_N.brep` in the output directory.
 
 **Example**
 
@@ -113,6 +113,6 @@ occtkit pattern in.brep --kind linear --output-dir /tmp/pattern --direction 1,0,
 { "ok": true, "outputPaths": ["/tmp/pattern/pattern_0.brep", "/tmp/pattern/pattern_1.brep", "/tmp/pattern/pattern_2.brep"], "totalCount": 3 }
 ```
 
-**Drives** — `OCCTSwift.Shape.mirrored` / `.linearPattern` / `.circularPattern`.
+**Drives**: `OCCTSwift.Shape.mirrored` / `.linearPattern` / `.circularPattern`.
 
-**Notes** — Mirror emits one file (`pattern_0.brep`); the original is not re-emitted. Linear and circular patterns decompose the compound result via `subShapes` to recover individual instances. Circular default `totalAngle: 0` means a full 360° circle divided equally among `totalCount` instances.
+**Notes**: Mirror emits one file (`pattern_0.brep`); the original is not re-emitted. Linear and circular patterns decompose the compound result via `subShapes` to recover individual instances. Circular default `totalAngle: 0` means a full 360° circle divided equally among `totalCount` instances.

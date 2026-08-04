@@ -6,7 +6,7 @@ nav_order: 1
 # OCCTSwiftScripts documentation
 
 A **script harness** for rapid iteration on [OCCTSwift](https://github.com/gsdali/OCCTSwift)
-parametric geometry — the OCCTSwift answer to **CadQuery / OpenSCAD**. Edit a Swift script
+parametric geometry: the OCCTSwift answer to **CadQuery / OpenSCAD**. Edit a Swift script
 using the *full OCCTSwift API*, run it, and see the result live in the
 [OCCTSwiftViewport](https://github.com/gsdali/OCCTSwiftViewport) demo app (the file watcher
 auto-reloads on each run). Bundled alongside is **`occtkit`**, a headless multi-call CLI of
@@ -35,7 +35,7 @@ swift run Script                 # build + run Sources/Script/main.swift → liv
 
 ## Cookbook
 
-Task-oriented, example-rich recipes — short prose plus the actual Swift script (or `occtkit`
+Task-oriented, example-rich recipes, short prose plus the actual Swift script (or `occtkit`
 invocation) and a rendered figure. The **[Cookbook index](guides/cookbook/)** lists every area:
 
 [Script iteration](guides/cookbook/script-iteration.md) ·
@@ -54,15 +54,15 @@ invocation) and a rendered figure. The **[Cookbook index](guides/cookbook/)** li
 
 ## Reference
 
-- **[CLI & API Reference](reference/)** — per-family detail: the `ScriptContext` / `ScriptHarness`
+- **[CLI & API Reference](reference/)**: per-family detail: the `ScriptContext` / `ScriptHarness`
   API, and every `occtkit` verb's flags, JSON schema, what it returns, an example call + result,
   and the OCCTSwift call behind it.
-- [README verb table](https://github.com/gsdali/OCCTSwiftScripts#occtkit-cli) — the one-line catalog.
+- [README verb table](https://github.com/gsdali/OCCTSwiftScripts#occtkit-cli): the one-line catalog.
 
 ## Guides & concepts
 
-- [Getting started](guides/getting-started.md) — build, run your first script, wire up the live viewport, install `occtkit`.
-- [Architecture](guides/architecture.md) — the targets (ScriptHarness / Script / DrawingComposer / occtkit), the output pipeline, the `--serve` envelope, and where this sits in the OCCTSwift ecosystem.
+- [Getting started](guides/getting-started.md): build, run your first script, wire up the live viewport, install `occtkit`.
+- [Architecture](guides/architecture.md): the targets (ScriptHarness / Script / DrawingComposer / occtkit), the output pipeline, the `--serve` envelope, and where this sits in the OCCTSwift ecosystem.
 
 ## Project
 

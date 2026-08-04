@@ -39,7 +39,7 @@ enum FeatureRecognizeCommand: Subcommand {
         struct Feature: Codable {
             let id: String
             let kind: String           // "pocket" | "hole"
-            let confidence: Double     // 1.0 — AAG is rule-based, no probabilistic score
+            let confidence: Double     // 1.0, AAG is rule-based, no probabilistic score
             let params: [String: Double]
             let topologyRefs: [String]
         }

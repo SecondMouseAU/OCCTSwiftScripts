@@ -1,4 +1,4 @@
-// Reconstruct — JSON `[FeatureSpec]` → BREP via OCCTSwift.FeatureReconstructor.
+// Reconstruct: JSON `[FeatureSpec]` → BREP via OCCTSwift.FeatureReconstructor.
 //
 // Closes OCCTSwiftScripts#3. Was blocked on OCCTSwift#62 (FeatureReconstructor
 // landed v0.142) and #82 (FeatureSpec Codable; ended up as a discriminator-flat
@@ -20,7 +20,7 @@
 //   inputBrep   optional path to a starting BREP. When present, the kernel
 //               seeds BuildContext.current with this body and registers it
 //               under "@input" for boolean/fillet/chamfer references.
-//   features    array of feature entries — each with a "kind" discriminator
+//   features    array of feature entries: each with a "kind" discriminator
 //               ("revolve" | "extrude" | "hole" | "thread" | "fillet" |
 //                "chamfer" | "boolean") and snake_case fields per
 //               FeatureReconstructor.swift's private FeatureEntry decoder.

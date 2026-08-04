@@ -24,9 +24,9 @@ swift run occtkit graph-validate body.brep     # from a checkout, no install
 
 Every verb also accepts:
 
-- **Flag form** — positional paths + `--flags` as documented per verb below.
-- **JSON form** — a JSON request on **stdin**, or a `*.json` file path as the first argv.
-- **`--serve` mode** — a JSONL request loop: each stdin line is `{"args":[...]}` and
+- **Flag form**: positional paths + `--flags` as documented per verb below.
+- **JSON form**: a JSON request on **stdin**, or a `*.json` file path as the first argv.
+- **`--serve` mode**: a JSONL request loop: each stdin line is `{"args":[...]}` and
   the response is one JSONL envelope per request:
   `{"ok":bool,"exit":int,"stdout":str,"stderr":str,"error":str?}`. The subcommand's own
   stdout/stderr (including child-process output) is captured *into* the envelope, not
@@ -96,7 +96,7 @@ Validate a BREP's topology graph and surface a structured health record.
 **Output:** `{ isValid, errorCount, warningCount, healthRecord }` where `healthRecord`
 carries `{ isValid, shapeType, freeEdgeCount, nakedVertexCount, smallEdgeCount,
 smallFaceCount, selfIntersecting, errors }` (populated from `Shape.analyze()`;
-`nakedVertexCount` is always `0` — OCCTSwift does not expose it).
+`nakedVertexCount` is always `0`: OCCTSwift does not expose it).
 
 ```bash
 graph-validate body.brep
@@ -146,7 +146,7 @@ ML-friendly JSON (UV-Net / B-rep GNN feature export, via `OCCTSwiftIO`).
 **Input:** `graph-ml <shape.brep> [--uv-samples N] [--edge-samples N]`
 (defaults: `--uv-samples 16`, `--edge-samples 32`).
 **Output:** `{ vertexPositions, edgeBoundaryFlags, edgeManifoldFlags, faceAdjacentFaces,
-faceToFace, faceToEdge, edgeToVertex, faces[], edges[], faceAdjacency[], sampling }` —
+faceToFace, faceToEdge, edgeToVertex, faces[], edges[], faceAdjacency[], sampling }`:
 COO adjacency matrices, per-face position/normal/curvature grids, and a convexity-attributed
 face-adjacency graph (`convexity` ∈ `convex|concave|smooth`).
 
@@ -156,7 +156,7 @@ graph-ml part.brep --uv-samples 16 --edge-samples 32 > part.json
 
 ### `graph-select`
 
-Direct B-rep graph adjacency / selection queries — the "pointer" primitive behind
+Direct B-rep graph adjacency / selection queries: the "pointer" primitive behind
 DSL selectors and B-rep GNN selection (no full graph export needed).
 
 **Input:** `graph-select <shape.brep> --query <type> [ids]`. Queries:
@@ -181,7 +181,7 @@ Detect pockets and holes via AAG (Attributed Adjacency Graph) heuristics.
 
 **Input:** `feature-recognize <shape.brep>`
 **Output:** `{ pockets[], holes[], features[] }`. Each `features[]` entry has
-`{ id, kind ("pocket"|"hole"), confidence (1.0 — rule-based), params, topologyRefs }`,
+`{ id, kind ("pocket"|"hole"), confidence (1.0, rule-based), params, topologyRefs }`,
 where `topologyRefs` use the `face[N]` scheme.
 
 ```bash
@@ -235,7 +235,7 @@ measure-distance a.brep b.brep --compute-contacts
 ### `measure-deviation`
 
 Directed + symmetric surface deviation (one-sided / symmetric Hausdorff) between two
-BREPs — the fidelity metric a mesh→analytic reconstruction check needs. Mesh-based
+BREPs: the fidelity metric a mesh→analytic reconstruction check needs. Mesh-based
 (tessellate both, project samples onto triangles).
 
 **Flag form:** `measure-deviation <a.brep> <b.brep> [--deflection D] [--max-samples N]`
@@ -268,7 +268,7 @@ dxf-export bracket.brep bracket.dxf --view 0,0,1
 
 ### `drawing-export`
 
-Compose a complete **ISO 128-30 multi-view technical drawing** as DXF R12 — ISO 5457
+Compose a complete **ISO 128-30 multi-view technical drawing** as DXF R12, ISO 5457
 border + centring marks, ISO 7200 title block, ISO 5456-2 projection symbol, HLR
 orthographic views, auto-hatched section views (ISO 128-50), cutting-plane lines
 (ISO 128-40), auto-centerlines/centermarks, ISO 6410 cosmetic threads, ISO 1302
@@ -296,7 +296,7 @@ Build a BREP from a JSON `[FeatureSpec]` payload via OCCTSwift's `FeatureReconst
 
 **Request schema (JSON object):** `outputDir` (required), `outputName?` (default
 `"reconstructed"`), `inputBrep?` (a starting body, registered under `@input` for
-boolean/fillet/chamfer references), `features[]` — each with a `kind` discriminator
+boolean/fillet/chamfer references), `features[]`: each with a `kind` discriminator
 (`revolve` | `extrude` | `hole` | `thread` | `fillet` | `chamfer` | `boolean`) and
 snake_case fields.
 **Output:** `{ shape: "<path>.brep"|null, fulfilled[], skipped[{id,stage,reason,detail}], annotations[{id,kind,detail}] }`.
@@ -333,7 +333,7 @@ Apply translate → rotate → uniform-scale to a BREP, in declared order. Write
 (axis-angle and euler are mutually exclusive).
 **JSON form:** `{ "inputBrep": "...", "outputPath": "...", "translate": [x,y,z],
 "rotateAxisAngle": [x,y,z,rad] | "rotateEulerXyz": [x,y,z], "scale": s|[x,y,z] }`
-**Output:** `{ outputPath, trsf: [16 floats — column-major 4×4] }`.
+**Output:** `{ outputPath, trsf: [16 floats, column-major 4×4] }`.
 
 ```bash
 transform in.brep --output out.brep --translate 10,0,0 --rotate-axis-angle 0,0,1,1.5708
@@ -358,7 +358,7 @@ Mirror / linear / circular pattern of a BREP, written as one BREP per instance
 (`pattern_0.brep`, `pattern_1.brep`, ...) into `--output-dir`.
 
 **Flag form:** `pattern <input.brep> --kind mirror|linear|circular --output-dir <dir> [kind flags]`
-— mirror: `--plane xy|yz|zx | --plane ox,oy,oz;nx,ny,nz`; linear: `--direction x,y,z --spacing s --count n`;
+Mirror: `--plane xy|yz|zx | --plane ox,oy,oz;nx,ny,nz`; linear: `--direction x,y,z --spacing s --count n`;
 circular: `--axis-origin x,y,z --axis-direction x,y,z --total-count n [--total-angle radians]`.
 **JSON form:** `{ "inputBrep": "...", "kind": "...", "outputDir": "...", ... }`
 **Output:** `{ outputPaths[], totalCount }`.
@@ -374,7 +374,7 @@ pattern bolt.brep --kind circular --axis-origin 0,0,0 --axis-direction 0,0,1 --t
 ### `load-brep`
 
 Load a `.brep` and write a single-body `ScriptManifest` (`<id>.brep` + `manifest.json`)
-so OCCTSwiftViewport's ScriptWatcher picks it up — a no-compile equivalent of a one-line
+so OCCTSwiftViewport's ScriptWatcher picks it up: a no-compile equivalent of a one-line
 `ctx.add(...) + ctx.emit(...)` script.
 
 **Flag form:** `load-brep <input.brep> --emit-manifest <dir> [--id <bodyId>] [--color <hex>] [--allow-invalid]`
@@ -488,7 +488,7 @@ simplify-mesh part.brep --target-reduction 0.5 --output part-lod.obj
 ### `render-preview`
 
 Render a PNG preview of one or more BREPs at a named camera angle, headless, via
-OCCTSwiftViewport's `OffscreenRenderer`. **This repo owns `render-preview`** — it is the
+OCCTSwiftViewport's `OffscreenRenderer`. **This repo owns `render-preview`**: it is the
 ecosystem's way to embed 3D previews in docs and reports.
 
 **Flag form:** `render-preview <brep>... --output <png>
@@ -514,7 +514,7 @@ render-preview part.brep --output hl.png --highlight 'face[3],edge[7]' --highlig
 
 <model-viewer src="../models/drilled-block.glb" camera-controls auto-rotate environment-image="neutral" exposure="1.1" shadow-intensity="1" style="width:340px;height:300px;background:#eef1f5;border-radius:6px"></model-viewer>
 
-*Interactive 3D — representative kernel model (render-preview output for part.png).*
+*Interactive 3D, representative kernel model (render-preview output for part.png).*
 
 ---
 

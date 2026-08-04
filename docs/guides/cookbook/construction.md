@@ -7,7 +7,7 @@ nav_order: 6
 # Construction
 
 `transform`, `boolean`, and `pattern` are headless, pure-function verbs: each reads one or two
-BREP files, applies geometry in memory, and writes new BREP files. No scene, no history — just
+BREP files, applies geometry in memory, and writes new BREP files. No scene, no history, just
 BREP in → BREP out. That makes them trivially composable in a shell pipeline or a `--serve` JSONL
 loop driven by OCCTMCP.
 
@@ -26,7 +26,7 @@ and a single bolt-hole cylinder (`hole.brep`), we:
 
 ---
 
-## Step 1 — Circular-pattern the bolt hole
+## Step 1: Circular-pattern the bolt hole
 
 `pattern` takes one BREP and writes one file per instance into `--output-dir`. Circular mode
 needs an axis origin, an axis direction, and a total count. Omitting `--total-angle` means a full
@@ -55,14 +55,14 @@ occtkit pattern hole.brep \
 }
 ```
 
-Each `pattern_N.brep` is an independent solid — no parent-child linkage.
+Each `pattern_N.brep` is an independent solid, no parent-child linkage.
 
 ---
 
-## Step 2 — Union the instances into a single tool body
+## Step 2: Union the instances into a single tool body
 
 `boolean` works on exactly two BREPs. Union the six hole instances progressively to build one
-compound cutter. (Alternatively, union any existing compound from a prior step — each call is
+compound cutter. (Alternatively, union any existing compound from a prior step: each call is
 still a pure two-input function.)
 
 ```bash
@@ -97,7 +97,7 @@ done
 
 ---
 
-## Step 3 — Subtract the cutter from the flange
+## Step 3: Subtract the cutter from the flange
 
 ```bash
 occtkit boolean --op subtract \
@@ -116,11 +116,11 @@ occtkit boolean --op subtract \
 ```
 
 `volume` is the enclosed solid volume in mm³. A `null` here would indicate a non-solid result
-(open shell, degenerate faces) — treat that as a geometry problem upstream.
+(open shell, degenerate faces), treat that as a geometry problem upstream.
 
 ---
 
-## Step 4 — Rotate to align with the pipe axis
+## Step 4: Rotate to align with the pipe axis
 
 `transform` applies translate → rotate → scale in that order. Pass `--rotate-axis-angle` as
 `axisX,axisY,axisZ,radians`. Here a 90° rotation around the Y axis aligns the flange face with
@@ -144,7 +144,7 @@ occtkit transform flange_drilled.brep \
 }
 ```
 
-`trsf` is the column-major 4×4 transformation matrix — useful when a downstream tool needs to
+`trsf` is the column-major 4×4 transformation matrix: useful when a downstream tool needs to
 reproject points or normals without re-reading the BREP.
 
 ---
@@ -185,7 +185,7 @@ there. Nothing is cached between calls.
 ## JSON-form and `--serve`
 
 All three verbs accept a JSON request on stdin (or as a `.json` positional argument), and all
-support `--serve` for JSONL streaming — useful when OCCTMCP drives multiple operations without
+support `--serve` for JSONL streaming: useful when OCCTMCP drives multiple operations without
 forking a new process per call. The request keys match the flag names in camelCase: `inputBrep`,
 `outputPath`, `outputDir`, `axisOrigin`, `totalCount`, etc. See the
 [Construction reference](../../reference/construction.md) for the full field tables.
