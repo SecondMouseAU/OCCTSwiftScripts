@@ -4,11 +4,16 @@
 // Outputs: one solid body: a constant-pitch round-wire compression spring.
 // Notes:   The coil centre-line is a helix (Wire.helix); the wire cross-section is a
 //          circle placed at the helix start and oriented along the start tangent, then
-//          swept along the path (Shape.sweep → BRepOffsetAPI_MakePipe). The section
+//          swept along the path with Shape.pipeShell(..., solid: true) (OCCTSwiftScripts
+//          #100). Shape.sweep wraps BRepOffsetAPI_MakePipe, which never caps the ends of
+//          the swept tube and so returns a shell even for a closed circular profile;
+//          Shape.pipeShell wraps BRepOffsetAPI_MakePipeShell, which has an explicit
+//          `solid:` flag that caps the ends into a genuine solid. This is the documented
+//          canonical spring recipe (OCCTSwift cookbook, Helices & Springs). The section
 //          MUST sit on the spine start and face along the tangent or the pipe fails.
-//          Shape.sweep orientation-normalises its result (OCCTSwift v1.3.1, #170), so the
-//          solid has positive volume regardless of section sense. Ground/closed ends are
-//          out of scope here; this is an open-coil spring.
+//          `mode: .correctedFrenet` keeps the round section true along the coil (plain
+//          .frenet also builds a valid solid but lets the section twist slightly).
+//          Ground/closed ends are out of scope here; this is an open-coil spring.
 //
 // Run:  swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
@@ -39,7 +44,7 @@ let tLen = (t.x * t.x + t.y * t.y + t.z * t.z).squareRoot()
 let tangent = SIMD3<Double>(t.x / tLen, t.y / tLen, t.z / tLen)
 let section = Wire.circle(origin: SIMD3(meanRadius, 0, 0), normal: tangent, radius: wireDia / 2)!
 
-let spring = Shape.sweep(profile: section, along: path)!
+let spring = Shape.pipeShell(spine: path, profile: section, mode: .correctedFrenet, solid: true)!
 try ctx.add(spring, color: C.steel, name: "Compression spring")
 
 print("Free length ≈ \(pitch * activeCoils) mm, spring volume: \(spring.volume ?? 0) mm³")
