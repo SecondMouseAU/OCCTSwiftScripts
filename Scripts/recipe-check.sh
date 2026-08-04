@@ -5,7 +5,12 @@
 #   1. Run `occtkit run <dir>/main.swift --format brep` into a temp dir.
 #   2. Assert manifest.json parses and body-0.brep is non-empty.
 #   3. Assert the emitted volume is > 0 (via `occtkit metrics`).
-#   4. If <dir>/output.brep exists, compare volume + bounding box within tolerance.
+#   4. Assert the emitted body contains at least one solid (`solidCount >= 1`).
+#      This is a solids-count check, not a `shapeType == "solid"` check: a compound
+#      wrapping one solid (the normal `circularPatternCut` result) is healthy and must
+#      pass, while a shell, or a compound with zero solids inside (a wire-based
+#      revolve/sweep that never got faced/capped, OCCTSwiftScripts#100), must fail.
+#   5. If <dir>/output.brep exists, compare volume + bounding box within tolerance.
 #
 # Usage:
 #   Scripts/recipe-check.sh recipes/01-mounting-bracket
@@ -36,7 +41,19 @@ check_one() {
   # All validation + (optional) reference compare happens in one Python pass.
   # Args: <emitted-dir> <reference-output.brep>. occtkit metrics is shelled out for
   # both the emitted body and the reference; no data is piped over stdin.
-  python3 - "$tmp" "$dir/output.brep" <<'PY'
+  #
+  # This is deliberately `if ! python3 ...; then return 1; fi`, not a bare `python3
+  # ...` statement: `check_one` is always invoked as `check_one ... || status=1`, and
+  # bash disables `errexit` for every command inside a function while that function is
+  # itself the left-hand side of `||`. A bare statement here let a nonzero exit from
+  # this Python block fall straight through to the unconditional `echo "  ✓ ... OK"`
+  # below, so every failure this script detects (die() calls: missing/empty manifest
+  # or body, volume <= 0, solidCount < 1, drift vs the reference) got printed and then
+  # silently reported as a pass anyway, with exit 0. This was a pre-existing bug, not
+  # introduced by the solidCount check: confirmed on the unmodified script that a real
+  # reference-drift failure on 01-mounting-bracket still printed "✓ 01-mounting-bracket
+  # OK" and exited 0.
+  if ! python3 - "$tmp" "$dir/output.brep" <<'PY'
 import json, os, subprocess, sys
 
 emitted_dir, ref = sys.argv[1], sys.argv[2]
@@ -56,13 +73,17 @@ except Exception as e:
 if not os.path.exists(body) or not os.path.getsize(body): die("body-0.brep missing/empty")
 
 def metrics(path):
-    out = subprocess.check_output(occtkit + ["metrics", path, "--metrics", "volume,boundingBox"])
+    out = subprocess.check_output(occtkit + ["metrics", path, "--metrics", "volume,boundingBox,solidCount"])
     return json.loads(out)
 
 cur = metrics(body)
 v = cur.get("volume")
 if v is None or v <= 0: die(f"volume not > 0: {v}")
 print(f"  ✓ volume = {v:.3f}")
+
+solids = cur.get("solidCount")
+if solids is None or solids < 1: die(f"solidCount not >= 1: {solids} (shapeType alone is not enough, see header)")
+print(f"  ✓ solidCount = {solids}")
 
 if os.path.exists(ref):
     r = metrics(ref); rv = r["volume"]
@@ -76,6 +97,9 @@ if os.path.exists(ref):
 else:
     print("  · no reference output.brep, skipping compare")
 PY
+  then
+    return 1
+  fi
   echo "  ✓ $name OK"
 }
 
