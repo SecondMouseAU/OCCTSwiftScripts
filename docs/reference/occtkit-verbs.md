@@ -190,14 +190,17 @@ feature-recognize bracket.brep
 
 ### `metrics`
 
-Volume / surface area / centre of mass / bounding box / principal axes for a BREP.
-Pure read, no file output. `volume`, `centerOfMass`, `principalAxes` come from
-`Shape.volumeInertia` (solid-only; `null` otherwise).
+Volume / surface area / centre of mass / bounding box / principal axes / solid count for
+a BREP. Pure read, no file output. `volume`, `centerOfMass`, `principalAxes` come from
+`Shape.volumeInertia` (solid-only; `null` otherwise). `solidCount` is
+`Shape.subShapes(ofType: .solid).count`: use it, not `shapeType`, to tell a genuinely
+solid body from a shell or an empty-of-solids compound (`shapeType` alone is misleading,
+`circularPatternCut` legitimately reports `compound` for a healthy one-solid result).
 
-**Flag form:** `metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,boundingBoxOptimal,principalAxes]`
+**Flag form:** `metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,boundingBoxOptimal,principalAxes,solidCount]`
 (omit `--metrics` for all except `boundingBoxOptimal`, which is opt-in).
 **JSON form:** `{ "inputBrep": "...", "metrics": [...] }`
-**Output:** `{ volume?, surfaceArea?, centerOfMass?, boundingBox?, boundingBoxOptimal?, principalAxes? }`.
+**Output:** `{ volume?, surfaceArea?, centerOfMass?, boundingBox?, boundingBoxOptimal?, principalAxes?, solidCount? }`.
 
 ```bash
 metrics part.brep --metrics volume,boundingBox
