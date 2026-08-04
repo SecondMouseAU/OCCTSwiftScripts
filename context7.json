@@ -1,7 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "OCCTSwiftScripts",
-  "description": "A script harness + 29-verb `occtkit` CLI for OpenCASCADE CAD in Swift — the OCCTSwift answer to CadQuery/OpenSCAD. Ships the ScriptHarness and DrawingComposer libraries; OCCTMCP-ready.",
+  "description": "A script harness + 29-verb `occtkit` CLI for OpenCASCADE CAD in Swift, the OCCTSwift answer to CadQuery/OpenSCAD. Ships the ScriptHarness and DrawingComposer libraries; OCCTMCP-ready.",
   "folders": [
     "docs",
     "Sources/ScriptHarness",
@@ -14,13 +14,12 @@
     ".build",
     "okf",
     "Scripts",
-    ".swiftpm",
-    "docs/knowledge"
+    ".swiftpm"
   ],
   "rules": [
     "OCCTSwiftScripts is a CadQuery/OpenSCAD-style harness for OCCTSwift, not a CAD kernel. Geometry comes from the OCCTSwift API (`import OCCTSwift`); a script accumulates bodies in a `ScriptContext`, calls `emit()`, and OCCTSwiftViewport live-reloads.",
     "Script entry point is `Sources/Script/main.swift`; build then `swift run Script`. Always: `let ctx = ScriptContext()`, build geometry, `try ctx.add(shape, id:, color:)` per body, `try ctx.emit()` LAST. Headless: `occtkit run <file>.swift`.",
-    "Fallible OCCTSwift factories return optionals — unwrap with `guard let`/`if let`, or `!` only in throwaway scripts. `ScriptContext.add()` accepts `Shape`, `Wire`, or `Edge`; `addCompound([Shape])` and `addGraph(_:)` also exist.",
+    "Fallible OCCTSwift factories return optionals: unwrap with `guard let`/`if let`, or `!` only in throwaway scripts. `ScriptContext.add()` accepts `Shape`, `Wire`, or `Edge`; `addCompound([Shape])` and `addGraph(_:)` also exist.",
     "Colors are `ScriptContext.Colors` constants (`.steel`, `.brass`, `.copper`, `.red`, ...), passed as the `color:` argument; they are `[Float]` RGBA under the hood.",
     "Output: one `body-N.brep` per add + an optional combined `output.step`, to iCloud `.../CloudDocs/OCCTSwiftScripts/output/` if present, else `~/.occtswift-scripts/output/`. `manifest.json` is written LAST so a partial failure keeps the prior frame.",
     "`occtkit` is a busybox-style multi-call binary: run a verb as `occtkit <verb> ...`, `swift run occtkit <verb> ...`, or an installed symlink (`make install`). 29 verbs span script-host, graph, drawings, reconstruct, construction, I/O, mesh, render, XCAF.",
