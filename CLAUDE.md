@@ -19,7 +19,7 @@ reference; the bundle holds the standing policies, the public component surface,
 references. Record durable decisions and policies as OKF entries, not only in chat or commit
 messages.
 
-**Read `okf/policies/` before starting work. All six are mandatory:**
+**Read `okf/policies/` before starting work. All seven are mandatory:**
 
 - [context-first](okf/policies/context-first.md): look OCCT / OCCTSwift documentation up via
   the `context` MCP, then context7 for external libraries, then other ecosystem repos' docs.
@@ -42,6 +42,12 @@ messages.
 - [open-source-boundary](okf/policies/open-source-boundary.md): never propose a verb,
   dependency, or change that would make this repo depend on a closed-source project. Downstream
   closed-source consumers (the OCCTStudio app) wire their own proprietary pieces.
+- [issue-tracking](okf/policies/issue-tracking.md): every issue carries a `type:*` and a
+  `priority:*` label. A multi-phase initiative gets its own project board rather than being
+  folded into the default backlog view.
+
+`Scripts/policy-check.sh` (CI: `.github/workflows/docs-consistency.yml`) asserts this list stays
+in step with `okf/policies/`, so adding a policy file without listing it here fails the build.
 
 `okf/` is the only knowledge bundle. An earlier one at `docs/knowledge/` was consolidated into
 it and removed on 2026-08-04; see [`okf/log.md`](okf/log.md).
