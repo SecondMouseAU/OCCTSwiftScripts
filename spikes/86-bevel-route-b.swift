@@ -270,7 +270,14 @@ func buildBlank(_ g: GearGeometry) -> Shape? {
         SIMD3(0, innerRoot.x, innerRoot.y),
     ]
     guard let wire = Wire.polygon3D(profilePts, closed: true) else { return nil }
-    return Shape.revolve(profile: wire, axisOrigin: .zero, axisDirection: SIMD3(0, 0, 1), angle: 2 * .pi)
+    // Face the wire before revolving. `Shape.revolve(profile: wire, ...)` revolves a
+    // curve and so returns a SHELL. That is correct OCCT behaviour but useless as a
+    // boolean operand: subtracting from a shell trims surface patches instead of
+    // carving material, which is exactly what produced the disconnected blade-like
+    // "teeth" in this spike's first run. See
+    // okf/decisions/wire-sweep-factories-are-not-symmetric.md and #100.
+    guard let face = Shape.face(from: wire) else { return nil }
+    return face.revolved(axisOrigin: .zero, axisDirection: SIMD3(0, 0, 1))
 }
 
 // ── Tooth-space cutter: one wedge, lofted across the same slices+1 stations ─
