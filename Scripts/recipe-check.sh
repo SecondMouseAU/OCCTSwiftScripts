@@ -87,6 +87,12 @@ print(f"  ✓ solidCount = {solids}")
 
 if os.path.exists(ref):
     r = metrics(ref); rv = r["volume"]
+    # `solidCount >= 1` above catches "a shell shipped". This catches the other half
+    # of the same family: a topology regression that still has a positive volume, for
+    # example a compound going from 1 solid to 3 because a boolean stopped fusing.
+    rs = r.get("solidCount")
+    if rs is not None and solids != rs:
+        die(f"solidCount drift: {solids} vs reference {rs}")
     rel = abs(v - rv) / max(abs(rv), 1e-9)
     if rel > tol: die(f"volume drift {rel:.2e} > tol {tol:.1e} (ref {rv:.3f})")
     for key in ("min", "max"):

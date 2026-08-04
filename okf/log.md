@@ -1,5 +1,15 @@
 # Knowledge Log
 
+## 2026-08-05
+
+* **Update**: Fixed two cookbook recipes that emitted shells while documenting themselves as
+  solids (#100). `03-pipe-flange` revolved a wire, `02-helical-spring` swept one. The flange's
+  shell was also silently under-cutting its bolt circle, removing one third of the correct
+  material. Hardened `Scripts/recipe-check.sh` to assert `solidCount`, and fixed a bug there that
+  made every check it performed decorative.
+* **Creation**: Recorded the wire-sweep-factories-are-not-symmetric decision.
+* **Creation**: Recorded the errexit-is-suppressed-in-or-context decision.
+
 ## 2026-08-04
 
 * **Update**: Deduplication pass for issue #82. Moved `readFile`, `decodeJSON`, `valueAfter`,

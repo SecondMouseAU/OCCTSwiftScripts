@@ -35,7 +35,7 @@ corners; it falls back to the un-chamfered body if the blend fails.
 
 - `Wire.polygon(_:closed:)`: the `(radius, axial)` half-section
 - `Shape.face(from:)`: face the half-section before revolving
-- `revolved(axisOrigin:axisDirection:)`: surface of revolution (on the faced section)
+- `Shape.revolved(axisOrigin:axisDirection:)`: surface of revolution (on the faced section)
 - `Shape.cylinder(at:direction:radius:height:)`: the bolt-hole tool
 - `Shape.circularPatternCut(tool:axisPoint:axisDirection:count:angle:)`: the bolt circle (OCCTSwift v1.3.1)
 - `Shape.chamfered(distance:)`: edge break (optional)

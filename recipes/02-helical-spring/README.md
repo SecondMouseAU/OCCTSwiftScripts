@@ -47,3 +47,8 @@ keeps the round section true along the coil.
   ends need either a variable-pitch helix or an end-grinding boolean.
 - `Wire.helix` uses `turns:` (a coil count), **not** a `height:`. Free length ≈ `pitch ·
   activeCoils`.
+- Checking a swept result: assert `shape.subShapeCount(ofType: .solid) >= 1`. Neither
+  `shapeType` nor a positive `volume` is sufficient, since a shell reports a plausible
+  volume and a compound wrapping one solid is healthy. If you are debugging a sweep's
+  orientation rather than its topology, `Shape.signedVolume` inspects the raw sense and
+  `orientedForward()` normalises it.

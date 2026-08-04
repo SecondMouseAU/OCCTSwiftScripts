@@ -35,7 +35,7 @@ let tangent = t / tLen
 let section = Wire.circle(origin: SIMD3(meanRadius, 0, 0),
                           normal: tangent, radius: wireDia / 2)!
 
-let spring = Shape.sweep(profile: section, along: path)!
+let spring = Shape.pipeShell(spine: path, profile: section, mode: .correctedFrenet, solid: true)!
 ```
 
 Run it:
@@ -50,9 +50,16 @@ swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
 - The section circle **must** sit on the spine start and face along the tangent:
   an edge-on or offset section makes `BRepOffsetAPI_MakePipe` fail and returns `nil`.
-- `Shape.sweep` orientation-normalises its result since OCCTSwift v1.3.1 (issue #170),
-  so you never need to flip the section sense to avoid a negative-volume solid. Use
-  `Shape.signedVolume` if you need to inspect raw orientation.
+- **Use `pipeShell(..., solid: true)`, not `Shape.sweep`, when you want a solid.**
+  `Shape.sweep` wraps `BRepOffsetAPI_MakePipe`, which never caps the tube ends, so it
+  returns an open **shell**. The shell still reports a plausible positive `volume`, which
+  is what let this go unnoticed in this recipe until OCCTSwiftScripts#100. Check with
+  `shape.subShapeCount(ofType: .solid) >= 1`; `shapeType` alone is misleading, because a
+  compound wrapping one solid is perfectly healthy.
+- `Shape.sweep` orientation-normalises its result since OCCTSwift v1.3.1 (issue #170), so
+  you never need to flip the section sense to avoid a negative-volume shell. Use
+  `Shape.signedVolume` and `orientedForward()` if you need to inspect or fix raw
+  orientation.
 - `Wire.helix` takes `turns:` (a coil count), **not** a `height:`.
   Free length ≈ `pitch · turns`.
 - Ground or closed ends are out of scope here: they require a variable-pitch helix or

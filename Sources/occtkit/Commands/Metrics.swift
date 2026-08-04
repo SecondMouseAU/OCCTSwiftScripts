@@ -7,7 +7,7 @@
 //   Shape.volumeInertia            -> volume, centerOfMass, principalMoments + axes
 //   Shape.surfaceArea              -> total area
 //   Shape.bounds                   -> axis-aligned bounding box
-//   Shape.subShapes(ofType: .solid) -> solidCount
+//   Shape.subShapeCount(ofType: .solid) -> solidCount
 //
 // `volumeInertia` is solid-only; for non-solids, volume / centerOfMass /
 // principalAxes fall back to nil. surfaceArea is computed off the
@@ -108,7 +108,7 @@ enum MetricsCommand: Subcommand {
             )
         }()
 
-        let solidCount: Int? = wants("solidCount") ? shape.subShapes(ofType: .solid).count : nil
+        let solidCount: Int? = wants("solidCount") ? shape.subShapeCount(ofType: .solid) : nil
 
         try GraphIO.emitJSON(Response(
             volume: wants("volume") ? inertia?.volume : nil,
