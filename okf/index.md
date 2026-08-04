@@ -51,6 +51,7 @@ See [`decisions/`](decisions/index.md) for recorded engineering decisions and th
 - [No em-dashes, banned words in prose](policies/writing-style.md)
 - [Search before building](policies/search-before-building.md)
 - [Open-source boundary](policies/open-source-boundary.md)
+- [Code structure](policies/code-structure.md)
 
 ## History
 
