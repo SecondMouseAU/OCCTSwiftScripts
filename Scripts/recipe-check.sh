@@ -53,7 +53,9 @@ check_one() {
   # introduced by the solidCount check: confirmed on the unmodified script that a real
   # reference-drift failure on 01-mounting-bracket still printed "✓ 01-mounting-bracket
   # OK" and exited 0.
-  if ! python3 - "$tmp" "$dir/output.brep" <<'PY'
+  # -u: stdout is block-buffered when piped while die() writes to stderr unbuffered,
+  # so failures would otherwise print above the passing lines that preceded them.
+  if ! python3 -u - "$tmp" "$dir/output.brep" <<'PY'
 import json, os, subprocess, sys
 
 emitted_dir, ref = sys.argv[1], sys.argv[2]

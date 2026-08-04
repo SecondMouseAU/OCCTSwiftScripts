@@ -193,12 +193,19 @@ feature-recognize bracket.brep
 Volume / surface area / centre of mass / bounding box / principal axes / solid count for
 a BREP. Pure read, no file output. `volume`, `centerOfMass`, `principalAxes` come from
 `Shape.volumeInertia` (solid-only; `null` otherwise). `solidCount` is
-`Shape.subShapes(ofType: .solid).count`: use it, not `shapeType`, to tell a genuinely
+`Shape.subShapeCount(ofType: .solid)`: use it, not `shapeType`, to tell a genuinely
 solid body from a shell or an empty-of-solids compound (`shapeType` alone is misleading,
 `circularPatternCut` legitimately reports `compound` for a healthy one-solid result).
 
 **Flag form:** `metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,boundingBoxOptimal,principalAxes,solidCount]`
 (omit `--metrics` for all except `boundingBoxOptimal`, which is opt-in).
+
+> **Downstream note (added OCCTSwiftScripts#100).** `solidCount` is in the default-all set, so
+> every existing `occtkit metrics` consumer, including OCCTMCP's `compute_metrics`, now receives
+> one extra field in the default response. The change is additive and the field is optional, so
+> no consumer breaks. It is default-all rather than opt-in like `boundingBoxOptimal` because the
+> traversal is a single cheap `TopExp::MapShapes` pass, and because "is this actually a solid" is
+> the question a caller most often needs and cannot answer from `shapeType`.
 **JSON form:** `{ "inputBrep": "...", "metrics": [...] }`
 **Output:** `{ volume?, surfaceArea?, centerOfMass?, boundingBox?, boundingBoxOptimal?, principalAxes?, solidCount? }`.
 

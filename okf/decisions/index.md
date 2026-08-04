@@ -15,4 +15,3 @@ that need standalone rationale.
   faces a wire for you, `revolve` and `sweep` do not. Assert `solidCount >= 1`.
 * [errexit is suppressed in `||` context](errexit-is-suppressed-in-or-context.md): a function
   called as `f || status=1` must `return 1` explicitly or its checks are decorative.
-
