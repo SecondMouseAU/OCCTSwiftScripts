@@ -18,7 +18,7 @@ BUILD   = .build/release/$(BIN)
 # hoisting into a shell variable would collapse the recipe into one opaque block.
 VERBS = $(shell $(BUILD) --verbs)
 
-.PHONY: build install uninstall clean help recipe recipes-test recipes-render verb-check
+.PHONY: build install uninstall clean help recipe recipes-test recipes-render verb-check run-identity-check
 
 help:
 	@echo "Targets:"
@@ -30,6 +30,7 @@ help:
 	@echo "  recipes-test       run + smoke-test every recipe (occtkit run + metrics)"
 	@echo "  recipes-render     regenerate each recipe's output.png (skips if no Metal)"
 	@echo "  verb-check         assert the verb inventory is single-sourced + consistent"
+	@echo "  run-identity-check assert occtkit run's workspace identity matches its dep path"
 
 recipe:
 	@Scripts/new-recipe.sh "$(NAME)"
@@ -42,6 +43,9 @@ recipes-render:
 
 verb-check:
 	@Scripts/verb-check.sh
+
+run-identity-check: $(BUILD)
+	@OCCTKIT=$(BUILD) Scripts/run-identity-check.sh
 
 build:
 	swift build -c release

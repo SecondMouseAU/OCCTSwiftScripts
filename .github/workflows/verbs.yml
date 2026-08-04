@@ -16,6 +16,7 @@ on:
     paths:
       - 'Sources/occtkit/**'
       - 'Scripts/verb-check.sh'
+      - 'Scripts/run-identity-check.sh'
       - 'Makefile'
       - 'README.md'
       - 'docs/reference/occtkit-verbs.md'
@@ -25,6 +26,7 @@ on:
     paths:
       - 'Sources/occtkit/**'
       - 'Scripts/verb-check.sh'
+      - 'Scripts/run-identity-check.sh'
       - 'Makefile'
       - 'README.md'
       - 'docs/reference/occtkit-verbs.md'
@@ -52,3 +54,11 @@ jobs:
         env:
           OCCTKIT: .build/release/occtkit
         run: Scripts/verb-check.sh
+
+      # CI always checks out into a directory named after the repo, so it cannot
+      # catch the identity mismatch in #98 on its own. This points
+      # OCCTKIT_SCRIPTS_PATH at a deliberately renamed symlink instead.
+      - name: Check occtkit run package identity
+        env:
+          OCCTKIT: .build/release/occtkit
+        run: Scripts/run-identity-check.sh

@@ -7,7 +7,15 @@
 //   1. $OCCTKIT_SCRIPTS_PATH (path-based dep), explicit override
 //   2. Auto-detect package root from argv[0] (path-based dep), works when
 //      running via `swift run occtkit ...` from a built tree
-//   3. Remote `from: "0.2.0"` (last published tag at time of writing)
+//   3. Remote `from: "1.0.0"` against SecondMouseAU/OCCTSwiftScripts
+//
+// The checkout directory may be named anything. For the two path-based branches
+// SwiftPM derives the dependency's identity from the directory basename rather
+// than from the `name:` in its manifest, so the generated manifest computes both
+// the declaration and the identity from one value (see `pathDep`). Hardcoding
+// that identity previously broke `occtkit run` in forks, second checkouts, git
+// worktrees, and any OCCTKIT_SCRIPTS_PATH pointing somewhere named differently
+// (OCCTSwiftScripts#98).
 //
 // Usage:
 //   occtkit run <script.swift> [--format brep,step,graph-json,graph-sqlite] [--output <dir>]
@@ -88,10 +96,59 @@ enum RunCommand: Subcommand {
         .appendingPathComponent(".occtswift-scripts/runner-cache")
     private static let workspaceDir: URL = cacheDir.appendingPathComponent("workspace")
 
-    private static func resolveScriptsDep() -> String {
+    /// The generated workspace manifest needs two things that must agree: the
+    /// dependency declaration, and the package identity the target refers to.
+    ///
+    /// SwiftPM derives a **path** dependency's identity from the checkout
+    /// directory's basename, not from the `name:` in its manifest. Hardcoding the
+    /// identity as "OCCTSwiftScripts" therefore broke `occtkit run` in every
+    /// checkout not literally named that: forks, second checkouts, and git
+    /// worktrees, plus any `OCCTKIT_SCRIPTS_PATH` pointing somewhere named
+    /// differently. Returning both together is what keeps them in step (#98).
+    private struct ScriptsDep {
+        /// The `.package(...)` line to interpolate into `dependencies:`.
+        let declaration: String
+        /// The identity to pass as `package:` in the target's product dependency.
+        let identity: String
+    }
+
+    private static func pathDep(_ path: String) -> ScriptsDep {
+        // Absolutized and standardized once, so the declaration and the identity
+        // are provably the same value rather than two parallel derivations.
+        //
+        // Absolutizing matters because the generated manifest lives in the cache
+        // directory, not the caller's CWD: a relative OCCTKIT_SCRIPTS_PATH passes
+        // the `fileExists` probe against occtkit's CWD but would then resolve
+        // against the workspace directory, pointing at nothing.
+        //
+        // `standardizedFileURL` collapses `.` and `..` (`/a/b/..` has a
+        // `lastPathComponent` of ".." raw, "a" standardized). It does not resolve
+        // symlinks, which is deliberate: SwiftPM derives the identity from the
+        // path as declared, so a symlinked OCCTKIT_SCRIPTS_PATH must keep the
+        // symlink's own basename for the two to agree.
+        let url = URL(fileURLWithPath: path).standardizedFileURL
+        return ScriptsDep(
+            declaration: ".package(path: \"\(escapedForManifest(url.path))\")",
+            identity: url.lastPathComponent
+        )
+    }
+
+    /// Escape a string for embedding in a generated Swift string literal.
+    ///
+    /// Both `"` and `\` are legal in APFS path components, so every value that
+    /// reaches the generated manifest goes through this. Escaping happens at each
+    /// interpolation site rather than inside `ScriptsDep`, so `identity` keeps
+    /// comparing equal to the real directory basename. A half-applied escape is
+    /// worse than none, because it reads as handled.
+    private static func escapedForManifest(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\")
+         .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
+    private static func resolveScriptsDep() -> ScriptsDep {
         if let p = ProcessInfo.processInfo.environment["OCCTKIT_SCRIPTS_PATH"],
            FileManager.default.fileExists(atPath: p + "/Package.swift") {
-            return ".package(path: \"\(p)\")"
+            return pathDep(p)
         }
         // argv[0] is typically <pkg>/.build/<cfg>/occtkit when run via `swift run`
         let exe = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
@@ -100,9 +157,15 @@ enum RunCommand: Subcommand {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         if FileManager.default.fileExists(atPath: candidate.appendingPathComponent("Package.swift").path) {
-            return ".package(path: \"\(candidate.path)\")"
+            return pathDep(candidate.path)
         }
-        return ".package(url: \"https://github.com/gsdali/OCCTSwiftScripts.git\", from: \"0.2.0\")"
+        // A URL dependency's identity is the last path component of the URL minus
+        // any .git suffix, so this one is "OCCTSwiftScripts" regardless of where
+        // the consumer checked anything out.
+        return ScriptsDep(
+            declaration: ".package(url: \"https://github.com/SecondMouseAU/OCCTSwiftScripts.git\", from: \"1.0.0\")",
+            identity: "OCCTSwiftScripts"
+        )
     }
 
     private static func ensureWorkspace() throws {
@@ -120,13 +183,13 @@ enum RunCommand: Subcommand {
             name: "OCCTSwiftUserScript",
             platforms: [.macOS(.v15)],
             dependencies: [
-                \(scriptsDep),
+                \(scriptsDep.declaration),
             ],
             targets: [
                 .executableTarget(
                     name: "Script",
                     dependencies: [
-                        .product(name: "ScriptHarness", package: "OCCTSwiftScripts"),
+                        .product(name: "ScriptHarness", package: "\(escapedForManifest(scriptsDep.identity))"),
                     ],
                     path: "Sources/Script",
                     swiftSettings: [.swiftLanguageMode(.v6)]

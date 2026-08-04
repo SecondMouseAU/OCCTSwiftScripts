@@ -101,7 +101,7 @@ No tests exist. No linter is configured.
 
 **Output location**: iCloud Drive (`~/Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output/`) if available, otherwise `~/.occtswift-scripts/output/`. Cleaned on `ScriptContext` init.
 
-**`occtkit run` workspace** (`Sources/occtkit/Commands/Run.swift`): cached SPM workspace at `~/.occtswift-scripts/runner-cache/workspace/`. Resolves the ScriptHarness dep in this order: (1) `$OCCTKIT_SCRIPTS_PATH` if set, (2) auto-detected from the running binary's `argv[0]` (works for `swift run occtkit ...`), (3) fallback to remote `from: "0.2.0"`.
+**`occtkit run` workspace** (`Sources/occtkit/Commands/Run.swift`): cached SPM workspace at `~/.occtswift-scripts/runner-cache/workspace/`. Resolves the ScriptHarness dep in this order: (1) `$OCCTKIT_SCRIPTS_PATH` if set, (2) auto-detected from the running binary's `argv[0]` (works for `swift run occtkit ...`), (3) fallback to remote `SecondMouseAU/OCCTSwiftScripts` `from: "1.0.0"`. **The checkout directory may be named anything**: for the two path-based branches SwiftPM derives the dependency's identity from the directory basename, not from the `name:` in its manifest, so `Run.swift` computes the declaration and the identity from one value. Hardcoding that identity previously broke `occtkit run` in forks, second checkouts, git worktrees, and any `OCCTKIT_SCRIPTS_PATH` pointing at a differently-named directory (#98). `Scripts/run-identity-check.sh` guards it.
 
 ## Key Conventions
 
