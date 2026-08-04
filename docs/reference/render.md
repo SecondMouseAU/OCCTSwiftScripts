@@ -18,7 +18,7 @@ Headless PNG rendering of one or more BREPs with configurable camera, display mo
 
 Render a headless PNG preview of one or more BREPs with camera presets, display modes, and AIS scene overlays.
 
-**Input** — flag-form or JSON-form (stdin or argv path).
+**Input**: flag-form or JSON-form (stdin or argv path).
 
 **Parameters**
 
@@ -40,7 +40,7 @@ Render a headless PNG preview of one or more BREPs with camera presets, display 
 | `--highlight` / `highlight` | string[] | no | Extract and highlight sub-shapes from the **first** input BREP: `face[N],edge[M],vertex[K]` (comma-separated). |
 | `--highlight-color` / `highlightColor` | string | no | Sub-shape highlight color: `#rrggbb` \| `#rrggbbaa`. Default: `#ffa500` (orange). |
 
-**Returns** — JSON envelope with the output PNG path and rendered image dimensions: `{ "outputPath": "...", "width": N, "height": N, "mimeType": "image/png" }`. Fails if the input BREP is invalid, Metal device is unavailable, or a highlighted sub-shape (face/edge/vertex) is not found on the source (warning to stderr, continues).
+**Returns**: JSON envelope with the output PNG path and rendered image dimensions: `{ "outputPath": "...", "width": N, "height": N, "mimeType": "image/png" }`. Fails if the input BREP is invalid, Metal device is unavailable, or a highlighted sub-shape (face/edge/vertex) is not found on the source (warning to stderr, continues).
 
 **Example**
 
@@ -57,6 +57,6 @@ occtkit render-preview part.brep --output /tmp/part.png --camera iso --display-m
 }
 ```
 
-**Drives** — `OCCTSwiftViewport` `OffscreenRenderer` (camera presets, display modes, background); `OCCTSwiftTools` `CADFileLoader.shapeToBodyAndMetadata` (Shape → `ViewportBody` conversion); `OCCTSwiftAIS` `Trihedron` / `WorkPlane` (scene overlays); `Shape.subShape(type:index:)` (sub-shape extraction for `--highlight`).
+**Drives**: `OCCTSwiftViewport` `OffscreenRenderer` (camera presets, display modes, background); `OCCTSwiftTools` `CADFileLoader.shapeToBodyAndMetadata` (Shape → `ViewportBody` conversion); `OCCTSwiftAIS` `Trihedron` / `WorkPlane` (scene overlays); `Shape.subShape(type:index:)` (sub-shape extraction for `--highlight`).
 
-**Notes** — `--highlight` extracts sub-shapes from the first input only (render multi-BREP scenes solo if highlighting in a specific body). Sub-shape IDs (`face[N]`, `edge[M]`, `vertex[K]`) match those emitted by `query-topology` for cross-reference. `--annotate-dimensions` (dimension overlays) is not yet implemented — filed upstream as `OCCTSwiftViewport#26`; the annotation path is reserved.
+**Notes**: `--highlight` extracts sub-shapes from the first input only (render multi-BREP scenes solo if highlighting in a specific body). Sub-shape IDs (`face[N]`, `edge[M]`, `vertex[K]`) match those emitted by `query-topology` for cross-reference. `--annotate-dimensions` (dimension overlays) is not yet implemented, filed upstream as `OCCTSwiftViewport#26`; the annotation path is reserved.

@@ -18,7 +18,7 @@ Manufacturing-readiness checks and geometry repair: wall-thickness analysis for 
 
 UV-grid sample each face and cast an inward ray to the opposite wall; reports min/max/mean thickness and flags all samples below a minimum acceptable threshold.
 
-**Input** — Flag-form or JSON-form (stdin or argv path).
+**Input**: Flag-form or JSON-form (stdin or argv path).
 
 **Parameters**
 
@@ -28,7 +28,7 @@ UV-grid sample each face and cast an inward ray to the opposite wall; reports mi
 | `--min-acceptable` / `minAcceptable` | number | no | Thickness threshold; samples below this are flagged as thin regions |
 | `--sampling-density` / `samplingDensity` | enum | no | Grid density per face: `coarse` (4×4) \| `medium` (8×8, default) \| `fine` (16×16) |
 
-**Returns** — JSON object with `minThickness`, `maxThickness`, `meanThickness` (or `null` if no samples), `thinRegions` (array of flagged sample locations), and `samples` (count).
+**Returns**: JSON object with `minThickness`, `maxThickness`, `meanThickness` (or `null` if no samples), `thinRegions` (array of flagged sample locations), and `samples` (count).
 
 **Example**
 
@@ -52,9 +52,9 @@ occtkit check-thickness part.brep --min-acceptable 1.5 --sampling-density fine
 }
 ```
 
-**Drives** — `Face.uvBounds`, `Face.point(atU:v:)`, `Face.normal(atU:v:)`, `Shape.intersectLine(origin:direction:)`.
+**Drives**: `Face.uvBounds`, `Face.point(atU:v:)`, `Face.normal(atU:v:)`, `Shape.intersectLine(origin:direction:)`.
 
-**Notes** — `fine` increases accuracy at the cost of speed; use `coarse` for a quick sanity check on large bodies.
+**Notes**: `fine` increases accuracy at the cost of speed; use `coarse` for a quick sanity check on large bodies.
 
 ---
 
@@ -62,7 +62,7 @@ occtkit check-thickness part.brep --min-acceptable 1.5 --sampling-density fine
 
 Pairwise minimum-distance and interference check between two or more BREPs; each pair gets a `minDistance` and optional contact points, with `interferenceVolume` reported when bodies intersect.
 
-**Input** — Flag-form or JSON-form (stdin or argv path).
+**Input**: Flag-form or JSON-form (stdin or argv path).
 
 **Parameters**
 
@@ -73,7 +73,7 @@ Pairwise minimum-distance and interference check between two or more BREPs; each
 | `--max-contacts` / `maxContacts` | integer | no | Maximum contact points per pair (default: 32) |
 | `--no-contacts` / `computeContacts: false` | flag | no | Omit contact point details |
 
-**Returns** — JSON object with `pairs` array. Each pair contains: `a`, `b` (file paths), `minDistance`, `intersects` (bool), `belowMinClearance` (bool or `null` if no threshold), `contacts` (array of point pairs), `interferenceVolume` (volume of overlap, or `null` for non-solid pairs or when not intersecting).
+**Returns**: JSON object with `pairs` array. Each pair contains: `a`, `b` (file paths), `minDistance`, `intersects` (bool), `belowMinClearance` (bool or `null` if no threshold), `contacts` (array of point pairs), `interferenceVolume` (volume of overlap, or `null` for non-solid pairs or when not intersecting).
 
 **Example**
 
@@ -112,9 +112,9 @@ occtkit analyze-clearance shaft.brep housing.brep bearing.brep --min-clearance 0
 }
 ```
 
-**Drives** — `Shape.allDistanceSolutions(to:)`, `Shape.intersection(_:)`, `Shape.volume`.
+**Drives**: `Shape.allDistanceSolutions(to:)`, `Shape.intersection(_:)`, `Shape.volume`.
 
-**Notes** — A `minDistance` of 0 means bodies touch; negative values indicate interference (overlap). `interferenceVolume` is meaningful only for solid×solid pairs.
+**Notes**: A `minDistance` of 0 means bodies touch; negative values indicate interference (overlap). `interferenceVolume` is meaningful only for solid×solid pairs.
 
 ---
 
@@ -122,7 +122,7 @@ occtkit analyze-clearance shaft.brep housing.brep bearing.brep --min-clearance 0
 
 Heal imported or non-watertight geometry via OCCT ShapeFixer; reports before/after `Shape.analyze()` snapshots so the caller can verify the heal changed something.
 
-**Input** — Flag-form or JSON-form (stdin or argv path).
+**Input**: Flag-form or JSON-form (stdin or argv path).
 
 **Parameters**
 
@@ -140,7 +140,7 @@ Heal imported or non-watertight geometry via OCCT ShapeFixer; reports before/aft
 | `--fix-orientation` / `fixOrientation` | flag | no | Accepted for forward compat; currently coalesces into precision tuning |
 | `--unify-domain` / `unifyDomain` | flag | no | Accepted for forward compat; currently coalesces into precision tuning |
 
-**Returns** — JSON object with `outputPath`, `before` and `after` health snapshots (each with `faceCount`, `edgeCount`, `freeEdgeCount`, `smallEdgeCount`, `smallFaceCount`, `selfIntersectionCount`, `isValid`), `fixes` (counts of resolved issues), and `warnings` (array).
+**Returns**: JSON object with `outputPath`, `before` and `after` health snapshots (each with `faceCount`, `edgeCount`, `freeEdgeCount`, `smallEdgeCount`, `smallFaceCount`, `selfIntersectionCount`, `isValid`), `fixes` (counts of resolved issues), and `warnings` (array).
 
 **Example**
 
@@ -179,6 +179,6 @@ occtkit heal imported.brep --output imported_healed.brep --tolerance 0.01
 }
 ```
 
-**Drives** — `ShapeFixer` (`setPrecision`, `setMaxTolerance`, `setMinTolerance`, `perform`), `Shape.analyze()`, `Shape.isValid`.
+**Drives**: `ShapeFixer` (`setPrecision`, `setMaxTolerance`, `setMinTolerance`, `perform`), `Shape.analyze()`, `Shape.isValid`.
 
-**Notes** — Per-fix `--fix-*` flags are accepted today for forward compatibility with the issue spec but currently all coalesce into `ShapeFixer`'s precision tuning. Granular per-fix gating awaits an upstream OCCTSwift API. If `ShapeFixer.perform()` reports no changes, both snapshots may be identical.
+**Notes**: Per-fix `--fix-*` flags are accepted today for forward compatibility with the issue spec but currently all coalesce into `ShapeFixer`'s precision tuning. Granular per-fix gating awaits an upstream OCCTSwift API. If `ShapeFixer.perform()` reports no changes, both snapshots may be identical.

@@ -1,4 +1,4 @@
-# 06 — Twisted fan blade
+# 06: Twisted fan blade
 
 A single tapered, twisted fan/propeller blade lofted through NACA airfoil sections and fused
 to a hub boss. The canonical "loft through changing cross-sections" recipe.
@@ -25,20 +25,20 @@ A symmetric NACA airfoil is generated once in chord-normalised coordinates: the 
 spacing (points cluster at the leading edge). The closed loop runs upper surface LE→TE then
 lower surface TE→LE. For each spanwise section this base airfoil is scaled by the (tapering)
 chord, rotated in its own plane by the (interpolated) twist angle, and lifted to its Z station
-— built as a `Wire.polygon3D`. Every section has the **same point count in the same order**, so
+, built as a `Wire.polygon3D`. Every section has the **same point count in the same order**, so
 `Shape.loft` correspondence is unambiguous. The lofted solid is then fused to a hub cylinder.
 
 ## OCCTSwift APIs used
 
-- `Wire.polygon3D(_:closed:)` — each twisted, scaled airfoil section
-- `Shape.loft(profiles:solid:)` — sweep the solid through the sections
-- `Shape.cylinder(at:direction:radius:height:)` + `Shape.union(_:)` — the hub boss
-- `Shape.volume` — sanity print
+- `Wire.polygon3D(_:closed:)`: each twisted, scaled airfoil section
+- `Shape.loft(profiles:solid:)`: sweep the solid through the sections
+- `Shape.cylinder(at:direction:radius:height:)` + `Shape.union(_:)`: the hub boss
+- `Shape.volume`: sanity print
 
 ## Gotchas
 
 - **Loft matches profiles by vertex index.** All sections must share the same point count and
-  ordering — generate them from one base loop, only transforming the points. Mismatched counts
+  ordering, generate them from one base loop, only transforming the points. Mismatched counts
   give twisted/torn surfaces (and, before OCCTSwift v1.3.2, could crash `ThruSections`).
 - Keep the trailing edge slightly open (the NACA TE is non-zero here); a perfectly closed TE
   makes the upper/lower TE points coincide and degenerates the section wire.

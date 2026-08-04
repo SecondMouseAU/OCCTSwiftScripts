@@ -1,6 +1,6 @@
 // MultiViewLayout.swift
 // Lay out orthographic views on a sheet per ISO 128-30 (first or third angle).
-// Layout math only — projection / bounds / placement transforms come from
+// Layout math only, projection / bounds / placement transforms come from
 // OCCTSwift v0.147 (`Drawing.project`, `Drawing.bounds`, `Drawing.transformed`).
 
 import Foundation

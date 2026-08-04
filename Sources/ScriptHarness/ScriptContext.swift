@@ -9,7 +9,7 @@ import OCCTSwift
 
 /// Accumulates geometry and writes output for viewport visualization and external tools.
 ///
-/// Supports the full OCCTSwift API surface — solids, wires, edges, curves, surfaces.
+/// Supports the full OCCTSwift API surface, solids, wires, edges, curves, surfaces.
 /// Wire/edge/curve geometry is preserved through BREP format and visualized as wireframe.
 ///
 /// Usage:
@@ -209,7 +209,7 @@ public final class ScriptContext: Sendable {
     }
 
     /// Build and export topology graphs for all shapes added so far.
-    /// Convenience method — builds a `BRepGraph` per shape and exports each.
+    /// Convenience method, builds a `BRepGraph` per shape and exports each.
     public func addGraphsForAllShapes(sqlite: Bool = true) throws {
         for (shape, bodyID) in shapes.all {
             guard let graph = BRepGraph(shape: shape) else { continue }

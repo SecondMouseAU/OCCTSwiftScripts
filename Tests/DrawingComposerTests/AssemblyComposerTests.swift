@@ -58,7 +58,7 @@ struct AssemblyComposerTests {
         defer { try? FileManager.default.removeItem(at: url) }
         try result.writer.write(to: url)
         let size = (try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
-        #expect(size > 4_000, "GA DXF was only \(size) bytes — views may not have rendered")
+        #expect(size > 4_000, "GA DXF was only \(size) bytes, views may not have rendered")
     }
 
     @Test("Empty component list throws")

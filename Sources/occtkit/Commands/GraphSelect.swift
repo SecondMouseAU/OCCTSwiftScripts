@@ -1,15 +1,15 @@
-// GraphSelect — direct B-rep graph adjacency / selection queries.
+// GraphSelect: direct B-rep graph adjacency / selection queries.
 //
 // Closes OCCTSwiftScripts#54. Lets a consumer answer a *local* topology
-// question — "what is adjacent to face[N]?", "faces of edge[M]?", "edges of
-// vertex[K]?", "all boundary edges", "the convex/concave face adjacencies" —
+// question: "what is adjacent to face[N]?", "faces of edge[M]?", "edges of
+// vertex[K]?", "all boundary edges", "the convex/concave face adjacencies":
 // without exporting and re-parsing the whole graph (graph-ml). This is the
 // selection / "pointer" primitive behind DSL-style selectors and the
 // face-adjacency-graph + GNN selection used in the generative-CAD literature
 // (UV-Net, Pointer-CAD, AAGNet).
 //
 // Index spaces: face queries run over the Attributed Adjacency Graph (AAG),
-// whose face indices follow `shape.faces()` order — the same `face[N]` scheme
+// whose face indices follow `shape.faces()` order: the same `face[N]` scheme
 // `query-topology` emits. Edge/vertex queries run over the BRepGraph
 // (`edge[M]` / `vertex[K]`). Convexity is a property of the dihedral between two
 // faces, so it is reported on face *adjacencies* (AAG edges), not on a lone edge.

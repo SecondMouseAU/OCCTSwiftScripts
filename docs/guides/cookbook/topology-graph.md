@@ -12,7 +12,7 @@ All six commands operate on an **absolute BREP file path** or, in the case of `g
 
 ---
 
-## 1. Validate — topology health record
+## 1. Validate: topology health record
 
 [`graph-validate`](../../reference/topology-graph.md#graph-validate) checks the shape without touching the file.
 
@@ -38,13 +38,13 @@ occtkit graph-validate bracket.brep
 }
 ```
 
-If `isValid` is `false`, examine the `healthRecord.errors` list. A shape with topology errors can still be loaded for measurement but compact and dedup on an invalid shape may produce further corruption — fix or heal before proceeding.
+If `isValid` is `false`, examine the `healthRecord.errors` list. A shape with topology errors can still be loaded for measurement but compact and dedup on an invalid shape may produce further corruption, fix or heal before proceeding.
 
 ---
 
-## 2. Compact — drop unreferenced nodes
+## 2. Compact: drop unreferenced nodes
 
-[`graph-compact`](../../reference/topology-graph.md#graph-compact) rebuilds the shape and removes nodes that nothing references — common after Boolean operations and healing. Pass a distinct output path to preserve the original.
+[`graph-compact`](../../reference/topology-graph.md#graph-compact) rebuilds the shape and removes nodes that nothing references, common after Boolean operations and healing. Pass a distinct output path to preserve the original.
 
 ```bash
 occtkit graph-compact bracket.brep bracket_compact.brep
@@ -65,7 +65,7 @@ occtkit graph-compact bracket.brep bracket_compact.brep
 
 ---
 
-## 3. Dedup — merge shared surface/curve geometry
+## 3. Dedup: merge shared surface/curve geometry
 
 [`graph-dedup`](../../reference/topology-graph.md#graph-dedup) detects geometrically identical surfaces and curves and merges them into single graph nodes. This reduces file size and produces a cleaner attributed adjacency graph (gAAG) for feature recognition and ML export.
 
@@ -89,7 +89,7 @@ The three steps above chain naturally: validate → compact → dedup gives you 
 
 ## 4. Query a BREPGraph SQLite database
 
-[`graph-query`](../../reference/topology-graph.md#graph-query) reads a BREPGraph SQLite file — produced by `ScriptContext.addGraph(..., sqlite: true)` inside a script — and emits a topology summary.
+[`graph-query`](../../reference/topology-graph.md#graph-query) reads a BREPGraph SQLite file, produced by `ScriptContext.addGraph(..., sqlite: true)` inside a script, and emits a topology summary.
 
 ```bash
 occtkit graph-query graph-0.sqlite
@@ -126,7 +126,7 @@ This command requires a SQLite file; it does not accept a BREP path directly.
 
 ---
 
-## 5. ML export — full graph with UV and edge samples
+## 5. ML export: full graph with UV and edge samples
 
 [`graph-ml`](../../reference/topology-graph.md#graph-ml) exports the full topology graph augmented with per-face UV grids (positions, normals, Gaussian and mean curvatures), per-edge curve samples, COO adjacency matrices, and an attributed face-adjacency block. Use `--uv-samples` and `--edge-samples` to tune sampling density (defaults: 16 and 32).
 
@@ -159,7 +159,7 @@ occtkit graph-ml bracket_clean.brep --uv-samples 12 --edge-samples 24
 }
 ```
 
-Face indices in `faceAdjacency` and `faceAdjacentFaces` follow `shape.faces()` order — the same `face[N]` scheme `query-topology` emits. Convexity is a property of the dihedral angle between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero).
+Face indices in `faceAdjacency` and `faceAdjacentFaces` follow `shape.faces()` order: the same `face[N]` scheme `query-topology` emits. Convexity is a property of the dihedral angle between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero).
 
 ---
 
@@ -172,7 +172,7 @@ Face indices in `faceAdjacency` and `faceAdjacentFaces` follow `shape.faces()` o
 | `face-neighbors` | `--face N` | adjacent faces + convexity + shared-edge count + face plane info |
 | `edge-faces` | `--edge M` | face indices on both sides, start/end vertices, boundary/manifold flags |
 | `vertex-edges` | `--vertex K` | edge indices incident to the vertex |
-| `face-adjacency` | — | full attributed gAAG (faceCount + all adjacencies) |
+| `face-adjacency` |, | full attributed gAAG (faceCount + all adjacencies) |
 | `edges-class` | `--class <kind>` | matching edge indices; `kind` = `boundary` \| `non-manifold` \| `seam` \| `degenerate` |
 
 **Face neighbours with convexity:**
@@ -216,5 +216,5 @@ Face indices follow `shape.faces()` order; edge and vertex indices are BRepGraph
 
 ## Reference
 
-- [Topology graph](../../reference/topology-graph.md) — full parameter tables for all six commands.
-- [Introspection & measurement](introspection-and-measurement.md) — `query-topology` and `measure-distance` (scene-aware wrappers).
+- [Topology graph](../../reference/topology-graph.md): full parameter tables for all six commands.
+- [Introspection & measurement](introspection-and-measurement.md): `query-topology` and `measure-distance` (scene-aware wrappers).

@@ -1,4 +1,4 @@
-// GraphML — export a BREP shape's topology graph in an ML-friendly JSON shape:
+// GraphML: export a BREP shape's topology graph in an ML-friendly JSON shape:
 // COO sparse adjacency + per-face UV-grid samples (positions/normals/curvatures)
 // + per-edge curve samples. Intended for GNN / UV-Net / BRepNet pipelines.
 //

@@ -6,7 +6,7 @@ builder:
     # Documented Swift version + platform pair for the build matrix.
     # OCCTSwift's xcframework is arm64 macOS 12+ / iOS 15+; this package
     # currently targets macOS 15+ (per Package.swift) because the dev
-    # machine pinned macOS 15 — iOS support is an open question for a
+    # machine pinned macOS 15, iOS support is an open question for a
     # future minor.
     - documentation_targets:
         - ScriptHarness

@@ -1,4 +1,4 @@
-// DrawingExport — CLI wrapper around DrawingComposer.render.
+// DrawingExport: CLI wrapper around DrawingComposer.render.
 //
 // Reads a JSON spec and a BREP, calls into the public DrawingComposer
 // library to compose the drawing, writes the resulting DXF, and emits a

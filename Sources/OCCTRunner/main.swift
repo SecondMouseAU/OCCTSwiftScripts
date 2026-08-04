@@ -1,4 +1,4 @@
-// OCCTRunner — CLI wrapper for running OCCTSwift geometry scripts.
+// OCCTRunner: CLI wrapper for running OCCTSwift geometry scripts.
 //
 // Usage:
 //   occtrunner <script.swift> [--format brep,step,graph-json,graph-sqlite] [--output <dir>]
@@ -74,7 +74,7 @@ func parseArgs() -> RunnerConfig {
 
 func printUsage() {
     let usage = """
-    OCCTRunner — Run OCCTSwift geometry scripts
+    OCCTRunner: Run OCCTSwift geometry scripts
 
     USAGE:
       occtrunner <script.swift> [options]

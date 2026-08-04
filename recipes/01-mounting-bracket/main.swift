@@ -1,7 +1,7 @@
-// Recipe 01 — Mounting bracket
+// Recipe 01: Mounting bracket
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — an L-bracket with a filleted inside corner and four
+// Outputs: one solid body: an L-bracket with a filleted inside corner and four
 //          through-holes (two per leg).
 // Notes:   The inside corner is rounded by filleting the solid's concave edge, found
 //          geometrically with Shape.concaveEdges() (OCCTSwift v1.3.1, #171) rather than
@@ -54,4 +54,4 @@ bracket = bracket.drilled(at: up2,   direction: SIMD3(1, 0, 0), radius: holeRadi
 try ctx.add(bracket, color: C.steel, name: "Mounting bracket")
 
 print("Bracket volume: \(bracket.volume ?? 0) mm³")
-try ctx.emit(description: "L-bracket — \(legLength)mm legs, \(width)mm wide, 4× Ø\(holeRadius * 2) holes")
+try ctx.emit(description: "L-bracket, \(legLength)mm legs, \(width)mm wide, 4× Ø\(holeRadius * 2) holes")

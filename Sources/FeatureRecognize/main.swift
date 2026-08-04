@@ -1,4 +1,4 @@
-// FeatureRecognize — detect pockets and holes in a BREP shape using
+// FeatureRecognize: detect pockets and holes in a BREP shape using
 // OCCTSwift's Attributed Adjacency Graph (AAG) heuristics.
 //
 // Usage: FeatureRecognize <shape.brep>

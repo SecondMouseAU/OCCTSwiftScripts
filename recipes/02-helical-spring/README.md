@@ -1,4 +1,4 @@
-# 02 — Helical compression spring
+# 02: Helical compression spring
 
 A constant-pitch, round-wire compression spring built by sweeping a circular section
 along a helical path. The canonical "sweep a profile along a 3D curve" recipe.
@@ -26,10 +26,10 @@ solid comes back with positive volume regardless of the section's sense.
 
 ## OCCTSwift APIs used
 
-- `Wire.helix(radius:pitch:turns:)` — the coil centre-line
-- `Wire.circle(origin:normal:radius:)` — the wire cross-section
-- `Shape.sweep(profile:along:)` — pipe-sweep the section along the helix
-- `Shape.volume` — sanity print
+- `Wire.helix(radius:pitch:turns:)`: the coil centre-line
+- `Wire.circle(origin:normal:radius:)`: the wire cross-section
+- `Shape.sweep(profile:along:)`: pipe-sweep the section along the helix
+- `Shape.volume`: sanity print
 
 ## Gotchas
 
@@ -38,7 +38,7 @@ solid comes back with positive volume regardless of the section's sense.
 - `Shape.sweep` orientation-normalises since OCCTSwift v1.3.1, so you no longer need to
   flip the section sense to avoid a negative-volume solid. Use `Shape.signedVolume` if you
   need to inspect the raw orientation, or `Shape.orientedForward()` to normalise explicitly.
-- Ground/closed/squared ends are **out of scope** — this is an open-coil spring. Closed
+- Ground/closed/squared ends are **out of scope**: this is an open-coil spring. Closed
   ends need either a variable-pitch helix or an end-grinding boolean.
 - `Wire.helix` uses `turns:` (a coil count), **not** a `height:`. Free length ≈ `pitch ·
   activeCoils`.

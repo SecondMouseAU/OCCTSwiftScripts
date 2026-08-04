@@ -8,7 +8,7 @@ nav_order: 7
 
 A read-only inspection workflow on an existing BREP: compute physical properties, pull
 stable topology IDs with a filter, measure the minimum gap between two bodies, certify a
-reconstruction against a source mesh, and detect features — all without touching the geometry.
+reconstruction against a source mesh, and detect features: all without touching the geometry.
 
 Full flag and field documentation: [Introspection & measurement reference](../../reference/introspection.md).
 
@@ -33,10 +33,10 @@ occtkit metrics flange.brep --metrics volume,surfaceArea,boundingBoxOptimal
 }
 ```
 
-**`boundingBox` vs `boundingBoxOptimal`** — the default `boundingBox` (via OCCT's `Bnd_Box`)
+**`boundingBox` vs `boundingBoxOptimal`**: the default `boundingBox` (via OCCT's `Bnd_Box`)
 encloses the control-point hull of B-spline faces, which over-reports extents on curved
 geometry by 1–2 % or more. `boundingBoxOptimal` calls `BRepBndLib::AddOptimal` and samples
-the exact surfaces for a tight envelope. It is excluded from the default-all set — list it
+the exact surfaces for a tight envelope. It is excluded from the default-all set, list it
 explicitly. Use it whenever the bbox drives a fit-check or clearance decision.
 
 ---
@@ -69,7 +69,7 @@ occtkit query-topology flange.brep --entity face --filter '{"surfaceType":"plane
 
 ### Faces above an area threshold
 
-Combine `surfaceType` and `minArea` in the same filter object — all filter keys are
+Combine `surfaceType` and `minArea` in the same filter object: all filter keys are
 AND-combined:
 
 ```bash
@@ -95,12 +95,12 @@ with the `topologyRefs` returned by `feature-recognize` (step 4 below).
 
 ---
 
-## 3. Measure distance vs measure deviation — choose the right tool
+## 3. Measure distance vs measure deviation: choose the right tool
 
 | Goal | Command | What it returns |
 |------|---------|-----------------|
-| Clearance check — is there a gap between two bodies? | `measure-distance` | Minimum gap in model units (≈0 for touching or overlapping bodies) |
-| Fidelity certification — how closely does a reconstruction match a source mesh? | `measure-deviation` | Directed + symmetric surface Hausdorff; `≈0` is **not** a meaningful answer to the fidelity question |
+| Clearance check, is there a gap between two bodies? | `measure-distance` | Minimum gap in model units (≈0 for touching or overlapping bodies) |
+| Fidelity certification, how closely does a reconstruction match a source mesh? | `measure-deviation` | Directed + symmetric surface Hausdorff; `≈0` is **not** a meaningful answer to the fidelity question |
 
 ### Minimum gap (`measure-distance`)
 
@@ -125,22 +125,22 @@ occtkit measure-distance shaft.brep bearing.brep --compute-contacts
 }
 ```
 
-`minDistance: 0.05` — a 0.05 mm clearance remains. `--compute-contacts` returns up to 32
+`minDistance: 0.05`: a 0.05 mm clearance remains. `--compute-contacts` returns up to 32
 closest-point pairs; omit it when you only need the scalar gap.
 
 **Do not use `measure-distance` for fidelity.** When a reconstruction overlaps its source
-mesh the result is `minDistance: 0.0` — no information about surface match quality.
+mesh the result is `minDistance: 0.0`: no information about surface match quality.
 
 ### Surface deviation (`measure-deviation`)
 
 Use this to certify that a B-rep reconstruction is within tolerance of a scan or reference
 mesh. The two direction statistics tell a complete story:
 
-- **`fromToTo`** — reconstruction surface vs. reference. High `max` here means the
+- **`fromToTo`**: reconstruction surface vs. reference. High `max` here means the
   reconstruction extends **beyond** the reference (over-extension).
-- **`toToFrom`** — reference surface vs. reconstruction. High `max` here means parts of
+- **`toToFrom`**: reference surface vs. reconstruction. High `max` here means parts of
   the reference that the reconstruction **does not cover** (under-coverage).
-- **`symmetricHausdorff`** — `max(fromToTo.max, toToFrom.max)`: the single worst-case in
+- **`symmetricHausdorff`**: `max(fromToTo.max, toToFrom.max)`: the single worst-case in
   either direction. Compare this against your tolerance spec.
 
 ```bash
@@ -162,11 +162,11 @@ occtkit measure-deviation recon.brep source_mesh.brep --deflection 0.1
 }
 ```
 
-`symmetricHausdorff: 0.22` against a 0.25 mm tolerance spec — pass. The `worstPoint`
+`symmetricHausdorff: 0.22` against a 0.25 mm tolerance spec, pass. The `worstPoint`
 coordinates tell you exactly where to look in the viewport.
 
 `--deflection` controls tessellation fineness (model units). The default is 0.5 % of the
-shape A bounding-box diagonal — usually a good starting point. Reduce it for a tighter
+shape A bounding-box diagonal, usually a good starting point. Reduce it for a tighter
 bound at higher compute cost. `--max-samples` (default 20 000) caps samples per direction.
 
 ---
@@ -174,7 +174,7 @@ bound at higher compute cost. `--max-samples` (default 20 000) caps samples per 
 ## 4. Recognize features
 
 Detect pockets and holes via OCCTSwift's attributed adjacency graph (AAG) heuristics.
-The `feature-recognize` verb accepts only a single positional BREP argument — no flags.
+The `feature-recognize` verb accepts only a single positional BREP argument, no flags.
 
 ```bash
 occtkit feature-recognize flange.brep

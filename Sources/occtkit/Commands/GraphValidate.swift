@@ -1,9 +1,9 @@
-// GraphValidate — validate a BREP's topology graph and emit structured health.
+// GraphValidate: validate a BREP's topology graph and emit structured health.
 //
 // Existing fields (isValid / errorCount / warningCount) are preserved for
 // backward compatibility. Per the OCCTMCP-driver introspection batch
 // (OCCTSwiftScripts#18), the response also carries a normalized
-// `healthRecord` populated from Shape.analyze() — small-edge / free-edge /
+// `healthRecord` populated from Shape.analyze(), small-edge / free-edge /
 // self-intersection counts, plus the shape's top-level type. `nakedVertexCount`
 // isn't exposed by OCCTSwift today; emitted as 0 with a docstring note.
 

@@ -13,11 +13,11 @@ and bends into a sheet-metal part. Both read from stdin or a file path and write
 
 ---
 
-## 1. `reconstruct` — feature list → BREP
+## 1. `reconstruct`: feature list → BREP
 
 `reconstruct` drives `OCCTSwift.FeatureReconstructor.buildJSON` (v0.147+). The request
 envelope is a JSON object with four keys: `outputDir`, `outputName` (optional; default
-`"reconstructed"`), `inputBrep` (optional; see below), and `features` — an array of feature
+`"reconstructed"`), `inputBrep` (optional; see below), and `features`: an array of feature
 entries, each identified by a `kind` discriminator.
 
 ### Minimal example: revolve then drill
@@ -114,16 +114,16 @@ field list.
 
 ---
 
-## 2. `compose-sheet-metal` — flanges + bends → folded part
+## 2. `compose-sheet-metal`: flanges + bends → folded part
 
 `compose-sheet-metal` drives `OCCTSwift.SheetMetal.Builder` (v0.151+). Each face of the
-part is a `Flange` — a 2D profile placed in 3D by an `origin`, an in-plane `uAxis` (and
+part is a `Flange`: a 2D profile placed in 3D by an `origin`, an in-plane `uAxis` (and
 optional `vAxis`), and a `normal` along which thickness is extruded. `Bend`s round the
 shared edges between adjacent flanges.
 
 ### The U-channel (worked example)
 
-A base plate with two walls bent up on opposite long edges — the canonical robust part for
+A base plate with two walls bent up on opposite long edges: the canonical robust part for
 this builder.
 
 ```bash
@@ -185,7 +185,7 @@ Keep these in mind when authoring specs:
   downward for some edge orientations, folding the wall below the base and causing the bend
   fillet to fail.
 - **Walls must span the full shared edge.** Corner relief cutouts or inset origins cause the
-  bend fillet to fail — the builder rounds the entire shared edge.
+  bend fillet to fail: the builder rounds the entire shared edge.
 - **No shared corners.** The builder handles chains and opposite flanges (U-channel,
   Z-bracket) but not two walls that meet at a corner. A four-wall tray or closed box is not
   buildable today. A U-channel is the reliable canonical part.

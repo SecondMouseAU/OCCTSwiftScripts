@@ -1,4 +1,4 @@
-# 01 — Mounting bracket
+# 01: Mounting bracket
 
 An L-shaped mounting bracket with a rounded inside corner and four through-holes
 (two per leg). A good first look at sketch → extrude → drill.
@@ -19,7 +19,7 @@ An L-shaped mounting bracket with a rounded inside corner and four through-holes
 
 The L cross-section is built as a closed polygon in the XY plane and extruded along Z into
 a prism. The inside corner is then rounded by filleting the solid's **concave edge**,
-located geometrically with `Shape.concaveEdges()` — no fragile edge-index bookkeeping, and
+located geometrically with `Shape.concaveEdges()`: no fragile edge-index bookkeeping, and
 it tracks the corner as parameters change. The fillet is applied *before* drilling so
 `concaveEdges()` returns only the reentrant corner. Finally four holes are cut: two through
 the base leg (drilled along Y) and two through the upright leg (drilled along X). Each drill
@@ -28,12 +28,12 @@ are clean and coincident-face artifacts are avoided.
 
 ## OCCTSwift APIs used
 
-- `Wire.polygon(_:closed:)` — L-shaped cross-section
-- `Shape.extrude(profile:direction:length:)` — profile → prism
-- `Shape.concaveEdges()` — find the reentrant inside-corner edge (OCCTSwift v1.3.1)
-- `Shape.filleted(edges:radius:)` — round that edge
-- `Shape.drilled(at:direction:radius:depth:)` — the four through-holes
-- `Shape.volume` — sanity print
+- `Wire.polygon(_:closed:)`: L-shaped cross-section
+- `Shape.extrude(profile:direction:length:)`: profile → prism
+- `Shape.concaveEdges()`: find the reentrant inside-corner edge (OCCTSwift v1.3.1)
+- `Shape.filleted(edges:radius:)`: round that edge
+- `Shape.drilled(at:direction:radius:depth:)`: the four through-holes
+- `Shape.volume`: sanity print
 
 ## Gotchas
 

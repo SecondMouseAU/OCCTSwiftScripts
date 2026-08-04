@@ -16,7 +16,7 @@ Full flag and field lists live in the [I/O reference](../../reference/io.md) and
 
 ---
 
-## 1. Load a native BREP — `load-brep`
+## 1. Load a native BREP: `load-brep`
 
 The fastest path for geometry that already exists on disk (a previous script run, a Boolean result,
 a reconstruction output). One BREP in, one manifest entry out.
@@ -48,11 +48,11 @@ OCCTSwiftViewport's ScriptWatcher picks up the manifest automatically; the body 
 viewer under the id `"housing"`.
 
 Pass `--allow-invalid` when loading an open shell or a reconstruction draft that hasn't been
-healed yet — the validity gate is bypassed and the response's `isValid` field will be `false`.
+healed yet: the validity gate is bypassed and the response's `isValid` field will be `false`.
 
 ---
 
-## 2. Import STEP / IGES / STL / OBJ — `import`
+## 2. Import STEP / IGES / STL / OBJ: `import`
 
 `import` handles all four neutral formats. The format is inferred from the file extension unless
 you pass `--format` explicitly.
@@ -121,7 +121,7 @@ STEP-only; passing it with IGES, STL, or OBJ emits a warning and falls back to s
 
 ---
 
-## 3. Walk the XCAF tree — `inspect-assembly`
+## 3. Walk the XCAF tree: `inspect-assembly`
 
 Before writing metadata you need the stable `label_<int64>` IDs that identify each component.
 `inspect-assembly` reads a STEP or `.xbf` file without importing it into the scene.
@@ -178,11 +178,11 @@ pass to `set-metadata --component-id` in the next step.
 
 ---
 
-## 4. Write metadata — `set-metadata`
+## 4. Write metadata: `set-metadata`
 
 `set-metadata` writes title-block fields and arbitrary custom attributes onto the document or a
 named component, saving to a new `.xbf` (binary OCAF). The input can be a STEP file or an `.xbf`
-from a previous `set-metadata` run — you can chain calls to accumulate metadata.
+from a previous `set-metadata` run; you can chain calls to accumulate metadata.
 
 ### Document-level stamp
 

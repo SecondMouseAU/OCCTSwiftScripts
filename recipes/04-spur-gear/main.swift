@@ -1,7 +1,7 @@
-// Recipe 04 — Involute spur gear
+// Recipe 04: Involute spur gear
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — a parametric involute spur gear with a central bore.
+// Outputs: one solid body: a parametric involute spur gear with a central bore.
 // Notes:   Standard full-depth involute teeth. The full tooth outline is generated as a
 //          single closed polygon by sampling the involute flanks (mirrored per tooth) and
 //          connecting them with root points, then extruded to the face width and bored.
@@ -84,4 +84,4 @@ gear = gear.subtracting(bore)!
 try ctx.add(gear, color: C.steel, name: "Spur gear")
 
 print("Pitch Ø\(pitchR * 2), \(teeth) teeth, gear volume: \(gear.volume ?? 0) mm³")
-try ctx.emit(description: "Involute spur gear — module \(module), \(teeth) teeth")
+try ctx.emit(description: "Involute spur gear, module \(module), \(teeth) teeth")

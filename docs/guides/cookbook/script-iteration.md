@@ -7,7 +7,7 @@ nav_order: 1
 # Script iteration
 
 The script harness gives you a CadQuery/OpenSCAD-style inner loop: edit one Swift file, run one
-command, and see the result in a live viewport — no Xcode project, no app target, no simulator.
+command, and see the result in a live viewport, no Xcode project, no app target, no simulator.
 This page covers the loop itself, the minimal `ScriptContext` template, how to add different
 geometry kinds with colors, how to attach metadata, and what the output pipeline produces.
 
@@ -22,7 +22,7 @@ Sources/Script/main.swift   ← your geometry lives here
         │
         │  swift run Script   (~1–2 s incremental)
         ▼
-~/.occtswift-scripts/output/          (or iCloud Drive — see Output location below)
+~/.occtswift-scripts/output/          (or iCloud Drive; see Output location below)
    body-0.brep   body-1.brep  …      ← one BREP per ctx.add call
    output.step                        ← combined STEP (all bodies)
    manifest.json                      ← written last; triggers the watcher
@@ -33,7 +33,7 @@ Sources/Script/main.swift   ← your geometry lives here
 ```
 
 1. Open `Sources/Script/main.swift` in any editor.
-2. Run `swift run Script` in the terminal — first build is a few seconds; incremental rebuilds
+2. Run `swift run Script` in the terminal, first build is a few seconds; incremental rebuilds
    take roughly one second.
 3. The demo app's Script Watcher polls the output directory and reloads whenever `manifest.json`
    changes. Keep the app open beside your editor.
@@ -54,7 +54,7 @@ let ctx = ScriptContext(metadata: ManifestMetadata(
 ))
 let C = ScriptContext.Colors.self
 
-// — geometry goes here —
+//, geometry goes here:
 
 try ctx.emit(description: "Drilled mounting bracket")
 ```
@@ -64,7 +64,7 @@ trigger file the watcher watches for). Add geometry between the two lines.
 
 ---
 
-## Adding geometry — Shape, Wire, Edge
+## Adding geometry: Shape, Wire, Edge
 
 ### Solid shape
 
@@ -75,7 +75,7 @@ try ctx.add(blank, id: "blank", color: C.steel, name: "Stock")
 
 ### Wire (sketch / profile)
 
-Wire bodies are displayed as wireframe only — useful for cross-section inspection and sweep paths.
+Wire bodies are displayed as wireframe only: useful for cross-section inspection and sweep paths.
 
 ```swift
 let profile = Wire.rectangle(width: 80, height: 40)!
@@ -99,7 +99,7 @@ let C = ScriptContext.Colors.self
 
 ---
 
-## Worked example — drilled mounting bracket
+## Worked example: drilled mounting bracket
 
 Build a rectangular blank, add two countersunk mounting holes and a central slot, then register
 each stage so the viewport shows the progression.
@@ -274,7 +274,7 @@ let ctx = ScriptContext(exportSTEP: false, metadata: ...)
 ## Next steps
 
 Once the geometry is correct, extract it into a reusable library target so the same validated
-`Shape`-returning function can be imported by your app — see
+`Shape`-returning function can be imported by your app, see
 [Authoring geometry](authoring-geometry.md) for the end-to-end workflow.
 
 ![Drilled mounting bracket](images/mounting-bracket.png)

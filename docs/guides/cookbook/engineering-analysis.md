@@ -9,7 +9,7 @@ nav_order: 11
 A DFM-style workflow for three headless verbs: check wall thickness against a
 manufacturing floor, confirm clearance and flag interference between mating
 bodies, and heal imported geometry that arrives non-watertight. All three verbs
-are pure read-then-write — they take BREPs from disk and emit JSON on stdout.
+are pure read-then-write; they take BREPs from disk and emit JSON on stdout.
 
 Full flag and return-value details: [Engineering analysis reference](../../reference/engineering.md).
 
@@ -45,7 +45,7 @@ occtkit check-thickness housing.brep \
 ```
 
 `minThickness: 1.1` is below the 1.5 mm floor. The `thinRegions` array gives
-the world-space `centerPoint` and `faceRefs` for every flagged sample — take
+the world-space `centerPoint` and `faceRefs` for every flagged sample, take
 those coordinates back to your modeller to thicken the wall at `face[3]`.
 
 ---
@@ -97,7 +97,7 @@ occtkit analyze-clearance shaft.brep housing.brep bearing.brep \
 }
 ```
 
-The shaft–bearing pair has `intersects: true` and `interferenceVolume: 2.3` mm³ —
+The shaft–bearing pair has `intersects: true` and `interferenceVolume: 2.3` mm³:
 a real clash that needs fixing. The shaft–housing gap of 0.05 mm is within spec
 tolerance but tagged `belowMinClearance: true` because it is under the 0.1 mm
 design rule. Add `--no-contacts` to suppress point details and speed up large
@@ -111,7 +111,7 @@ Geometry imported from STEP or IGES often arrives with free edges, small slivers
 or invalid orientation. Run `heal` to apply OCCT ShapeFix and write a repaired
 BREP, then compare the before/after snapshots to confirm the repair.
 
-**Before heal — snapshot the raw import:**
+**Before heal, snapshot the raw import:**
 
 ```bash
 occtkit check-thickness imported.brep --sampling-density coarse
@@ -156,7 +156,7 @@ occtkit heal imported.brep --output imported_healed.brep --tolerance 0.01
 is closed. `fixes.freeEdgesClosed: 3` accounts for all three violations from the
 before snapshot.
 
-**After heal — re-run the thickness check:**
+**After heal, re-run the thickness check:**
 
 ```bash
 occtkit check-thickness imported_healed.brep \

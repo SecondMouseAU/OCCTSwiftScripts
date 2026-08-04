@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# render-recipe.sh — render a recipe's output.png via the render-preview verb.
+# render-recipe.sh: render a recipe's output.png via the render-preview verb.
 #
 # Runs the recipe to a temp dir, then renders body-0.brep to <dir>/output.png with the
 # OCCTSwiftViewport OffscreenRenderer. If render-preview fails (no Metal / headless CI),
-# it warns and skips without erroring — the PNG is a locally-generated artifact, never a
+# it warns and skips without erroring: the PNG is a locally-generated artifact, never a
 # CI gate (see issue #16).
 #
 # Usage:
@@ -41,7 +41,7 @@ render_one() {
         >/dev/null 2>&1 && [ -s "$dir/output.png" ]; then
     echo "  ✓ wrote $dir/output.png"
   else
-    echo "  ! render-preview unavailable (headless / no Metal) — PNG skipped" >&2
+    echo "  ! render-preview unavailable (headless / no Metal), PNG skipped" >&2
   fi
 }
 

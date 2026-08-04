@@ -18,7 +18,7 @@ Tools for traversing assembly hierarchies in OCAF documents and writing document
 
 Walk an XCAF document's assembly tree; report names, colors, transforms, and per-component metadata.
 
-**Input** — flag-form, JSON-form (stdin or file path), or `.brep` (degenerate single-node response).
+**Input**: flag-form, JSON-form (stdin or file path), or `.brep` (degenerate single-node response).
 
 **Parameters**
 
@@ -27,7 +27,7 @@ Walk an XCAF document's assembly tree; report names, colors, transforms, and per
 | `inputPath` | string | yes | Path to `.step` / `.stp` / `.xbf` (OCAF binary) file, or `.brep` (produces single-node response since BREPs carry no XCAF metadata). |
 | `depth` | integer | no | Maximum tree depth to traverse; omit for unlimited. |
 
-**Returns** — A JSON tree with a synthetic root if multiple top-level shapes exist, or the single top-level `Node` if one root. Each `Node` carries stable `label_<int64>` IDs, names, 4×4 transforms (16-element float array, column-major), optional RGBA colors, `isAssembly` / `isReference` flags, and a `referredTo` field when the node points to another component. Counts of total components, instances, and references at the document scope. Returns an error if the file cannot be loaded.
+**Returns**: A JSON tree with a synthetic root if multiple top-level shapes exist, or the single top-level `Node` if one root. Each `Node` carries stable `label_<int64>` IDs, names, 4×4 transforms (16-element float array, column-major), optional RGBA colors, `isAssembly` / `isReference` flags, and a `referredTo` field when the node points to another component. Counts of total components, instances, and references at the document scope. Returns an error if the file cannot be loaded.
 
 **Example**
 
@@ -65,7 +65,7 @@ occtkit inspect-assembly assembly.step --depth 2
 }
 ```
 
-**Drives** — `Document.rootNodes` → `AssemblyNode.children` tree walk; `AssemblyNode.labelId` (stable int64 identifier for round-trip to `set-metadata --component-id`); `AssemblyNode.isReference` / `AssemblyNode.referredNode` for reference tracking.
+**Drives**: `Document.rootNodes` → `AssemblyNode.children` tree walk; `AssemblyNode.labelId` (stable int64 identifier for round-trip to `set-metadata --component-id`); `AssemblyNode.isReference` / `AssemblyNode.referredNode` for reference tracking.
 
 ---
 
@@ -73,7 +73,7 @@ occtkit inspect-assembly assembly.step --depth 2
 
 Write document- or component-level XCAF metadata onto an OCAF document; save as `.xbf` (binary OCAF format).
 
-**Input** — flag-form, JSON-form (stdin or file path).
+**Input**: flag-form, JSON-form (stdin or file path).
 
 **Parameters**
 
@@ -91,7 +91,7 @@ Write document- or component-level XCAF metadata onto an OCAF document; save as 
 | `partNumber` | string | no | Part number identifier. |
 | `customAttr` | key=value | no | Arbitrary named-string attribute (repeatable; write `--custom-attr key=value --custom-attr k2=v2`). |
 
-**Returns** — The output `.xbf` path and a dictionary of all applied metadata fields (canonical keys + custom attrs) keyed by name. Returns an error if the input file cannot be loaded, the component ID does not exist, or the output path is not writable.
+**Returns**: The output `.xbf` path and a dictionary of all applied metadata fields (canonical keys + custom attrs) keyed by name. Returns an error if the input file cannot be loaded, the component ID does not exist, or the output path is not writable.
 
 **Example**
 
@@ -121,6 +121,6 @@ occtkit set-metadata assembly.step --output assembly_meta.xbf \
 }
 ```
 
-**Drives** — `Document.node(at:)` lookup by `componentId` (int64); `AssemblyNode.setNamedString()` / `.setNamedReal()` / `.setName()` to write `TDataStd_NamedData` and `TDataStd_Name` attributes; `Document.defineAllFormats()` and `Document.setStorageFormat("BinXCAF")` to persist XCAF metadata to the binary format.
+**Drives**: `Document.node(at:)` lookup by `componentId` (int64); `AssemblyNode.setNamedString()` / `.setNamedReal()` / `.setName()` to write `TDataStd_NamedData` and `TDataStd_Name` attributes; `Document.defineAllFormats()` and `Document.setStorageFormat("BinXCAF")` to persist XCAF metadata to the binary format.
 
-**Notes** — The output is always `.xbf` (binary OCAF), regardless of input format, because STEP roundtrip via the OCCTSwift exporter does not expose a one-call "write custom named-data" path in v1. Use `inspect-assembly` on the output `.xbf` to verify the metadata round-tripped correctly. Canonical keys (`title`, `drawnBy`, `material`, `weight`, `revision`, `partNumber`) are stored on the document's main label at document scope; custom attrs (via `--custom-attr key=value`) are stored as arbitrary named strings on the same target.
+**Notes**: The output is always `.xbf` (binary OCAF), regardless of input format, because STEP roundtrip via the OCCTSwift exporter does not expose a one-call "write custom named-data" path in v1. Use `inspect-assembly` on the output `.xbf` to verify the metadata round-tripped correctly. Canonical keys (`title`, `drawnBy`, `material`, `weight`, `revision`, `partNumber`) are stored on the document's main label at document scope; custom attrs (via `--custom-attr key=value`) are stored as arbitrary named strings on the same target.

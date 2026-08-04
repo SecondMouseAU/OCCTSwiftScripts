@@ -18,7 +18,7 @@ Build BREP models from JSON feature specifications or sheet-metal specs. Both ve
 
 Build a BREP from a JSON `[FeatureSpec]` via FeatureReconstructor.
 
-**Input** — JSON request on stdin or file path. Both forms supported.
+**Input**: JSON request on stdin or file path. Both forms supported.
 
 **Parameters**
 
@@ -29,21 +29,21 @@ Build a BREP from a JSON `[FeatureSpec]` via FeatureReconstructor.
 | `inputBrep` | string | no | Path to a starting BREP. Seeds `BuildContext.current` and registers it under `@input` for boolean/fillet/chamfer references |
 | `features` | array | yes | Array of feature entries, each with a `kind` discriminator and snake_case fields |
 
-**Feature kinds and fields** — each feature entry has a `kind` discriminator:
+**Feature kinds and fields**: each feature entry has a `kind` discriminator:
 
-- `revolve` — `id` (string), `profile_points_2d` (array of `[x, y]`), `axis_origin` (`[x, y, z]`), `axis_direction` (`[x, y, z]`), `angle_deg` (number)
-- `extrude` — `id`, `profile_points_2d`, `direction` (`[x, y, z]`), `length` (number)
-- `hole` — `id`, `center` (`[x, y, z]`), `direction` (`[x, y, z]`), `radius` (number), `depth` (number)
-- `thread` — `id`, `spec` (string), `hole_ref` (string), `length` (number, optional)
-- `fillet` — `id`, `edges` (array of edge IDs), `radius` (number)
-- `chamfer` — `id`, `edges`, `distance` (number)
-- `boolean` — `id`, `op` (`"union"` | `"subtract"` | `"intersection"`), `left` (string, often `"@input"`), `right` (string)
+- `revolve`: `id` (string), `profile_points_2d` (array of `[x, y]`), `axis_origin` (`[x, y, z]`), `axis_direction` (`[x, y, z]`), `angle_deg` (number)
+- `extrude`: `id`, `profile_points_2d`, `direction` (`[x, y, z]`), `length` (number)
+- `hole`: `id`, `center` (`[x, y, z]`), `direction` (`[x, y, z]`), `radius` (number), `depth` (number)
+- `thread`: `id`, `spec` (string), `hole_ref` (string), `length` (number, optional)
+- `fillet`: `id`, `edges` (array of edge IDs), `radius` (number)
+- `chamfer`: `id`, `edges`, `distance` (number)
+- `boolean`: `id`, `op` (`"union"` | `"subtract"` | `"intersection"`), `left` (string, often `"@input"`), `right` (string)
 
-**Returns** — JSON object with:
-- `shape` — path to output BREP file, or `null` if build failed
-- `fulfilled` — array of feature IDs that succeeded
-- `skipped` — array of objects with `id`, `stage`, `reason` (`under_determined` | `occt_failure` | `unresolved_ref` | `unsupported`), and optional `detail`
-- `annotations` — array of objects with `id`, `kind` (`"thread"`), and optional `detail`
+**Returns**: JSON object with:
+- `shape`: path to output BREP file, or `null` if build failed
+- `fulfilled`: array of feature IDs that succeeded
+- `skipped`: array of objects with `id`, `stage`, `reason` (`under_determined` | `occt_failure` | `unresolved_ref` | `unsupported`), and optional `detail`
+- `annotations`: array of objects with `id`, `kind` (`"thread"`), and optional `detail`
 
 **Example**
 
@@ -76,9 +76,9 @@ reconstruct /tmp/revolve.json
 }
 ```
 
-**Drives** — `OCCTSwift.FeatureReconstructor.buildJSON(_:inputBody:)` (v0.147+; `inputBody:` parameter added v0.152; `boolean` JSON decoder branch added v0.152.1).
+**Drives**: `OCCTSwift.FeatureReconstructor.buildJSON(_:inputBody:)` (v0.147+; `inputBody:` parameter added v0.152; `boolean` JSON decoder branch added v0.152.1).
 
-**Notes** — When `inputBrep` is supplied, hole/fillet/chamfer entries cut/finish the loaded body directly; additive features (extrude/revolve) union onto it. Use `{"kind":"boolean","op":"subtract","left":"@input","right":<id>}` entries to express non-circular pocket cuts that reference the seeded body.
+**Notes**: When `inputBrep` is supplied, hole/fillet/chamfer entries cut/finish the loaded body directly; additive features (extrude/revolve) union onto it. Use `{"kind":"boolean","op":"subtract","left":"@input","right":<id>}` entries to express non-circular pocket cuts that reference the seeded body.
 
 ---
 
@@ -86,7 +86,7 @@ reconstruct /tmp/revolve.json
 
 Compose a sheet-metal BREP from a JSON spec via SheetMetal.Builder.
 
-**Input** — JSON request on stdin or file path. Both forms supported.
+**Input**: JSON request on stdin or file path. Both forms supported.
 
 **Parameters**
 
@@ -98,10 +98,10 @@ Compose a sheet-metal BREP from a JSON spec via SheetMetal.Builder.
 | `flanges` | array | yes | Array of flange objects, each with `id` (string), `profile` (array of `[x, y]` points), `origin` (`[x, y, z]`), `uAxis` (`[x, y, z]`), `vAxis` (`[x, y, z]`, optional; defaults to cross(`normal`, `uAxis`)), `normal` (`[x, y, z]`) |
 | `bends` | array | no | Array of bend objects, each with `from` (flange id), `to` (flange id), `radius` (number). Defaults to `[]` |
 
-**Returns** — JSON object with:
-- `shape` — absolute path to output BREP file
-- `flanges` — count of flanges composed
-- `bends` — count of bends applied
+**Returns**: JSON object with:
+- `shape`: absolute path to output BREP file
+- `flanges`: count of flanges composed
+- `bends`: count of bends applied
 
 **Example**
 
@@ -143,6 +143,6 @@ compose-sheet-metal /tmp/channel.json
 }
 ```
 
-**Drives** — `OCCTSwift.SheetMetal.Builder(thickness:).build(flanges:bends:)` (v0.151+; bend step awareness added v0.153).
+**Drives**: `OCCTSwift.SheetMetal.Builder(thickness:).build(flanges:bends:)` (v0.151+; bend step awareness added v0.153).
 
-**Notes** — Kept separate from `reconstruct` because SheetMetal lives in its own upstream namespace. The split also reserves room for the planned reverse direction (bent BREP → flat cutting pattern).
+**Notes**: Kept separate from `reconstruct` because SheetMetal lives in its own upstream namespace. The split also reserves room for the planned reverse direction (bent BREP → flat cutting pattern).

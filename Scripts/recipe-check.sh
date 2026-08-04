@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# recipe-check.sh — smoke-test a recipe and (optionally) compare to its reference BREP.
+# recipe-check.sh: smoke-test a recipe and (optionally) compare to its reference BREP.
 #
 # For one recipe directory:
 #   1. Run `occtkit run <dir>/main.swift --format brep` into a temp dir.
@@ -74,7 +74,7 @@ if os.path.exists(ref):
                 die(f"bbox {key} drift {abs(a-b):.2e}")
     print(f"  ✓ matches reference output.brep (Δvol {rel:.2e})")
 else:
-    print("  · no reference output.brep — skipping compare")
+    print("  · no reference output.brep, skipping compare")
 PY
   echo "  ✓ $name OK"
 }

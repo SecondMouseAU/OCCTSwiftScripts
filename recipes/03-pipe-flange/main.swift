@@ -1,7 +1,7 @@
-// Recipe 03 — Pipe flange
+// Recipe 03: Pipe flange
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — a raised-face pipe flange with a bolt circle.
+// Outputs: one solid body: a raised-face pipe flange with a bolt circle.
 // Notes:   The flange is a surface of revolution. The half-section is drawn in the XY
 //          plane as (radius, axial) pairs with radius ≥ bore (so it never crosses the
 //          axis) and revolved a full turn about the Y axis. The bolt circle is cut with
@@ -60,4 +60,4 @@ flange = flange.chamfered(distance: 1.0) ?? flange
 try ctx.add(flange, color: C.brass, name: "Pipe flange")
 
 print("Flange volume: \(flange.volume ?? 0) mm³, \(boltCount)× Ø\(boltRadius * 2) bolt holes")
-try ctx.emit(description: "Raised-face flange — Ø\(boreRadius * 2) bore, \(boltCount)-bolt circle")
+try ctx.emit(description: "Raised-face flange, Ø\(boreRadius * 2) bore, \(boltCount)-bolt circle")

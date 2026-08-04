@@ -10,12 +10,12 @@ Three techniques that take a simple primitive and multiply it into a complex sol
 **pipe sweeps** drag a cross-section along a 3D path; **lofts** skin a surface across a
 stack of placed profiles; **linear patterns** tile a body along one or more axes and fuse
 the copies. Each sub-recipe below is a worked example drawn from the
-[`recipes/`](https://github.com/gsdali/OCCTSwiftScripts/tree/main/recipes) folder — run
+[`recipes/`](https://github.com/gsdali/OCCTSwiftScripts/tree/main/recipes) folder, run
 the exact command shown to reproduce the output.
 
 ---
 
-## 1 — Helix + pipe sweep (helical spring)
+## 1: Helix + pipe sweep (helical spring)
 
 **Recipe:** `recipes/02-helical-spring/`
 
@@ -48,19 +48,19 @@ swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
 **Gotchas**
 
-- The section circle **must** sit on the spine start and face along the tangent —
+- The section circle **must** sit on the spine start and face along the tangent:
   an edge-on or offset section makes `BRepOffsetAPI_MakePipe` fail and returns `nil`.
 - `Shape.sweep` orientation-normalises its result since OCCTSwift v1.3.1 (issue #170),
   so you never need to flip the section sense to avoid a negative-volume solid. Use
   `Shape.signedVolume` if you need to inspect raw orientation.
 - `Wire.helix` takes `turns:` (a coil count), **not** a `height:`.
   Free length ≈ `pitch · turns`.
-- Ground or closed ends are out of scope here — they require a variable-pitch helix or
+- Ground or closed ends are out of scope here: they require a variable-pitch helix or
   an end-grinding boolean.
 
 ---
 
-## 2 — Lofted twisted sections (fan blade)
+## 2: Lofted twisted sections (fan blade)
 
 **Recipe:** `recipes/06-fan-blade/`
 
@@ -104,7 +104,7 @@ swift run occtkit run recipes/06-fan-blade/main.swift --format brep
 
 - **Loft matches profiles by vertex index.** Every section must have the same point count
   in the same winding order. Generate all sections from one base loop and only transform
-  the points — mismatched counts produce twisted or torn surfaces.
+  the points, mismatched counts produce twisted or torn surfaces.
 - Keep the trailing edge slightly open (the NACA TE is non-zero by formula). Coincident
   upper/lower TE points degenerate the wire.
 - Large twist deltas across few sections can cause the loft to self-intersect. Add more
@@ -116,7 +116,7 @@ See the [Construction reference](../../reference/construction.md) for the `loft`
 
 ---
 
-## 3 — Linear pattern + union (strut lattice)
+## 3: Linear pattern + union (strut lattice)
 
 **Recipe:** `recipes/05-lattice-cube/`
 
@@ -149,14 +149,14 @@ swift run occtkit run recipes/05-lattice-cube/main.swift --format brep
 
 **Gotchas**
 
-- `linearPattern` is 1D — tile a 2D grid by chaining two calls on the result.
+- `linearPattern` is 1D, tile a 2D grid by chaining two calls on the result.
 - Use full-length rods (spanning the whole lattice) rather than per-cell segments.
   Per-cell segments accumulate coincident faces at every node, making the union slower
   and more fragile.
-- Cost scales with `(cells+1)² × 3` cylinders plus the final fuse — keep `cells` at 3–5
+- Cost scales with `(cells+1)² × 3` cylinders plus the final fuse, keep `cells` at 3–5
   for fast iteration; large lattices fuse slowly.
 - This is a simple cubic (rods-only) lattice. Body-centred (BCC) or octet cells add
-  diagonal struts — sweep them along `Wire.line` diagonals and union them the same way.
+  diagonal struts, sweep them along `Wire.line` diagonals and union them the same way.
 
 See the [Construction reference](../../reference/construction.md) for `linearPattern` and
 `circularPattern` flag details.

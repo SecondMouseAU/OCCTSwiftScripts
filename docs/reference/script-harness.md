@@ -6,7 +6,7 @@ nav_order: 1
 
 # Script harness & run
 
-The `ScriptHarness` library — `ScriptContext`, `ManifestMetadata`, `Colors` — is the primary
+The `ScriptHarness` library, `ScriptContext`, `ManifestMetadata`, `Colors`: is the primary
 author API for writing parametric CAD scripts. The `run` verb hosts those scripts headlessly,
 caching an SPM workspace and building/executing them on demand.
 
@@ -34,7 +34,7 @@ ScriptContext(exportSTEP: Bool = true, metadata: ManifestMetadata? = nil)
 | `exportSTEP` | `Bool` | `true` | Whether to write a combined `output.step` file (disable to skip STEP for speed) |
 | `metadata` | `ManifestMetadata?` | `nil` | Optional project metadata (name, revision, tags, notes) written into `manifest.json` |
 
-**What it does** — Creates a new context, cleans the output directory (iCloud Drive
+**What it does**: Creates a new context, cleans the output directory (iCloud Drive
 `~/Library/Mobile Documents/.../OCCTSwiftScripts/output/` if available, else
 `~/.occtswift-scripts/output/`), and prepares to accumulate geometry.
 
@@ -57,7 +57,7 @@ let profile = Wire.rectangle(width: 20, height: 10)!
 try ctx.add(profile, id: "sketch", color: ScriptContext.Colors.yellow)
 ```
 
-**Notes** — `ScriptContext` is `Sendable` (thread-safe via internal NSLock). Output directory
+**Notes**: `ScriptContext` is `Sendable` (thread-safe via internal NSLock). Output directory
 is cleaned on init; if you call `ScriptContext()` multiple times in one script, only the final
 `emit()` persists.
 
@@ -91,7 +91,7 @@ try ctx.add(
 | `roughness` | `Float?` | no | PBR roughness (reserved for future use) |
 | `metallic` | `Float?` | no | PBR metallic value (reserved for future use) |
 
-**What it does** — Writes the shape to `body-N.brep` immediately, records metadata in the
+**What it does**: Writes the shape to `body-N.brep` immediately, records metadata in the
 manifest, and appends to the internal shape list for later graph export or compound operations.
 
 **Example**
@@ -102,9 +102,9 @@ let filleted = solid.filleted(radius: 1.0) ?? solid
 try ctx.add(filleted, id: "bracket", color: [0.7, 0.7, 0.75, 1.0], name: "Main Bracket")
 ```
 
-**Returns** — Throws `ScriptError` on BREP write failure.
+**Returns**: Throws `ScriptError` on BREP write failure.
 
-**Notes** — Wire and Edge shapes should use the overloaded `add(_:Wire)` or `add(_:Edge)`
+**Notes**: Wire and Edge shapes should use the overloaded `add(_:Wire)` or `add(_:Edge)`
 methods instead, which convert internally. BREP write is fast (~1 ms); STEP (optional) is
 slower (~50 ms).
 
@@ -125,9 +125,9 @@ try ctx.add(
 ) throws
 ```
 
-**Parameters** — Same as `add(Shape)`, minus `roughness`/`metallic`.
+**Parameters**: Same as `add(Shape)`, minus `roughness`/`metallic`.
 
-**What it does** — Converts the wire to a `Shape` via `Shape.fromWire(_:)` and adds it as a
+**What it does**: Converts the wire to a `Shape` via `Shape.fromWire(_:)` and adds it as a
 wireframe body. Useful for sketches, sweep paths, or construction geometry.
 
 **Example**
@@ -137,7 +137,7 @@ let profilePath = Wire.circle(radius: 5.0, center: SIMD3(0, 0, 0))!
 try ctx.add(profilePath, id: "sweep-path", color: ScriptContext.Colors.cyan)
 ```
 
-**Notes** — The wire's topology is preserved in BREP format, displayed as edges (no fill).
+**Notes**: The wire's topology is preserved in BREP format, displayed as edges (no fill).
 
 ---
 
@@ -156,9 +156,9 @@ try ctx.add(
 ) throws
 ```
 
-**Parameters** — Same as `add(Shape)`, minus `roughness`/`metallic`.
+**Parameters**: Same as `add(Shape)`, minus `roughness`/`metallic`.
 
-**What it does** — Converts the edge to a `Shape` via `Shape.fromEdge(_:)` and adds it as a
+**What it does**: Converts the edge to a `Shape` via `Shape.fromEdge(_:)` and adds it as a
 wireframe body. Useful for construction axes or curve references.
 
 **Example**
@@ -185,9 +185,9 @@ try ctx.addCompound(
 ) throws
 ```
 
-**Parameters** — Same as `add(Shape)`, minus `roughness`/`metallic`.
+**Parameters**: Same as `add(Shape)`, minus `roughness`/`metallic`.
 
-**What it does** — Compounds the input shapes and writes as a single BREP body. Useful for
+**What it does**: Compounds the input shapes and writes as a single BREP body. Useful for
 assemblies or multi-part results.
 
 **Example**
@@ -224,7 +224,7 @@ try ctx.addGraph(
 | `sourceBodyId` | `String?` | no | Body ID this graph was derived from (for reference) |
 | `sqlite` | `Bool` | no | Also write a SQLite database (default `true`) |
 
-**What it does** — Writes the graph as `graph-N.json` (BREPGraph v1 schema) and optionally
+**What it does**: Writes the graph as `graph-N.json` (BREPGraph v1 schema) and optionally
 `graph-N.sqlite` for indexing and queries. Adds graph metadata to the manifest.
 
 **Example**
@@ -255,7 +255,7 @@ try ctx.addGraphsForAllShapes(sqlite: Bool = true) throws
 |------|------|:--------:|-------------|
 | `sqlite` | `Bool` | no | Also write SQLite databases (default `true`) |
 
-**What it does** — Convenience method that iterates all accumulated shapes, builds a
+**What it does**: Convenience method that iterates all accumulated shapes, builds a
 `BRepGraph` for each, and exports each to JSON + optional SQLite. Skips shapes that fail
 to build a graph. Each graph is linked to its source body ID in the manifest.
 
@@ -286,12 +286,12 @@ try ctx.emit(description: String? = nil) throws
 |------|------|:--------:|-------------|
 | `description` | `String?` | no | Short description of the script output |
 
-**What it does** — If `exportSTEP` is true, writes a single `output.step` file combining all
-added shapes (for external tool interop). Writes `manifest.json` last — this is the **trigger
+**What it does**: If `exportSTEP` is true, writes a single `output.step` file combining all
+added shapes (for external tool interop). Writes `manifest.json` last; this is the **trigger
 file** that the OCCTSwiftViewport file watcher listens to, so geometry is only visible after
 `emit()` completes successfully.
 
-**Returns** — Throws `ScriptError` on manifest or STEP write failure.
+**Returns**: Throws `ScriptError` on manifest or STEP write failure.
 
 **Output files** (in order of creation)
 
@@ -318,7 +318,7 @@ try ctx.add(final, id: "part", color: C.steel)
 try ctx.emit(description: "Filleted rectangular extrusion")
 ```
 
-**Notes** — Call `emit()` **last** after all geometry is added. Partial output (missing
+**Notes**: Call `emit()` **last** after all geometry is added. Partial output (missing
 `manifest.json`) will not trigger the viewport watcher, so failed scripts leave the previous
 frame visible. Output directory is `~/.occtswift-scripts/output/` or iCloud Drive equivalent
 (resolved at `ScriptContext` init time).
@@ -400,7 +400,7 @@ try ctx.add(solid, id: "chassis", color: C.steel)
 try ctx.add(fastener, id: "bolt", color: C.copper)
 ```
 
-**Notes** — All colors are RGBA with alpha = 1.0. Use custom `[Float]` arrays for custom
+**Notes**: All colors are RGBA with alpha = 1.0. Use custom `[Float]` arrays for custom
 colors: `[r, g, b, a]` with values in 0–1 range.
 
 ---
@@ -409,7 +409,7 @@ colors: `[r, g, b, a]` with values in 0–1 range.
 
 Host a user Swift script headlessly via a cached SPM workspace.
 
-**Input** — Flag form or `--serve` JSONL mode.
+**Input**: Flag form or `--serve` JSONL mode.
 
 **Signature**
 
@@ -426,18 +426,18 @@ occtkit run <script.swift> [options]
 | `--output`, `-o` | path | no | Copy output directory to this path after run |
 | `--serve` | flag | no | Read JSONL requests on stdin, emit JSONL envelopes on stdout |
 
-**What it does** — Creates or updates a cached SPM workspace under
+**What it does**: Creates or updates a cached SPM workspace under
 `~/.occtswift-scripts/runner-cache/workspace/`, copies the user script to `Sources/Script/main.swift`,
 rewrites imports/settings as needed, runs `swift build && swift run Script`, and copies the
 output directory on completion.
 
-**Format control** — The `--format` list controls what `ScriptContext` writes:
-- `brep` — individual body BREP files (always written)
-- `step` — combined `output.step` (rewrites `ScriptContext()` to `ScriptContext(exportSTEP: false)`)
-- `graph-json` — topology graphs as `graph-N.json` (injects `ctx.addGraphsForAllShapes(sqlite: false)` before emit)
-- `graph-sqlite` — topology graphs as `graph-N.sqlite` (injects `ctx.addGraphsForAllShapes(sqlite: true)` before emit)
+**Format control**: The `--format` list controls what `ScriptContext` writes:
+- `brep`: individual body BREP files (always written)
+- `step`: combined `output.step` (rewrites `ScriptContext()` to `ScriptContext(exportSTEP: false)`)
+- `graph-json`: topology graphs as `graph-N.json` (injects `ctx.addGraphsForAllShapes(sqlite: false)` before emit)
+- `graph-sqlite`: topology graphs as `graph-N.sqlite` (injects `ctx.addGraphsForAllShapes(sqlite: true)` before emit)
 
-**Workspace resolution** — ScriptHarness dependency is auto-detected in order:
+**Workspace resolution**: ScriptHarness dependency is auto-detected in order:
 1. `$OCCTKIT_SCRIPTS_PATH` environment variable (if set and contains `Package.swift`)
 2. Auto-detect from running binary's `argv[0]` (works for `swift run occtkit ...`)
 3. Remote fallback: `from: "0.2.0"` tag from GitHub
@@ -465,7 +465,7 @@ printf '{"args":["test.swift"]}\n' | occtkit run --serve
 }
 ```
 
-**Error handling** — Build or runtime errors are reported in `stderr` and exit code is non-zero.
+**Error handling**: Build or runtime errors are reported in `stderr` and exit code is non-zero.
 
 ```json
 {
@@ -476,7 +476,7 @@ printf '{"args":["test.swift"]}\n' | occtkit run --serve
 }
 ```
 
-**Notes** — First run is ~30 s (full SPM build of OCCTSwift + dependencies); subsequent runs
+**Notes**: First run is ~30 s (full SPM build of OCCTSwift + dependencies); subsequent runs
 are ~1–2 s incremental. Output directory is resolved the same way as `ScriptContext`:
 iCloud Drive `~/Library/Mobile Documents/.../OCCTSwiftScripts/output/` if available, else
 `~/.occtswift-scripts/output/`. With `--serve`, the subcommand's stdout/stderr and any child

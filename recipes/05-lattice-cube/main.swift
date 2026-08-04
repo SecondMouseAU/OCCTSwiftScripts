@@ -1,7 +1,7 @@
-// Recipe 05 — Strut lattice cube
+// Recipe 05: Strut lattice cube
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — a 3D-printable cubic strut lattice.
+// Outputs: one solid body: a 3D-printable cubic strut lattice.
 // Notes:   The lattice is a grid of round struts running in all three axes. Each axis uses
 //          one full-length strut cylinder, replicated across the other two axes with
 //          Shape.linearPattern, then all three groups are fused. Full-length rods (rather
@@ -43,4 +43,4 @@ let lattice = xRods.union(yRods)!.union(zRods)!
 try ctx.add(lattice, color: C.copper, name: "Strut lattice")
 
 print("\(cells)³ cells, edge \(span) mm, lattice volume: \(lattice.volume ?? 0) mm³")
-try ctx.emit(description: "Cubic strut lattice — \(cells)³ cells, Ø\(strutR * 2) struts")
+try ctx.emit(description: "Cubic strut lattice, \(cells)³ cells, Ø\(strutR * 2) struts")

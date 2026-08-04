@@ -1,12 +1,12 @@
-// Recipe 07 — Sheet-metal U-channel
+// Recipe 07: Sheet-metal U-channel
 //
 // Inputs:  none (edit the parameter block below)
-// Outputs: one solid body — a folded sheet-metal channel: a base with two walls bent up.
+// Outputs: one solid body: a folded sheet-metal channel: a base with two walls bent up.
 // Notes:   Uses OCCTSwift's SheetMetal.Builder. Each face is a Flange defined by its plane
 //          (origin + uAxis + thickness normal + vAxis) and a 2D profile; a Bend joins the
 //          base to each wall with an inside radius, and the builder rounds the bend regions
 //          into one solid. The two walls run the FULL width of the base and sit on opposite
-//          edges — the builder folds chains / opposite flanges, but not flanges that share a
+//          edges: the builder folds chains / opposite flanges, but not flanges that share a
 //          corner (a four-wall tray fails the corner fillet), so a U-channel is the robust,
 //          canonical sheet-metal part here.
 //
@@ -16,7 +16,7 @@ import OCCTSwift
 import ScriptHarness
 
 // ── Parameters ──────────────────────────────────────────────────────────────
-let width: Double      = 80   // base size in X — also the wall width (mm)
+let width: Double      = 80   // base size in X, also the wall width (mm)
 let depth: Double      = 50   // base size in Y, between the two walls (mm)
 let wallHeight: Double = 25   // wall height (mm)
 let thickness: Double  = 1.5  // sheet thickness (mm)
@@ -37,7 +37,7 @@ let base = SheetMetal.Flange(
     uAxis: SIMD3(1, 0, 0), vAxis: SIMD3(0, 1, 0))
 
 // Two full-width walls on the y=0 and y=depth edges. Each sits on its base edge (origin),
-// runs along it in +X (uAxis), rises +Z (vAxis — given explicitly because the default
+// runs along it in +X (uAxis), rises +Z (vAxis, given explicitly because the default
 // cross(normal, uAxis) would point one wall downward), and extrudes thickness outward.
 let front = SheetMetal.Flange(
     id: "front",
@@ -60,7 +60,7 @@ do {
         .build(flanges: [base, front, back], bends: bends)
     try ctx.add(channel, color: C.steel, name: "Sheet-metal U-channel")
     print("Channel \(width)×\(depth)×\(wallHeight), volume: \(channel.volume ?? 0) mm³")
-    try ctx.emit(description: "Sheet-metal U-channel — \(width)×\(depth), \(wallHeight) walls")
+    try ctx.emit(description: "Sheet-metal U-channel, \(width)×\(depth), \(wallHeight) walls")
 } catch {
     fatalError("SheetMetal build failed: \(error)")
 }

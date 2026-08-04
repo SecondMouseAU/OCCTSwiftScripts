@@ -7,7 +7,7 @@ nav_order: 5
 # occtkit CLI basics
 
 `occtkit` is a busybox-style multi-call binary: one binary, 29 verbs, three invocation styles.
-This page covers the mechanics — how to install it, the two input forms every verb accepts, and
+This page covers the mechanics, how to install it, the two input forms every verb accepts, and
 the `--serve` JSONL envelope that powers OCCTMCP. For the full verb list see the
 [Reference](../../reference/).
 
@@ -17,7 +17,7 @@ the `--serve` JSONL envelope that powers OCCTMCP. For the full verb list see the
 # Install to /usr/local/bin (builds first if needed, then creates one symlink per verb)
 make install
 
-# Install to a custom prefix (e.g. ~/.local/bin — make sure it is on $PATH)
+# Install to a custom prefix (e.g. ~/.local/bin: make sure it is on $PATH)
 make install PREFIX=$HOME/.local
 
 # Remove all symlinks and the binary
@@ -32,13 +32,13 @@ alongside the `occtkit` binary itself.
 After install, all three forms are equivalent:
 
 ```bash
-# 1. Installed symlink — shortest, busybox-style
+# 1. Installed symlink: shortest, busybox-style
 graph-validate body.brep
 
-# 2. Umbrella binary — useful when the symlinks are not on $PATH
+# 2. Umbrella binary: useful when the symlinks are not on $PATH
 occtkit graph-validate body.brep
 
-# 3. From a checkout — no install needed
+# 3. From a checkout: no install needed
 swift run occtkit graph-validate body.brep
 ```
 
@@ -54,7 +54,7 @@ occtkit --help
 
 Every verb accepts **both** input styles. Use whichever fits your pipeline.
 
-**Flag-form** — positional arguments and `--flags`, familiar from Unix tools:
+**Flag-form**: positional arguments and `--flags`, familiar from Unix tools:
 
 ```bash
 # Validate a B-Rep graph and emit warnings to stdout
@@ -67,11 +67,11 @@ dxf-export bracket.brep bracket.dxf --view 0,0,1
 graph-ml part.brep --uv-samples 16 --edge-samples 32 > part.json
 ```
 
-**JSON-form** — a JSON object on stdin (or a file path as the sole argv argument). Same verbs,
+**JSON-form**: a JSON object on stdin (or a file path as the sole argv argument). Same verbs,
 richer inputs:
 
 ```bash
-# drawing-export reads its full spec from stdin — too many fields for flags
+# drawing-export reads its full spec from stdin: too many fields for flags
 echo '{
   "shape": "bracket.brep",
   "output": "bracket.dxf",
@@ -96,7 +96,7 @@ echo '{
 }' | reconstruct
 ```
 
-Verbs that accept a JSON file path as argv (instead of stdin) work the same way — pass the `.json`
+Verbs that accept a JSON file path as argv (instead of stdin) work the same way, pass the `.json`
 file as the sole positional argument.
 
 ## The `--serve` JSONL protocol
@@ -111,21 +111,21 @@ Any verb can be switched into a long-lived service with `--serve`. In this mode 
 Key properties:
 
 - **One envelope per request line.** Blank lines are silently ignored.
-- **Output is fully captured.** The subcommand's own stdout and stderr — including output from any
-  child process the verb spawns (e.g. `swift build` invoked by `occtkit run`) — are redirected into
+- **Output is fully captured.** The subcommand's own stdout and stderr, including output from any
+  child process the verb spawns (e.g. `swift build` invoked by `occtkit run`), are redirected into
   the envelope via per-request FD redirection. They do not leak to the terminal.
 - **`error` is present only when `ok` is false.** On success the field is omitted (keys are
   sorted, so `exit`/`ok`/`stdout`/`stderr` always appear).
 - **EOF on stdin exits 0.** The server loop terminates cleanly; no teardown handshake needed.
 - **Verbs throw rather than `exit()`**, so a single bad request returns an error envelope and the
-  loop continues — it does not kill the server.
+  loop continues; it does not kill the server.
 
 This is how **OCCTMCP** drives `occtkit`: it spawns one `occtkit <verb> --serve` process per verb
 family and multiplexes requests over stdin/stdout.
 
 ### Example: `graph-validate --serve`
 
-Feed two requests — one valid path, one that will fail:
+Feed two requests, one valid path, one that will fail:
 
 ```bash
 printf '{"args":["good.brep"]}\n{"args":["missing.brep"]}\n' \

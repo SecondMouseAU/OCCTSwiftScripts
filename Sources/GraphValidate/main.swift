@@ -1,4 +1,4 @@
-// GraphValidate — validate a BREP shape's topology graph.
+// GraphValidate: validate a BREP shape's topology graph.
 //
 // Usage: GraphValidate <shape.brep>
 // Stdout: JSON { isValid, errorCount, warningCount }

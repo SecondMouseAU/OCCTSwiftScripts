@@ -1,4 +1,4 @@
-// GraphDedup — deduplicate shared surface/curve geometry in a BREP shape's
+// GraphDedup: deduplicate shared surface/curve geometry in a BREP shape's
 // topology graph, then write the rebuilt shape to a new BREP file.
 //
 // Usage: GraphDedup <in.brep> <out.brep>

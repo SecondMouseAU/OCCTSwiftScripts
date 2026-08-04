@@ -1,4 +1,4 @@
-// GraphCompact — compact a BREP shape's topology graph (drop unreferenced nodes)
+// GraphCompact: compact a BREP shape's topology graph (drop unreferenced nodes)
 // and write the rebuilt shape to a new BREP file.
 //
 // Usage: GraphCompact <in.brep> <out.brep>

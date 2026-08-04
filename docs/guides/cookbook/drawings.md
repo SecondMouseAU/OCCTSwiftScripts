@@ -17,11 +17,11 @@ Full flag and schema details are in [Drawings & export reference](../../referenc
 
 ---
 
-## Recipe 1 — Quick HLR view with `dxf-export`
+## Recipe 1: Quick HLR view with `dxf-export`
 
 Use `dxf-export` when you need a single orthographic view and nothing else: it projects the
 shape along a view direction using hidden-line removal (HLR) and writes the result directly to
-DXF R12. No JSON spec, no layout — just an input BREP, an output path, and an optional view
+DXF R12. No JSON spec, no layout: just an input BREP, an output path, and an optional view
 direction.
 
 ```bash
@@ -58,7 +58,7 @@ occtkit dxf-export spur-gear.brep spur-gear-front.dxf --view 0,-1,0 --deflection
 
 ---
 
-## Recipe 2 — Full ISO sheet with `drawing-export`
+## Recipe 2: Full ISO sheet with `drawing-export`
 
 `drawing-export` composes a complete ISO 128-30 multi-view technical drawing from a JSON spec.
 Pipe the spec on stdin (or pass a path as the first argument) and `drawing-export` writes one
@@ -219,9 +219,9 @@ let result = try Composer.render(spec: spec, shape: shape)
 try result.writer.write(to: outputURL)
 ```
 
-The `shape` and `output` fields of `DrawingSpec` are unused in this path — pass `nil` for
+The `shape` and `output` fields of `DrawingSpec` are unused in this path, pass `nil` for
 both and supply the live `Shape` and destination `URL` as arguments instead.
 
-For the full JSON schema — every field, enum value, and nested type — see
+For the full JSON schema: every field, enum value, and nested type, see
 [`Sources/DrawingComposer/Spec.swift`](https://github.com/gsdali/OCCTSwiftScripts/blob/main/Sources/DrawingComposer/Spec.swift)
 and the [Drawings & export reference](../../reference/drawings.md).

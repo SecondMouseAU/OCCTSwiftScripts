@@ -1,7 +1,7 @@
 // Composer.swift
 // Public entry point: turn a `DrawingSpec` + a live `Shape` into a fully
 // populated `DXFWriter`. Same logic as the `occtkit drawing-export` CLI verb
-// but takes geometry in-process — for iOS apps and library consumers that
+// but takes geometry in-process: for iOS apps and library consumers that
 // can't subprocess. Closes OCCTSwiftScripts#7.
 
 import Foundation
@@ -15,7 +15,7 @@ public enum DrawingComposerError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .noViewsProjected:
-            return "No views projected — check the `views` array in the spec"
+            return "No views projected, check the `views` array in the spec"
         case .shapeBuildFailed(let m):
             return m
         }

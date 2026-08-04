@@ -13,7 +13,7 @@ and installing the `occtkit` CLI.
 - macOS 15+
 - Swift 6.0+ / Xcode 16+
 
-No external setup is needed beyond a Swift toolchain — OCCTSwift bundles a pre-built OCCT
+No external setup is needed beyond a Swift toolchain, OCCTSwift bundles a pre-built OCCT
 xcframework, so the first build resolves and compiles the cohort (~30 s cold; ~1–2 s incremental
 thereafter) without a C++ source build.
 
@@ -101,7 +101,7 @@ make uninstall
 
 Every verb accepts **flag-form** or **JSON-form** input (JSON on stdin or as an argv path), plus a
 generic **`--serve`** mode that reads JSONL `{"args":[...]}` requests and writes one JSONL envelope
-per request — used by OCCTMCP and any other JSON-driven consumer.
+per request, used by OCCTMCP and any other JSON-driven consumer.
 
 ```bash
 # JSON-form on stdin
@@ -121,14 +121,14 @@ occtkit render-preview part.brep --output part.png --camera iso --display-mode s
 
 <model-viewer src="../models/drilled-block.glb" camera-controls auto-rotate environment-image="neutral" exposure="1.1" shadow-intensity="1" style="width:340px;height:300px;background:#eef1f5;border-radius:6px"></model-viewer>
 
-*Interactive 3D — representative kernel model (render-preview output for part.png).*
+*Interactive 3D, representative kernel model (render-preview output for part.png).*
 
 ---
 
 ## Next steps
 
-- **[occtkit verb reference](../reference/occtkit-verbs.md)** — all 29 verbs: purpose, flags, JSON I/O, runnable examples.
-- **[ScriptHarness API](../reference/ScriptHarness.md)** — the `ScriptContext` output pipeline, with runnable Swift snippets.
-- **[DrawingComposer API](../reference/DrawingComposer.md)** — the multi-view ISO drawing library behind `drawing-export`.
-- **[Cookbook](../guides/cookbook/)** — task-oriented recipes for authoring, drawings, measurement, reconstruction, and more.
-- **[Architecture](architecture.md)** — the targets, the output pipeline, the `--serve` envelope, and the ecosystem.
+- **[occtkit verb reference](../reference/occtkit-verbs.md)**: all 29 verbs: purpose, flags, JSON I/O, runnable examples.
+- **[ScriptHarness API](../reference/ScriptHarness.md)**: the `ScriptContext` output pipeline, with runnable Swift snippets.
+- **[DrawingComposer API](../reference/DrawingComposer.md)**: the multi-view ISO drawing library behind `drawing-export`.
+- **[Cookbook](../guides/cookbook/)**: task-oriented recipes for authoring, drawings, measurement, reconstruction, and more.
+- **[Architecture](architecture.md)**: the targets, the output pipeline, the `--serve` envelope, and the ecosystem.
