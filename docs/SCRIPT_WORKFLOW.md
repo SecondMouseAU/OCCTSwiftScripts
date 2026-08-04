@@ -114,10 +114,15 @@ Shape.cone(bottomRadius: 5, topRadius: 2, height: 10)
 Shape.torus(majorRadius: 10, minorRadius: 2)
 
 // From profiles
-Shape.extrude(profile: wire, direction: SIMD3(0,0,1), length: 10)
-Shape.revolve(axis: SIMD3(0,1,0), axisOrigin: .zero, angle: .pi*2, profile: wire)
-Shape.sweep(profile: wire, along: pathWire)
-Shape.loft(profiles: [wire1, wire2, wire3], solid: true)
+// NOTE: these are NOT symmetric about what they return. `extrude` and `loft(solid: true)`
+// give you a solid; `revolve` and `sweep` given a *wire* return a SHELL, because they
+// sweep a curve. Face the wire first when you want a solid. See OCCTSwiftScripts#100.
+Shape.extrude(profile: wire, direction: SIMD3(0,0,1), length: 10)   // solid
+Shape.loft(profiles: [wire1, wire2, wire3], solid: true)            // solid
+Shape.revolve(axis: SIMD3(0,1,0), axisOrigin: .zero, angle: .pi*2, profile: wire)  // SHELL
+Shape.face(from: wire)?.revolved(axisOrigin: .zero, axisDirection: SIMD3(0,1,0))   // solid
+Shape.sweep(profile: wire, along: pathWire)                          // SHELL (uncapped)
+Shape.pipeShell(spine: pathWire, profile: wire, mode: .correctedFrenet, solid: true) // solid
 Shape.evolved(spine: spineWire, profile: profileWire)
 
 // Faces
@@ -258,7 +263,9 @@ let profile = Wire.polygon([...])!
 
 // ── 3D: Swept rail ──
 let path = Wire.line(from: SIMD3(0,0,0), to: SIMD3(0,0,50))!
-let rail = Shape.sweep(profile: profile, along: path)!
+// pipeShell(solid: true), not Shape.sweep: sweep leaves the tube ends uncapped and
+// returns a shell that still reports a plausible volume (OCCTSwiftScripts#100).
+let rail = Shape.pipeShell(spine: path, profile: profile, mode: .correctedFrenet, solid: true)!
 try ctx.add(rail, id: "rail-3d", color: C.steel, name: "Rail solid")
 
 // ── 2D: Cross-section profile ──
@@ -419,7 +426,7 @@ public enum NEM120Profile {
         var rail: Shape? = nil
         if let len = trackLength,
            let path = Wire.line(from: SIMD3(0,0,0), to: SIMD3(0,0,len)) {
-            rail = Shape.sweep(profile: profile, along: path)
+            rail = Shape.pipeShell(spine: path, profile: profile, mode: .correctedFrenet, solid: true)
         }
 
         return RailProfileResult(

@@ -4,13 +4,20 @@
 // Pure read: input BREP -> JSON envelope on stdout. No file output.
 //
 // Wraps:
-//   Shape.volumeInertia    -> volume, centerOfMass, principalMoments + axes
-//   Shape.surfaceArea      -> total area
-//   Shape.bounds           -> axis-aligned bounding box
+//   Shape.volumeInertia            -> volume, centerOfMass, principalMoments + axes
+//   Shape.surfaceArea              -> total area
+//   Shape.bounds                   -> axis-aligned bounding box
+//   Shape.subShapeCount(ofType: .solid) -> solidCount
 //
 // `volumeInertia` is solid-only; for non-solids, volume / centerOfMass /
 // principalAxes fall back to nil. surfaceArea is computed off the
 // optional-returning getter, also nil for shapes without surface area.
+// `solidCount` exists because `shapeType` alone is misleading: a healthy
+// `circularPatternCut` result reports `compound` (one solid wrapped in a
+// compound), while a wire-based revolve/sweep that never got faced/capped
+// also reports `compound` or `shell` with zero solids inside. Counting
+// solids, not reading the top-level shape type, is what `Scripts/recipe-check.sh`
+// uses to catch that (OCCTSwiftScripts#100).
 //
 // Two input modes:
 //   1. Flag form:  occtkit metrics <brep> [--metrics m1,m2,...]
@@ -25,7 +32,7 @@ enum MetricsCommand: Subcommand {
     static let summary = "Volume / area / center of mass / bbox / principal axes for a BREP"
     static let usage = """
         Usage:
-          metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,boundingBoxOptimal,principalAxes]
+          metrics <input.brep> [--metrics volume,surfaceArea,centerOfMass,boundingBox,boundingBoxOptimal,principalAxes,solidCount]
           metrics <request.json>             (JSON request from file)
           metrics                            (JSON request from stdin)
         """
@@ -47,6 +54,7 @@ enum MetricsCommand: Subcommand {
         let boundingBox: BoundingBox?
         let boundingBoxOptimal: BoundingBox?
         let principalAxes: PrincipalAxes?
+        let solidCount: Int?
 
         struct BoundingBox: Encodable {
             let min: [Double]
@@ -100,6 +108,8 @@ enum MetricsCommand: Subcommand {
             )
         }()
 
+        let solidCount: Int? = wants("solidCount") ? shape.subShapeCount(ofType: .solid) : nil
+
         try GraphIO.emitJSON(Response(
             volume: wants("volume") ? inertia?.volume : nil,
             surfaceArea: wants("surfaceArea") ? shape.surfaceArea : nil,
@@ -108,7 +118,8 @@ enum MetricsCommand: Subcommand {
             } : nil,
             boundingBox: bb,
             boundingBoxOptimal: bbOptimal,
-            principalAxes: pa
+            principalAxes: pa,
+            solidCount: solidCount
         ))
         return 0
     }
