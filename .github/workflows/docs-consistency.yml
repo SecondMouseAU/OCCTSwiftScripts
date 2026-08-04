@@ -1,0 +1,31 @@
+name: docs-consistency
+
+# Asserts the OKF policy list stays in step across okf/policies/, okf/index.md and
+# CLAUDE.md. CLAUDE.md deliberately inlines the policies so the always-loaded
+# reference needs no second hop, which makes it a hand-maintained second copy;
+# this is what stops that copy drifting.
+#
+# Pure text comparison, so no Swift build and no macOS runner needed.
+
+on:
+  push:
+    paths:
+      - 'okf/**'
+      - 'CLAUDE.md'
+      - 'Scripts/policy-check.sh'
+      - '.github/workflows/docs-consistency.yml'
+  pull_request:
+    paths:
+      - 'okf/**'
+      - 'CLAUDE.md'
+      - 'Scripts/policy-check.sh'
+      - '.github/workflows/docs-consistency.yml'
+  workflow_dispatch:
+
+jobs:
+  policies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check policy list consistency
+        run: Scripts/policy-check.sh
