@@ -57,7 +57,7 @@ let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: 
 // (verified on v2.0.0-kernel.1, upstream OCCTSwift#695). This geometric selection is
 // therefore a 1.x workaround, and this recipe could return to concaveEdges() once the
 // package moves to 2.0.0. Re-run the check in the OKF entry before doing so.
-let insideCorner = prism.edges { edge in
+let insideCornerEdges = prism.edges { edge in
     guard edge.isLine else { return false }
     let b = edge.bounds
     let runsFullWidth = abs((b.max.z - b.min.z) - width) < 1e-6
@@ -65,7 +65,13 @@ let insideCorner = prism.edges { edge in
     guard runsFullWidth else { return false }
     return abs(b.min.x - thickness) < 1e-6 && abs(b.min.y - thickness) < 1e-6
 }
-var bracket = prism.filleted(edges: insideCorner, radius: filletRadius)!
+// Guard the selector separately from the fillet. `filleted(edges: [], radius:)` does
+// return nil today (checked on both 1.17.0 and 2.0.0-kernel.1), so the force-unwrap
+// below would catch an empty match, but only as an anonymous nil-unwrap crash. This
+// names the actual fault, and avoids depending on undocumented nil-on-empty behaviour
+// if a parameter change or an upstream tweak ever silently breaks the predicate.
+precondition(!insideCornerEdges.isEmpty, "inside-corner edge selector matched nothing")
+var bracket = prism.filleted(edges: insideCornerEdges, radius: filletRadius)!
 
 // ── Four through-holes: two in the base leg (drill along Y), two in the upright
 //    leg (drill along X). Start just outside the entry face and over-run the exit.
