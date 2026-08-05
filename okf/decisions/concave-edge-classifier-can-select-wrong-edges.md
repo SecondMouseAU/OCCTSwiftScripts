@@ -28,13 +28,21 @@ published `v2.0.0-kernel.1` prerelease with the same repro:
 A T-prism with two reentrant edges reports 3 on 1.17.0 and 2 on 2.0.0-kernel.1. A box, having no
 reentrant edges, is correct on both.
 
-The fix was too involved to backport to the 1.x line, so it is carried by the 2.0.0 refactor.
-Raised upstream as [OCCTSwift#695](https://github.com/SecondMouseAU/OCCTSwift/issues/695).
+**No 1.x fix will land.** The change was too involved to backport, and upstream have confirmed a
+backport will not happen: the fix exists only on the 2.0.0 refactor branch, and the only way to get
+it before 2.0.0 ships is to pin to that branch. Raised upstream as
+[OCCTSwift#695](https://github.com/SecondMouseAU/OCCTSwift/issues/695).
 
-**So the geometric selection below is a 1.x workaround with a known end date.** When this repo
-moves to the 2.0.0 line, `concaveEdges()` becomes usable for this case again, and recipe 01 could
-return to it. That would be a legitimate simplification rather than a regression. Re-run the
-repro above before relying on it, rather than assuming the migration carried the fix.
+Pinning to a branch is not an option for this package. It is released under a semver floor
+(`from: "1.17.0"`), and a revision pin would propagate an unresolvable or unstable dependency to
+every downstream consumer. The repo has been bitten by revision-pinning before, see the
+OCCTSwiftViewport note in `CLAUDE.md`.
+
+**So the geometric selection below is permanent for as long as this repo is on the 1.x line.** Do
+not wait for a patch release; there will not be one. The workaround becomes removable only at a
+2.0.0 migration, at which point `concaveEdges()` is usable for this case again and recipe 01 could
+return to it as a legitimate simplification. Re-run the repro above at that point rather than
+assuming the migration carried the fix.
 
 # Why
 
