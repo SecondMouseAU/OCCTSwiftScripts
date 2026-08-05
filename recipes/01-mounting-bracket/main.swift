@@ -70,7 +70,7 @@ let insideCornerEdges = prism.edges { edge in
 // below would catch an empty match, but only as an anonymous nil-unwrap crash. This
 // names the actual fault, and avoids depending on undocumented nil-on-empty behaviour
 // if a parameter change or an upstream tweak ever silently breaks the predicate.
-precondition(!insideCornerEdges.isEmpty, "inside-corner edge selector matched nothing")
+guard !insideCornerEdges.isEmpty else { fatalError("inside-corner edge selector matched nothing") }
 var bracket = prism.filleted(edges: insideCornerEdges, radius: filletRadius)!
 
 // ── Four through-holes: two in the base leg (drill along Y), two in the upright
