@@ -50,6 +50,12 @@ by 1 mm so the resulting cut faces are clean and coincident-face artifacts are a
   (OCCTSwiftScripts #105). The true inside-corner edge has no such limit (its bound is
   `legLength − thickness`, 45 mm here), which is why the same `filletRadius = 8` works fine
   once the correct edge is selected.
+- **This is an OCCTSwift 1.x defect and no 1.x fix is coming.** It is fixed in the 2.0.0 line
+  (upstream OCCTSwift#695, root cause #613). A backport was built and merged upstream, then
+  reverted for what it costs the 2.0.0 release branch, so the geometric selection above is
+  permanent while this package is on 1.x rather than a stopgap. It becomes removable at a 2.0.0
+  migration. See `okf/decisions/concave-edge-classifier-can-select-wrong-edges.md`, which carries
+  the repro to re-run at that point.
 - **A concave fillet adds material, it does not remove it.** Rounding the inside corner
   fills part of the sharp reentrant point with a blend, so `bracket.volume` after the
   fillet is *larger* than the prism's, by `filletRadius² · (1 − π/4) · width`. Do not expect
