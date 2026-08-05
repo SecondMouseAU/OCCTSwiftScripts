@@ -17,3 +17,6 @@ that need standalone rationale.
   called as `f || status=1` must `return 1` explicitly or its checks are decorative.
 * [Revolve seams cannot be chamfered](revolve-seams-cannot-be-chamfered.md): the all-edge
   `chamfered(distance:)` always fails on a full revolve; select edges explicitly.
+* [Concave edge classifier can select wrong edges](concave-edge-classifier-can-select-wrong-edges.md):
+  `concaveEdges()` returned two unrelated edges instead of an L-bracket's one true reentrant
+  edge; verify a classifier's output geometrically before trusting it.

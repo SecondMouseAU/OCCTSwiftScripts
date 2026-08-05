@@ -9,7 +9,7 @@ tweak the parameters.
 
 | # | Recipe | Preview | What it shows |
 |---|--------|---------|---------------|
-| 01 | [Mounting bracket](01-mounting-bracket/) | <img src="01-mounting-bracket/output.png" width="160"> | sketch → extrude → `concaveEdges` fillet → drill |
+| 01 | [Mounting bracket](01-mounting-bracket/) | <img src="01-mounting-bracket/output.png" width="160"> | sketch → extrude → geometrically-selected inside-corner fillet → drill |
 | 02 | [Helical compression spring](02-helical-spring/) | <img src="02-helical-spring/output.png" width="160"> | helix path + circular section → pipe sweep |
 | 03 | [Pipe flange](03-pipe-flange/) | <img src="03-pipe-flange/output.png" width="160"> | revolve + `circularPatternCut` bolt circle + chamfer |
 | 04 | [Involute spur gear](04-spur-gear/) | <img src="04-spur-gear/output.png" width="160"> | involute tooth math → polygon → extrude → bore |

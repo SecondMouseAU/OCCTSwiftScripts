@@ -1,5 +1,19 @@
 # Knowledge Log
 
+## 2026-08-05 (fix/105-bracket-fillet)
+
+* **Update**: Fixed recipe 01's inside-corner fillet, which had never applied (#105).
+  `prism.concaveEdges()` returns the wrong two edges on this shape (top-cap boundary
+  segments bounded by the 5 mm leg thickness), not the one true reentrant edge (bounded
+  only by `legLength - thickness`, 45 mm). `filletRadius = 8` was infeasible for the wrong
+  edges and a `?? prism` fallback hid the resulting `nil`. Now selects the true edge
+  geometrically with `Shape.edges(where:)`; the same `filletRadius = 8` now applies,
+  adding 549.38 mm3 (matches the analytic `r² · (1 - pi/4) · width` prediction exactly).
+  Also fixed `recipes/06-fan-blade`'s `blade.union(hub) ?? blade`, the same pattern found
+  dormant during the `??`-fallback audit #105 requested (the union has never actually
+  failed; behaviour is unchanged).
+* **Creation**: Recorded the concave-edge-classifier-can-select-wrong-edges decision.
+
 ## 2026-08-05
 
 * **Update**: Fixed two cookbook recipes that emitted shells while documenting themselves as
