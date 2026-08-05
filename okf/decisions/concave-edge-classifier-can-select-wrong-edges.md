@@ -1,7 +1,7 @@
 ---
 type: decision
 title: Shape.concaveEdges() can return the wrong edges entirely, not just a threshold quirk
-description: On an extruded L-profile, concaveEdges() returns two top-cap boundary edges bounded by the leg thickness, not the one true reentrant edge that runs the extrusion length. Select fillet/chamfer edges geometrically instead of trusting the classifier.
+description: On OCCTSwift 1.x, concaveEdges() on an extruded L-profile returns two top-cap boundary edges rather than the one true reentrant edge, and classifies that edge convex. Fixed in the 2.0.0 line. Select fillet/chamfer edges geometrically while on 1.x.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/105
 tags: [decision, occtswift, fillet, topology, recipes, edge-selection]
 timestamp: 2026-08-05
@@ -9,10 +9,32 @@ timestamp: 2026-08-05
 
 # Decision
 
-Do not trust `Shape.concaveEdges()` / `Shape.convexEdges()` to find the edge you mean to
-fillet or chamfer, even when you can name the one edge you expect geometrically. Verify by
+On the OCCTSwift 1.x line, do not trust `Shape.concaveEdges()` / `Shape.convexEdges()` to
+find the edge you mean to fillet or chamfer, even when you can name the one edge you expect
+geometrically. Verify by
 inspecting the returned edges' actual positions, and prefer `Shape.edges(where:)` with an
 explicit geometric predicate once you know what you are looking for.
+
+# Version scope: 1.x only, fixed in 2.0.0
+
+This is an **OCCTSwift 1.x defect**. It is already fixed in the 2.0.0 line, verified against the
+published `v2.0.0-kernel.1` prerelease with the same repro:
+
+```
+1.17.0          L-prism concave=2 (expected 1)   insideCorner inConcave=false   MISMATCH
+2.0.0-kernel.1  L-prism concave=1 (expected 1)   insideCorner inConcave=true    OK
+```
+
+A T-prism with two reentrant edges reports 3 on 1.17.0 and 2 on 2.0.0-kernel.1. A box, having no
+reentrant edges, is correct on both.
+
+The fix was too involved to backport to the 1.x line, so it is carried by the 2.0.0 refactor.
+Raised upstream as [OCCTSwift#695](https://github.com/SecondMouseAU/OCCTSwift/issues/695).
+
+**So the geometric selection below is a 1.x workaround with a known end date.** When this repo
+moves to the 2.0.0 line, `concaveEdges()` becomes usable for this case again, and recipe 01 could
+return to it. That would be a legitimate simplification rather than a regression. Re-run the
+repro above before relying on it, rather than assuming the migration carried the fix.
 
 # Why
 

@@ -53,6 +53,10 @@ let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: 
 // The inside corner is the one straight edge parallel to the extrusion axis (Z) that
 // sits at (thickness, thickness): select it geometrically rather than trusting
 // concaveEdges(), which picks the wrong edges on this shape (see the header note).
+// That classifier defect is OCCTSwift 1.x only: it is fixed in the 2.0.0 line
+// (verified on v2.0.0-kernel.1, upstream OCCTSwift#695). This geometric selection is
+// therefore a 1.x workaround, and this recipe could return to concaveEdges() once the
+// package moves to 2.0.0. Re-run the check in the OKF entry before doing so.
 let insideCorner = prism.edges { edge in
     guard edge.isLine else { return false }
     let b = edge.bounds
