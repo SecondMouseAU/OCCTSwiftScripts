@@ -28,6 +28,11 @@
   edges, so the call returned nil and a `??` fallback hid it. Now selects the OD and raised-face
   rim explicitly.
 * **Creation**: Recorded the revolve-seams-cannot-be-chamfered decision.
+* **Update**: Recorded that OCCTSwift#695, the concaveEdges/convexEdges reentrant-edge
+  misclassification, will not be backported to 1.x. A backport was built and merged upstream
+  (PR #700, tests green) then reverted for what it costs the 2.0.0 release branch. The geometric
+  edge selection in recipe 01 is therefore permanent while this repo is on the 1.x line, not a
+  stopgap awaiting a patch release.
 
 ## 2026-08-04
 

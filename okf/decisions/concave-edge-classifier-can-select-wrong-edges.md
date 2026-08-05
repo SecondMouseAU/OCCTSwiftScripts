@@ -28,15 +28,31 @@ published `v2.0.0-kernel.1` prerelease with the same repro:
 A T-prism with two reentrant edges reports 3 on 1.17.0 and 2 on 2.0.0-kernel.1. A box, having no
 reentrant edges, is correct on both.
 
-**No 1.x fix will land.** The change was too involved to backport, and upstream have confirmed a
-backport will not happen: the fix exists only on the 2.0.0 refactor branch, and the only way to get
-it before 2.0.0 ships is to pin to that branch. Raised upstream as
+**No 1.x fix will land**, but not because a backport was infeasible. Upstream built, merged and
+measured one (OCCTSwift PR #700, all 4646 tests green on both CI jobs) and then **reverted it**,
+for what it costs the release branch rather than for any defect in it: merging main into
+`refactor/381-pass1b`, which carries the whole of v2.0.0, conflicted in 8 files across 18 regions,
+and those are not all mechanical. Main and the refactor branch made genuinely different, individually
+correct decisions on the same lines, because the sub-shape indexing work landed only on the refactor
+branch.
+
+The backport is not lost: re-landing means reverting the revert, so if 1.x becomes untenable before
+v2.0.0 ships this can be revisited. Tracked at
 [OCCTSwift#695](https://github.com/SecondMouseAU/OCCTSwift/issues/695).
 
-Pinning to a branch is not an option for this package. It is released under a semver floor
-(`from: "1.17.0"`), and a revision pin would propagate an unresolvable or unstable dependency to
-every downstream consumer. The repo has been bitten by revision-pinning before, see the
-OCCTSwiftViewport note in `CLAUDE.md`.
+**Root cause, worth knowing because it generalises.** An edge or vertex index crossing the bridge
+addressed a topology *occurrence* rather than a position in the deduplicated enumeration that
+`edges()` / `edgeCount` / `edge(at:)` return. A 20 mm box has 12 distinct edges but 24 edge
+occurrences, so the two enumerations diverge from the first repeat onwards on any ordinary solid,
+and `edgeConcavities()` zips one against the other. Upstream root-cause issue is OCCTSwift#613; the
+fix is #650. Treat any bridge-crossing index with the same suspicion until 2.0.0.
+
+Neither route to the fix is open to this package. It is reachable both from the refactor branch
+and from the published `v2.0.0-kernel.1` prerelease tag, but this package is released under a semver
+floor of `from: "1.17.0"`, meaning `>=1.17.0 <2.0.0`, so it cannot resolve a 2.x version at all
+without a major bump, and a revision pin would propagate an unstable dependency to every downstream
+consumer. This repo has carried a revision pin before (OCCTSwiftViewport, before `OffscreenRenderer`
+had a release tag) and the note in `CLAUDE.md` records why it was replaced with a version pin.
 
 **So the geometric selection below is permanent for as long as this repo is on the 1.x line.** Do
 not wait for a patch release; there will not be one. The workaround becomes removable only at a

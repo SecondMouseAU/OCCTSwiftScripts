@@ -57,7 +57,8 @@ let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: 
 // lives on the 2.0.0 refactor branch and upstream have confirmed no backport
 // (OCCTSwift#695). So this geometric selection is permanent while the package is on
 // 1.x, not a stopgap awaiting a patch release. It becomes removable at a 2.0.0
-// migration; re-run the check in the OKF entry then rather than assuming.
+// migration; re-run the check in the OKF entry at that point rather than assuming
+// the migration carried the fix.
 let insideCornerEdges = prism.edges { edge in
     guard edge.isLine else { return false }
     let b = edge.bounds
