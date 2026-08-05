@@ -36,6 +36,28 @@
 // uncomputable volume even after healing, so every measurement below uses
 // the smooth (isRuled: false) loft plus a heal step.
 //
+// Addendum from #108 (root cause, and a "no" answer for this route): the
+// "heals for free" line above is not a heal at all. `heal()`/`fixSolid()`
+// only reach `isValid == true` by relabeling the shape from Solid to Shell
+// (subShapeCount(ofType: .solid) drops to 0, OCCTSwift#702); "same face
+// count" was the tell, because the loft's two end-cap faces were never
+// built in the first place, at any teeth count, slice count, or cone-taper
+// setting. Bisected down to a single trigger, independent of teeth, tooth
+// shape, point density and flank proximity: `ThruSectionsBuilder(isSolid:
+// true)` silently omits the end caps whenever a section wire is genuinely
+// non-planar (two or more periods of out-of-plane variation around the
+// loop), which every multi-tooth bevel section is, because of the
+// per-vertex `radial * sin(pitchAngle)` term in `slicePoint`. A minimal,
+// gear-free repro (a plain wavy ring, no teeth at all) reproduces the exact
+// same signature and lives at spikes/108-minimal-repro/. No repair or
+// rebuild path (healed, fixSolid, solidFromShellFixed, solidFromShell,
+// solidFromShells, upgraded, unified, sewn at 5 tolerances) recovers a
+// valid closed solid, because none of them can synthesize the missing
+// caps; they only reclassify the same incomplete face set. See the #108
+// issue comment for the full measurement. Conclusion: a valid SOLID is not
+// reachable from this loft on OCCTSwift 1.x, and reducing point count (a
+// fitted involute instead of a sampled polyline) would not change that.
+//
 // Run:  copy this file's content over Sources/Script/main.swift, then
 // `swift run Script`. `swift run occtkit run <file>` (the normally
 // recommended way to run a script) does not work from this worktree:
