@@ -87,13 +87,18 @@ public final class ScriptContext: Sendable {
     // MARK: - Add Shape (solids, shells, compounds)
 
     /// Add a shape to the output. Writes BREP immediately.
+    /// - Parameter referenceFrames: Optional named heights along the shape's own local +Z axis
+    ///   (e.g. bevel gear "pitchbase"/"flattop"/"apex", OCCTSwiftScripts#88), in the coordinate
+    ///   frame `shape` is in at the moment of this call. Surfaced verbatim into the manifest's
+    ///   `BodyDescriptor.referenceFrames` for `render-preview` and other downstream consumers.
     public func add(
         _ shape: Shape,
         id: String? = nil,
         color: [Float]? = nil,
         name: String? = nil,
         roughness: Float? = nil,
-        metallic: Float? = nil
+        metallic: Float? = nil,
+        referenceFrames: [String: Double]? = nil
     ) throws {
         let index = descriptors.count
         let bodyID = id ?? "body-\(index)"
@@ -109,7 +114,8 @@ public final class ScriptContext: Sendable {
             name: name,
             color: color,
             roughness: roughness,
-            metallic: metallic
+            metallic: metallic,
+            referenceFrames: referenceFrames
         )
         descriptors.append(descriptor)
         shapes.append((shape, bodyID))

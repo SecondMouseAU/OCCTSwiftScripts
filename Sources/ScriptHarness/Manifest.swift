@@ -109,6 +109,14 @@ public struct BodyDescriptor: Codable, Sendable {
     /// Color as [r, g, b, a] array.
     public let color: [Float]?
 
+    /// Named reference heights along the body's own local +Z axis, in the coordinate frame the
+    /// body was in at the time it was added (e.g. bevel gear placement frames: "pitchbase",
+    /// "flattop", "apex", the explicit-reference-frame replacement for BOSL2's anchor system,
+    /// OCCTSwiftScripts#88). Optional and generic on purpose: this is a manifest-schema concept
+    /// usable by any future part family that wants to expose named axis heights, not a
+    /// gear-specific field. Downstream consumers (`render-preview`, etc.) key into it by name.
+    public let referenceFrames: [String: Double]?
+
     public init(
         id: String?,
         file: String,
@@ -116,7 +124,8 @@ public struct BodyDescriptor: Codable, Sendable {
         name: String? = nil,
         color: [Float]? = nil,
         roughness: Float? = nil,
-        metallic: Float? = nil
+        metallic: Float? = nil,
+        referenceFrames: [String: Double]? = nil
     ) {
         self.id = id
         self.file = file
@@ -125,5 +134,6 @@ public struct BodyDescriptor: Codable, Sendable {
         self.color = color
         self.roughness = roughness
         self.metallic = metallic
+        self.referenceFrames = referenceFrames
     }
 }
