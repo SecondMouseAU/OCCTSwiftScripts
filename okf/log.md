@@ -1,5 +1,19 @@
 # Knowledge Log
 
+## 2026-08-06 (spike/88-placement)
+
+* **Creation**: Spike 88 ports BOSL2's three `bevel_gear()` named anchors (pitchbase/flattop/
+  apex) as explicit `Double` reference-frame heights instead of an anchor-string system, plus a
+  `meshPair` helper that returns the translate/phase/tilt transform to mesh two gears at an
+  arbitrary shaft angle with coincident pitch-cone apexes (#88). Verified against the issue's
+  ground-truth table (apex height above pitchbase equals the mate's pitch radius at 90 degrees,
+  5 rows, exact to 1e-9) and at a non-right angle (65 degrees, pitch angles summing to the shaft
+  angle exactly). Built and meshed two real gear pairs (16t/28t at 90 degrees, 35t/15t at 65
+  degrees), asserting `solidCount >= 1` on each per house policy, and rendered both.
+  `ScriptHarness.BodyDescriptor` gained an optional `referenceFrames: [String: Double]?` field
+  so the heights surface into `manifest.json`.
+* **Creation**: Recorded the bevel-gear-explicit-reference-frames decision.
+
 ## 2026-08-05 (fix/105-bracket-fillet)
 
 * **Update**: Fixed recipe 01's inside-corner fillet, which had never applied (#105).

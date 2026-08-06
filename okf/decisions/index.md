@@ -20,3 +20,6 @@ that need standalone rationale.
 * [Concave edge classifier can select wrong edges](concave-edge-classifier-can-select-wrong-edges.md):
   `concaveEdges()` returned two unrelated edges instead of an L-bracket's one true reentrant
   edge; verify a classifier's output geometrically before trusting it.
+* [Bevel gear explicit reference frames](bevel-gear-explicit-reference-frames.md): BOSL2's
+  `anchor="pitchbase"|"flattop"|"apex"` string is replaced by three plain `Double` heights plus
+  a `meshPair` helper; ground truth checked against literal numbers, not re-derived.
