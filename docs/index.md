@@ -63,6 +63,7 @@ invocation) and a rendered figure. The **[Cookbook index](guides/cookbook/)** li
 
 - [Getting started](guides/getting-started.md): build, run your first script, wire up the live viewport, install `occtkit`.
 - [Architecture](guides/architecture.md): the targets (ScriptHarness / Script / DrawingComposer / occtkit), the output pipeline, the `--serve` envelope, and where this sits in the OCCTSwift ecosystem.
+- [BOSL2 bevel gears](guides/bosl2-bevel-gears.md): the three `bevel_gear()` examples from BOSL2's own documentation, reproduced on the B-Rep kernel next to the OpenSCAD originals, with the divergences measured rather than described.
 
 ## Project
 

@@ -1,5 +1,14 @@
 # Knowledge Log
 
+## 2026-08-06
+
+* **Creation**: Recorded three decisions from the BOSL2 bevel gear docs deliverable (#89): the
+  three example scripts copy an identical gear core because `occtkit run` compiles one file with
+  one dependency, and `Scripts/gear-core-check.sh` guards the copies; `right_handed` inverts
+  between BOSL2 and this port, and only a surface-deviation check can catch it; a tooth-space
+  cutter's inner radius IS the finished root surface, so cutting-clearance over-travel below the
+  root radius silently deepens every valley.
+
 ## 2026-08-06 (spike/88-placement)
 
 * **Creation**: Spike 88 ports BOSL2's three `bevel_gear()` named anchors (pitchbase/flattop/

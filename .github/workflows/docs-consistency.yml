@@ -1,11 +1,14 @@
 name: docs-consistency
 
-# Asserts the OKF policy list stays in step across okf/policies/, okf/index.md and
-# CLAUDE.md. CLAUDE.md deliberately inlines the policies so the always-loaded
-# reference needs no second hop, which makes it a hand-maintained second copy;
-# this is what stops that copy drifting.
+# Two text-only consistency guards, neither needing a Swift build or a macOS runner.
 #
-# Pure text comparison, so no Swift build and no macOS runner needed.
+# 1. The OKF policy list stays in step across okf/policies/, okf/index.md and CLAUDE.md.
+#    CLAUDE.md deliberately inlines the policies so the always-loaded reference needs no
+#    second hop, which makes it a hand-maintained second copy; this stops that copy drifting.
+#
+# 2. The three BOSL2 bevel gear example scripts keep an identical copied construction core.
+#    The duplication is forced: `occtkit run` compiles one Sources/Script/main.swift with
+#    ScriptHarness as its only dependency, so an example cannot import a shared gear module.
 
 on:
   push:
@@ -13,12 +16,16 @@ on:
       - 'okf/**'
       - 'CLAUDE.md'
       - 'Scripts/policy-check.sh'
+      - 'Scripts/gear-core-check.sh'
+      - 'docs/guides/bosl2-bevel-gears/**'
       - '.github/workflows/docs-consistency.yml'
   pull_request:
     paths:
       - 'okf/**'
       - 'CLAUDE.md'
       - 'Scripts/policy-check.sh'
+      - 'Scripts/gear-core-check.sh'
+      - 'docs/guides/bosl2-bevel-gears/**'
       - '.github/workflows/docs-consistency.yml'
   workflow_dispatch:
 
@@ -29,3 +36,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check policy list consistency
         run: Scripts/policy-check.sh
+
+  gear-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the copied gear core is identical across the examples
+        run: Scripts/gear-core-check.sh

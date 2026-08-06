@@ -20,6 +20,17 @@ tweak the parameters.
 > Previews are locally-generated artifacts (`make recipes-render`). If an image is
 > missing, the recipe still builds, PNGs are never a CI gate.
 
+## Worked examples that are not recipes
+
+[**BOSL2 bevel gears**](../docs/guides/bosl2-bevel-gears.md) reproduces the three `bevel_gear()`
+examples from BOSL2's own documentation on the B-Rep kernel, side by side with the OpenSCAD
+originals, with the divergences measured rather than described. It lives under `docs/guides/`
+rather than here for two reasons: two of the three examples emit a gear PAIR, which breaks the
+one-body-per-recipe rule below, and all three carry a 617-line construction core, well past the
+30 to 60 lines a recipe's `main.swift` is meant to be. Splitting the single-gear Example 1 out as
+`recipes/08-bevel-gear/` would fit the one-body rule but would add a fourth copy of that core to
+keep in step, so it was not done.
+
 ## Running a recipe
 
 From the repo root:

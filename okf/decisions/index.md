@@ -23,3 +23,12 @@ that need standalone rationale.
 * [Bevel gear explicit reference frames](bevel-gear-explicit-reference-frames.md): BOSL2's
   `anchor="pitchbase"|"flattop"|"apex"` string is replaced by three plain `Double` heights plus
   a `meshPair` helper; ground truth checked against literal numbers, not re-derived.
+* [BOSL2 examples copy the gear core](bosl2-examples-copy-the-gear-core.md): `occtkit run`
+  compiles one file with one dependency, so the three docs examples each carry an identical
+  617-line core; `Scripts/gear-core-check.sh` is what stops the copies drifting.
+* [`right_handed` inverts against BOSL2](bevel-gear-handedness-inverts-against-bosl2.md): BOSL2
+  mirrors on the FALSE branch because its transform stack already carries an `xflip`; volume and
+  bounding box are blind to getting this backwards, surface deviation is not.
+* [A tooth-space cutter's inner radius is the root surface](tooth-space-cutter-defines-the-root-surface.md):
+  the Route C blank has no root cone, so cutting-clearance over-travel below the root radius just
+  makes every valley deeper; it cost 1.05% of a 36-tooth gear's volume.

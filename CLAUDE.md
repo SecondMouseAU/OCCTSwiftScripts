@@ -48,6 +48,10 @@ messages.
 
 `Scripts/policy-check.sh` (CI: `.github/workflows/docs-consistency.yml`) asserts this list stays
 in step with `okf/policies/`, so adding a policy file without listing it here fails the build.
+The same workflow runs `Scripts/gear-core-check.sh`, which asserts the three BOSL2 bevel gear
+example scripts under `docs/guides/bosl2-bevel-gears/` keep a byte-identical copied construction
+core (see [that decision](okf/decisions/bosl2-examples-copy-the-gear-core.md); the duplication is
+forced by `occtkit run` compiling exactly one file with one dependency).
 
 `okf/` is the only knowledge bundle. An earlier one at `docs/knowledge/` was consolidated into
 it and removed on 2026-08-04; see [`okf/log.md`](okf/log.md).
