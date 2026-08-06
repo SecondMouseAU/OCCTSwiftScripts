@@ -657,19 +657,34 @@ guard handednessVolDiff < 1e-6 else {
     fatalError("handedness mirror changed volume by \(handednessVolDiff); expected exact match")
 }
 
-let baseVerts = spiral36.finalShape.subShapes(ofType: .vertex)
-let mirroredVerts = spiral36RH.finalShape.subShapes(ofType: .vertex)
-guard let baseV0 = baseVerts.first?.vertexPoint, let mirroredV0 = mirroredVerts.first?.vertexPoint else {
-    fatalError("could not extract a vertex point from base or mirrored shape")
+// Pick the vertex with the LARGEST |x| in the base shape, not subShapes(...).first: a bevel
+// gear blank's revolve seam sits exactly on the x=0 mirror plane (its profile is defined at
+// x=0 in buildFullBlank, before being revolved about Z), so the first-enumerated vertex can
+// trivially satisfy "x sign-flipped" (0 == -0) without the check meaning anything, which is
+// exactly what an earlier version of this check did. The tooth flanks are off-axis and give a
+// genuinely nonzero x to check against. Then find its counterpart in the mirrored shape by
+// matching (y, z), since an X-plane mirror leaves y and z untouched, rather than assuming
+// subShapes() enumerates both shapes in the same order.
+let baseVerts = spiral36.finalShape.subShapes(ofType: .vertex).map { $0.vertexPoint }
+let mirroredVerts = spiral36RH.finalShape.subShapes(ofType: .vertex).map { $0.vertexPoint }
+print("  vertex counts: base=\(baseVerts.count) mirrored=\(mirroredVerts.count)")
+guard baseVerts.count == mirroredVerts.count else {
+    fatalError("handedness mirror changed the vertex count (base=\(baseVerts.count), mirrored=\(mirroredVerts.count))")
 }
-print("  vertex[0]: base=\(baseV0) mirrored=\(mirroredV0)")
-let xSignFlipped = abs(baseV0.x - (-mirroredV0.x)) < 1e-9
-let yzUnchanged = abs(baseV0.y - mirroredV0.y) < 1e-9 && abs(baseV0.z - mirroredV0.z) < 1e-9
+guard let baseV = baseVerts.max(by: { abs($0.x) < abs($1.x) }) else {
+    fatalError("could not extract any vertex point from the base shape")
+}
+guard let matched = mirroredVerts.first(where: { abs($0.y - baseV.y) < 1e-6 && abs($0.z - baseV.z) < 1e-6 }) else {
+    fatalError("no vertex in the mirrored shape matches base vertex \(baseV) on (y, z)")
+}
+print("  vertex (max |x| in base): base=\(baseV) mirrored-match=\(matched)")
+let xSignFlipped = abs(baseV.x - (-matched.x)) < 1e-6
+let yzUnchanged = abs(baseV.y - matched.y) < 1e-6 && abs(baseV.z - matched.z) < 1e-6
 print("  x sign-flip exact: \(xSignFlipped)  y/z unchanged: \(yzUnchanged)")
 guard xSignFlipped, yzUnchanged else {
     fatalError("handedness mirror did not produce an exact per-vertex X sign flip")
 }
-print("  PASS: volume-preserving AND exact vertex-level X sign flip")
+print("  PASS: volume-preserving AND exact vertex-level X sign flip (non-trivial vertex, |x|=\(abs(baseV.x)))")
 print("")
 
 // ── 4. Backing: conical AND cylindrical, on the zerol base (faster to iterate). ─────────────
