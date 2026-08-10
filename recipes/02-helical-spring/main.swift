@@ -15,14 +15,30 @@
 //          .frenet also builds a valid solid but lets the section twist slightly).
 //          Ground/closed ends are out of scope here; this is an open-coil spring.
 //
-// KNOWN ISSUE (OCCTSwift 2.0.0+): this recipe's own reference output.brep was archived
-// as output.brep.pre-2.0.0-reference-see-issue-830 rather than kept live, so
-// Scripts/recipe-check.sh skips the drift compare here (still runs every other check).
-// Under OCCTSwift 2.0.0, this exact recipe's volume reads ~14% high (9765 mm³ vs a
-// hand-calculable ~8577 mm³ for this wire/coil geometry) — looks like a genuine kernel
-// regression in Shape.pipeShell(solid: true) on a helix spine, not a bug in this recipe.
-// Filed as https://github.com/SecondMouseAU/OCCTSwift/issues/830. Once that's fixed,
-// regenerate output.brep and delete the archived copy.
+// FIXED BUG (was misdiagnosed as an OCCTSwift 2.0.0 kernel regression, filed as
+// https://github.com/SecondMouseAU/OCCTSwift/issues/830, then root-caused and closed
+// not-a-bug there): this recipe used to compute the wire's start point/tangent
+// ANALYTICALLY, assuming Wire.helix's default clockwise: false winds the same way a
+// naive right-handed r(θ)=(R cosθ, R sinθ, pitch·θ/2π) formula does. It doesn't —
+// clockwise: false reverses the build axis, so the real start is (-meanRadius, ~0, 0),
+// descending, not (meanRadius, 0, 0) ascending. `mode: .frenet` re-derives its own
+// trihedron from the spine and was insensitive to this; `mode: .correctedFrenet`'s
+// twist-angle law is referenced to the profile's own input frame and was not, so the
+// wrong placement corrupted its solid (~14% volume error) once an OCCTSwift fix
+// (#598) made .correctedFrenet actually run corrected Frenet instead of silently
+// falling back to plain Frenet. See the OCCTSwift cookbook's own "Helices & Springs"
+// page (which hit and fixed the identical mistake, #721) for the full writeup. Fixed
+// here the same way: measure the spine's own start point and tangent (Edge.curve3D,
+// Curve3D.d1(at:)) rather than computing them. Verified: this recipe's volume is now
+// 8575.186 mm³, matching a hand calculation (cross-section area x coil path length,
+// placement-invariant) and the maintainer's own independent reproduction. This recipe
+// has no reference output.brep for now: the OLD one (built from the wrong placement)
+// agreed on volume post-fix (as expected, since volume doesn't depend on where along
+// the coil the profile starts) but NOT on bounding box (0.53mm drift, since the coil's
+// exact start point genuinely moved) — reusing it would have been wrong, not just
+// stale. Regenerate a real reference (`occtkit run ... --format brep`) and drop it in
+// as output.brep once someone has a local build handy; recipe-check.sh already runs
+// every other check (manifest/body/volume>0/solidCount) without one.
 //
 // Run:  swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
@@ -42,16 +58,18 @@ let ctx = ScriptContext(metadata: ManifestMetadata(
 ))
 let C = ScriptContext.Colors.self
 
-// ── Coil centre-line: a helix about Z, starting at (meanRadius, 0, 0) ─────────
+// ── Coil centre-line: a helix about Z ──────────────────────────────────────
 let meanRadius = (outsideDia - wireDia) / 2
 let path = Wire.helix(radius: meanRadius, pitch: pitch, turns: activeCoils)!
 
-// ── Wire cross-section: a circle at the helix start, oriented along the start
-//    tangent. Helix r(θ)=(R cosθ, R sinθ, pitch·θ/2π); tangent at θ=0 is (0, R, pitch/2π).
-let t = SIMD3<Double>(0, meanRadius, pitch / (2 * .pi))
-let tLen = (t.x * t.x + t.y * t.y + t.z * t.z).squareRoot()
-let tangent = SIMD3<Double>(t.x / tLen, t.y / tLen, t.z / tLen)
-let section = Wire.circle(origin: SIMD3(meanRadius, 0, 0), normal: tangent, radius: wireDia / 2)!
+// ── Wire cross-section: a circle at the helix's OWN start point, oriented along
+//    its OWN measured tangent there — never computed analytically (see header).
+let firstEdge = path.edges().first!
+let curve = firstEdge.curve3D!
+let (origin, rawTangent) = curve.d1(at: curve.domain.lowerBound)
+let tLen = (rawTangent.x * rawTangent.x + rawTangent.y * rawTangent.y + rawTangent.z * rawTangent.z).squareRoot()
+let tangent = SIMD3<Double>(rawTangent.x / tLen, rawTangent.y / tLen, rawTangent.z / tLen)
+let section = Wire.circle(origin: origin, normal: tangent, radius: wireDia / 2)!
 
 let spring = Shape.pipeShell(spine: path, profile: section, mode: .correctedFrenet, solid: true)!
 try ctx.add(spring, color: C.steel, name: "Compression spring")
