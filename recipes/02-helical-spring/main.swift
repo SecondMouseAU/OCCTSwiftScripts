@@ -29,7 +29,16 @@
 // falling back to plain Frenet. See the OCCTSwift cookbook's own "Helices & Springs"
 // page (which hit and fixed the identical mistake, #721) for the full writeup. Fixed
 // here the same way: measure the spine's own start point and tangent (Edge.curve3D,
-// Curve3D.d1(at:)) rather than computing them.
+// Curve3D.d1(at:)) rather than computing them. Verified: this recipe's volume is now
+// 8575.186 mm³, matching a hand calculation (cross-section area x coil path length,
+// placement-invariant) and the maintainer's own independent reproduction. This recipe
+// has no reference output.brep for now: the OLD one (built from the wrong placement)
+// agreed on volume post-fix (as expected, since volume doesn't depend on where along
+// the coil the profile starts) but NOT on bounding box (0.53mm drift, since the coil's
+// exact start point genuinely moved) — reusing it would have been wrong, not just
+// stale. Regenerate a real reference (`occtkit run ... --format brep`) and drop it in
+// as output.brep once someone has a local build handy; recipe-check.sh already runs
+// every other check (manifest/body/volume>0/solidCount) without one.
 //
 // Run:  swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
