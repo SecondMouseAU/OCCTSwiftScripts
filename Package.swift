@@ -80,7 +80,28 @@ let package = Package(
         // symbol doesn't exist before v1.15.0 (only the deprecated typealias
         // does, starting there): the floor must track the rename, not just
         // permit it via the open `from:` range.
-        occtDep("OCCTSwift", from: "1.17.0"),   // ≥1.17.0: Pass 1a duplication/bug-fix audit (OCCTSwift#377/#380), continuity enum consolidation (source-compatible via deprecated aliases), Surface.drawMesh/evaluateGrid now return SurfaceGrid (not used here), arc-length/Surface.normal/Curve2D.circle edge-case bug fixes; ≥1.15.0: BRepGraph rename (OCCTSwift#335); also carries kernel crash/hang fixes through #318/#323 (patches 0003-0009) from the prior 1.12.9 floor
+        // Bumped 1.17.0 -> 2.0.0 (OCCTSwiftScripts#111): a correctness major (17 breaking
+        // changes to the public Swift API, OCCT absorbed to 8.0.1), not a wrapping one. Fixed
+        // in this repo alongside the bump:
+        //   - ShapeAnalysisResult.selfIntersectionCount removed (#763; always 0, never
+        //     computed). Heal.swift / GraphValidate.swift now report `hasSelfIntersection` /
+        //     `selfIntersecting` as Bool? via the real `analyze(selfIntersectionTimeout:)`
+        //     check, opt-in (nil "not checked" by default, since the check is ~3000x an
+        //     ordinary scan on pathological input), rather than the fabricated always-0/always-false
+        //     the removed field silently produced.
+        //   - AAG builds nodes from face occurrences (#642): AAGNode.faceIndex /
+        //     PocketFeature.floorFaceIndex/wallFaceIndices / detectHoles()'s faceIndex /
+        //     AAGEdge.face1Index/face2Index now index Shape.orientedFaces(), not the
+        //     Shape.faces() `face[N]` scheme query-topology emits (they agreed automatically
+        //     pre-2.0.0, since faces() was itself occurrence-based then). FeatureRecognize.swift
+        //     (both the occtkit command and the legacy standalone target), GraphSelect.swift,
+        //     and GraphML.swift all cross-reference AAG output against that `face[N]` scheme
+        //     and now resolve through the new `AAGNode.distinctFaceIndex` bridge; no-op on any
+        //     shape that shares no face, which is every fixture this repo's tests used before
+        //     Tests/OcctkitCommandTests/AAGFaceIndexTests.swift (added alongside this bump)
+        //     started exercising a real shared-face compound.
+        // See docs/SEMVER.md#v200 in the OCCTSwift repo for the full break table.
+        occtDep("OCCTSwift", from: "2.0.0"),
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
@@ -255,6 +276,16 @@ let package = Package(
                 .product(name: "OCCTSwift", package: "OCCTSwift"),
             ],
             path: "Tests/DrawingComposerTests",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "OcctkitCommandTests",
+            dependencies: [
+                "occtkit",
+                "ScriptHarness",
+                .product(name: "OCCTSwift", package: "OCCTSwift"),
+            ],
+            path: "Tests/OcctkitCommandTests",
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]

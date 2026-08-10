@@ -1,5 +1,21 @@
 # Knowledge Log
 
+## 2026-08-10 (chore/bump-occtswift-2.0.0)
+
+* **Update**: Bumped the OCCTSwift floor to 2.0.0 (#111), a correctness major with 17 breaking
+  changes. Fixed two real breaks found by auditing every OCCTSwift call site against the full
+  break table, not just the issue's own first-pass grep: `ShapeAnalysisResult.selfIntersectionCount`
+  removed (#763) forced `Heal.swift`/`GraphValidate.swift` onto the real, opt-in
+  `hasSelfIntersection`/`selfIntersecting: Bool?` check; AAG building nodes from face
+  occurrences rather than distinct faces (#642) silently broke the `face[N]` alignment
+  `FeatureRecognize.swift`, `GraphSelect.swift`, and `GraphML.swift` each document for their own
+  AAG-derived output, fixed by resolving through the new `AAGNode.distinctFaceIndex` bridge.
+  Added `Tests/OcctkitCommandTests/AAGFaceIndexTests.swift`, a real regression suite against a
+  split-box-compound fixture, verified to fail if the fix is reverted.
+* **Creation**: Recorded the occtswift-2.0.0-floor-bump-blocked-on-cohort-releases decision:
+  this repo's own bump is complete, but a fresh clone cannot resolve the dependency graph from
+  remote until OCCTSwiftIO (and likely Tools/AIS/Mesh) ship a 2.0.0-compatible release.
+
 ## 2026-08-05 (fix/105-bracket-fillet)
 
 * **Update**: Fixed recipe 01's inside-corner fillet, which had never applied (#105).

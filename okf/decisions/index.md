@@ -20,3 +20,7 @@ that need standalone rationale.
 * [Concave edge classifier can select wrong edges](concave-edge-classifier-can-select-wrong-edges.md):
   `concaveEdges()` returned two unrelated edges instead of an L-bracket's one true reentrant
   edge; verify a classifier's output geometrically before trusting it.
+* [OCCTSwift 2.0.0 floor bump blocked on cohort releases](occtswift-2.0.0-floor-bump-blocked-on-cohort-releases.md):
+  `Package.swift` floors OCCTSwift at 2.0.0 and this repo's own code is fixed, but
+  OCCTSwiftIO's latest release still caps `occtswift` below 2.0.0 transitively, so a fresh
+  clone cannot resolve until the cohort ships. The PR is not blocked; the release is.

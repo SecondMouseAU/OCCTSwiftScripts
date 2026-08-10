@@ -262,3 +262,5 @@ occtkit feature-recognize flange.brep
 **Drives**: `AAG` (attributed adjacency graph) heuristic detection for pockets and holes.
 
 **Notes**: The `features` array is the primary OCCTMCP-friendly output with stable `face[N]` refs. The legacy `pockets` and `holes` arrays coexist for backward compatibility. AAG detection is rule-based and deterministic (no probabilistic scoring). For the full graph-level feature recognition with BRepGraph output and node IDs, see the Topology graph family's [`feature-recognize`](topology-graph.md#feature-recognize) verb (different from this lightweight per-body variant).
+
+`floorFaceIndex` / `wallFaceIndices` / `faceIndex` and every `topologyRefs` entry are resolved through `AAGNode.distinctFaceIndex` before being reported, so they stay in `shape.faces()`'s index space (the same one `query-topology`'s `face[N]` uses) even on a multi-solid compound where a face is shared between two solids. `AAG`'s own node index is an occurrence index into `Shape.orientedFaces()` (OCCTSwift#642, v2.0.0), which agrees with `shape.faces()` automatically on every single-solid part but not on a shared-face compound.

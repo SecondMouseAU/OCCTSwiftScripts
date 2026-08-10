@@ -25,6 +25,7 @@ Validate a BREP shape's topology graph and surface a structured health record.
 | name | type | required | description |
 |------|------|:--------:|-------------|
 | `<shape.brep>` | string | yes | Path to the BREP file to validate. |
+| `--self-intersection-timeout <d>` | number (seconds) | no | Opts into the real self-intersection check (see Notes); omitted, `selfIntersecting` is `nil` |
 
 **Returns**: Topology validity report with `isValid` / `errorCount` / `warningCount` and a `healthRecord` containing shape type, free-edge count, small-edge count, small-face count, and self-intersection status.
 
@@ -45,13 +46,15 @@ occtkit graph-validate shape.brep
     "nakedVertexCount": 0,
     "smallEdgeCount": 1,
     "smallFaceCount": 0,
-    "selfIntersecting": false,
+    "selfIntersecting": null,
     "errors": []
   }
 }
 ```
 
-**Drives**: `BRepGraph.validate()` + `Shape.analyze()`.
+**Drives**: `BRepGraph.validate()` + `Shape.analyze(selfIntersectionTimeout:)`.
+
+**Notes**: `selfIntersecting` is `Bool?`, `nil` ("not checked") by default rather than a fabricated `false` (OCCTSwift#763, v2.0.0: the previous `selfIntersectionCount`-derived `> 0` test always read `false`, since that count was always `0`, never computed). Pass `--self-intersection-timeout` to run the real, but comparatively expensive, `isSelfIntersecting(timeout:)` check.
 
 ---
 
@@ -220,7 +223,7 @@ occtkit graph-ml shape.brep --uv-samples 12 --edge-samples 24
 
 **Drives**: `BRepGraph.exportForML()` + `AAG` (Attributed Adjacency Graph).
 
-**Notes**: Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits). Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
+**Notes**: Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits and `faces[].index` above uses), resolved through `AAGNode.distinctFaceIndex` rather than AAG's own node index, which is an occurrence index into `Shape.orientedFaces()` and only agrees with `shape.faces()` on a shape with no face shared between two solids (OCCTSwift#642, v2.0.0). Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
 
 ---
 
@@ -264,10 +267,11 @@ occtkit graph-select shape.brep --query face-neighbors --face 2
   "neighbors": [
     { "face": 0, "convexity": "convex", "sharedEdgeCount": 1 },
     { "face": 3, "convexity": "concave", "sharedEdgeCount": 1 }
-  ]
+  ],
+  "warning": null
 }
 ```
 
 **Drives**: `AAG` (face queries) and `BRepGraph` (edge/vertex queries).
 
-**Notes**: Face indices follow `shape.faces()` order (the `face[N]` scheme from `query-topology`). Edge and vertex indices are BRepGraph indices. The correct secondary parameter to supply depends on `--query`: `--face` for `face-neighbors`, `--edge` for `edge-faces`, `--vertex` for `vertex-edges`, `--class` for `edges-class`; none needed for `face-adjacency`.
+**Notes**: Face indices follow `shape.faces()` order (the `face[N]` scheme from `query-topology`), resolved through `AAGNode.distinctFaceIndex` rather than AAG's own occurrence index into `Shape.orientedFaces()` (OCCTSwift#642, v2.0.0; the two agree automatically on a shape with no face shared between two solids). On a shape where `--face` names a face shared between two solids in a compound, `face-neighbors` reports the first occurrence's neighbours only and sets `warning` to a non-null string saying so, rather than silently picking a side; `face-adjacency`'s `faceCount` and every `face1`/`face2` are likewise in `shape.faces()`'s index space. Edge and vertex indices are BRepGraph indices, unaffected by any of this. The correct secondary parameter to supply depends on `--query`: `--face` for `face-neighbors`, `--edge` for `edge-faces`, `--vertex` for `vertex-edges`, `--class` for `edges-class`; none needed for `face-adjacency`.

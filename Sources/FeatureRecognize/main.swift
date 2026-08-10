@@ -39,10 +39,19 @@ do {
     let shape = try GraphIO.loadBREP(at: path)
     let aag = AAG(shape: shape)
 
+    // OCCTSwift#642 (v2.0.0): see occtkit's `feature-recognize` for the full rationale.
+    // floorFaceIndex/wallFaceIndices/faceIndex are AAG occurrence indices
+    // (Shape.orientedFaces()); resolve to Shape.faces()'s deduplicated index via
+    // AAGNode.distinctFaceIndex so this stays consistent with every other face[N]
+    // consumer (no-op on any shape that shares no face).
+    func distinctFace(_ occurrenceIndex: Int) -> Int {
+        aag.nodes[occurrenceIndex].distinctFaceIndex
+    }
+
     let pockets = aag.detectPockets().map { p in
         Report.Pocket(
-            floorFaceIndex: p.floorFaceIndex,
-            wallFaceIndices: p.wallFaceIndices,
+            floorFaceIndex: distinctFace(p.floorFaceIndex),
+            wallFaceIndices: p.wallFaceIndices.map(distinctFace),
             zLevel: p.zLevel,
             depth: p.depth,
             isOpen: p.isOpen,
@@ -53,7 +62,7 @@ do {
         )
     }
     let holes = aag.detectHoles().map { h in
-        Report.Hole(faceIndex: h.faceIndex, radius: h.radius, depth: h.depth)
+        Report.Hole(faceIndex: distinctFace(h.faceIndex), radius: h.radius, depth: h.depth)
     }
     try GraphIO.emitJSON(Report(pockets: pockets, holes: holes))
 } catch {

@@ -265,7 +265,7 @@ The `occtkit` executable is a separate target; install via the `Makefile` above 
 
 - macOS 15+
 - Swift 6.0+
-- [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) `>= 1.15.0` (xcframework built against OCCT 8.0.0 GA; floor required for the `BRepGraph` rename, see OCCTSwift#335)
+- [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) `>= 2.0.0` (xcframework built against OCCT 8.0.1; a correctness major, 17 breaking changes, see OCCTSwiftScripts#111 and OCCTSwift's `docs/SEMVER.md#v200`. **Not yet resolvable from a fresh clone**: the rest of the cohort below hasn't released a version compatible with OCCTSwift 2.0.0 yet)
 - [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) `>= 1.0.0` (powers `render-preview`)
 - [OCCTSwiftTools](https://github.com/SecondMouseAU/OCCTSwiftTools) `>= 1.0.0` (bridge layer used by `render-preview` for Shape→ViewportBody conversion)
 - [OCCTSwiftAIS](https://github.com/SecondMouseAU/OCCTSwiftAIS) `>= 1.0.0` (headless overlays for `render-preview`'s `--show-axes` / `--show-workplane` / `--highlight`)

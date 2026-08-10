@@ -92,11 +92,13 @@ occtkit run recipes/01-mounting-bracket/main.swift --format brep,graph-sqlite --
 
 Validate a BREP's topology graph and surface a structured health record.
 
-**Input:** `graph-validate <shape.brep>`
+**Input:** `graph-validate <shape.brep> [--self-intersection-timeout d]`
 **Output:** `{ isValid, errorCount, warningCount, healthRecord }` where `healthRecord`
 carries `{ isValid, shapeType, freeEdgeCount, nakedVertexCount, smallEdgeCount,
-smallFaceCount, selfIntersecting, errors }` (populated from `Shape.analyze()`;
-`nakedVertexCount` is always `0`: OCCTSwift does not expose it).
+smallFaceCount, selfIntersecting, errors }` (populated from
+`Shape.analyze(selfIntersectionTimeout:)`; `nakedVertexCount` is always `0`: OCCTSwift does
+not expose it). `selfIntersecting` is `Bool?`, `nil` unless `--self-intersection-timeout` is
+passed (OCCTSwift#763, v2.0.0); omitted, it is "not checked", not `false`.
 
 ```bash
 graph-validate body.brep
@@ -148,7 +150,10 @@ ML-friendly JSON (UV-Net / B-rep GNN feature export, via `OCCTSwiftIO`).
 **Output:** `{ vertexPositions, edgeBoundaryFlags, edgeManifoldFlags, faceAdjacentFaces,
 faceToFace, faceToEdge, edgeToVertex, faces[], edges[], faceAdjacency[], sampling }`:
 COO adjacency matrices, per-face position/normal/curvature grids, and a convexity-attributed
-face-adjacency graph (`convexity` ∈ `convex|concave|smooth`).
+face-adjacency graph (`convexity` ∈ `convex|concave|smooth`). `faceAdjacency`'s `face1`/`face2`
+are resolved to `faces[].index`'s space (`shape.faces()`), not AAG's own occurrence index into
+`Shape.orientedFaces()` (OCCTSwift#642, v2.0.0), so they never dangle-reference past `faces[]`
+on a compound where a face is shared between two solids.
 
 ```bash
 graph-ml part.brep --uv-samples 16 --edge-samples 32 > part.json
@@ -162,9 +167,11 @@ DSL selectors and B-rep GNN selection (no full graph export needed).
 **Input:** `graph-select <shape.brep> --query <type> [ids]`. Queries:
 `face-neighbors --face N` · `edge-faces --edge M` · `vertex-edges --vertex K` ·
 `face-adjacency` · `edges-class --class boundary|non-manifold|seam|degenerate`.
-Face indices follow `shape.faces()` order (AAG); edge/vertex indices are BRepGraph indices.
+Face indices follow `shape.faces()` order (AAG's own occurrence index is resolved to it, OCCTSwift#642); edge/vertex indices are BRepGraph indices.
 **Output:** per-query JSON tagged with `query`, e.g. `face-neighbors` returns
-`{ face, isPlanar, isVertical, isHorizontal, normal, neighbors[{face,convexity,sharedEdgeCount}] }`.
+`{ face, isPlanar, isVertical, isHorizontal, normal, neighbors[{face,convexity,sharedEdgeCount}], warning }`,
+where `warning` is non-null only when `--face` names a face shared between two solids in a
+compound (the neighbours are then the first occurrence's only).
 
 ```bash
 graph-select part.brep --query face-neighbors --face 0
@@ -182,7 +189,9 @@ Detect pockets and holes via AAG (Attributed Adjacency Graph) heuristics.
 **Input:** `feature-recognize <shape.brep>`
 **Output:** `{ pockets[], holes[], features[] }`. Each `features[]` entry has
 `{ id, kind ("pocket"|"hole"), confidence (1.0, rule-based), params, topologyRefs }`,
-where `topologyRefs` use the `face[N]` scheme.
+where `topologyRefs`, `floorFaceIndex`/`wallFaceIndices`, and `holes[].faceIndex` all use
+the `face[N]` scheme (`shape.faces()`'s index space, resolved from AAG's own occurrence
+index via `AAGNode.distinctFaceIndex`, OCCTSwift#642, v2.0.0).
 
 ```bash
 feature-recognize bracket.brep
@@ -449,9 +458,13 @@ compatibility but currently coalesce into precision tuning.)
 
 **Flag form:** `heal <input.brep> --output <out.brep> [--tolerance d] [--max-tolerance d]
 [--min-tolerance d] [--fix-small-edges] [--fix-small-faces] [--fix-gaps]
-[--fix-self-intersection] [--fix-orientation] [--unify-domain]`
+[--fix-self-intersection] [--fix-orientation] [--unify-domain]
+[--self-intersection-timeout d]`
 **JSON form:** `{ "inputBrep": "...", "outputPath": "...", "tolerance": d, ... }`
-**Output:** `{ outputPath, before{...}, after{...}, fixes{smallEdgesFixed,smallFacesFixed,freeEdgesClosed,selfIntersectionsResolved}, warnings[] }`.
+**Output:** `{ outputPath, before{...}, after{...}, fixes{smallEdgesFixed,smallFacesFixed,freeEdgesClosed,selfIntersectionResolved}, warnings[] }`.
+`before`/`after` carry `hasSelfIntersection: Bool?` (replaces the removed `selfIntersectionCount`,
+OCCTSwift#763, v2.0.0), and `fixes.selfIntersectionResolved: Bool?`; both are `nil` ("not checked")
+unless `--self-intersection-timeout` is passed.
 
 ```bash
 heal imported.brep --output healed.brep --tolerance 0.01
