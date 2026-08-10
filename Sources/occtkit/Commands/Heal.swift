@@ -19,11 +19,20 @@
 //          [--tolerance d] [--max-tolerance d] [--min-tolerance d]
 //          [--fix-small-edges] [--fix-small-faces] [--fix-gaps]
 //          [--fix-self-intersection] [--fix-orientation] [--unify-domain]
+//          [--self-intersection-timeout d]
 //
 //   2. JSON form:
 //      { "inputBrep": "...", "outputPath": "...",
 //        "tolerance": d, "maxTolerance": d, "minTolerance": d,
-//        "fixSmallEdges": <bool>, ... }
+//        "fixSmallEdges": <bool>, ..., "selfIntersectionTimeout": d }
+//
+// `--self-intersection-timeout` opts into the real (OCCTSwift#763,
+// `isSelfIntersecting(timeout:)`-backed) self-intersection check on both the
+// before and after snapshot; omitted, `before.hasSelfIntersection` /
+// `after.hasSelfIntersection` / `fixes.selfIntersectionResolved` are all nil
+// ("not checked"), not a fabricated false/0. The check is expensive on
+// pathological input (~3000x an ordinary scan) and this tool runs it twice,
+// so it is opt-in rather than default-on.
 
 import Foundation
 import OCCTSwift
@@ -38,6 +47,7 @@ enum HealCommand: Subcommand {
               [--tolerance d] [--max-tolerance d] [--min-tolerance d]
               [--fix-small-edges] [--fix-small-faces] [--fix-gaps]
               [--fix-self-intersection] [--fix-orientation] [--unify-domain]
+              [--self-intersection-timeout d]
           heal <request.json>
           heal                              (JSON request from stdin)
         """
@@ -56,6 +66,14 @@ enum HealCommand: Subcommand {
         var fixSelfIntersection: Bool
         var fixOrientation: Bool
         var unifyDomain: Bool
+        // OCCTSwift#763 (v2.0.0): `ShapeAnalysisResult.selfIntersectionCount` was removed:
+        // it was always 0, never computed. The real check (`isSelfIntersecting(timeout:)`,
+        // forwarded via `Shape.analyze(selfIntersectionTimeout:)`) is orders of magnitude more
+        // expensive than the rest of this snapshot (a few ms on ordinary shapes, but ~3000x on
+        // a pathological one) and this tool runs it TWICE (before + after), so it stays opt-in,
+        // nil (not checked) by default, matching upstream's own default. `nil` here says
+        // "unknown" plainly, unlike the fabricated always-0 this replaces.
+        var selfIntersectionTimeout: Double?
     }
 
     private struct JSONRequest: Decodable {
@@ -70,6 +88,7 @@ enum HealCommand: Subcommand {
         let fixSelfIntersection: Bool?
         let fixOrientation: Bool?
         let unifyDomain: Bool?
+        let selfIntersectionTimeout: Double?
     }
 
     struct Response: Encodable {
@@ -85,21 +104,24 @@ enum HealCommand: Subcommand {
             let freeEdgeCount: Int
             let smallEdgeCount: Int
             let smallFaceCount: Int
-            let selfIntersectionCount: Int
+            // nil = not checked (pass --self-intersection-timeout to opt in); see OCCTSwift#763.
+            let hasSelfIntersection: Bool?
             let isValid: Bool
         }
         struct Fixes: Encodable {
             let smallEdgesFixed: Int
             let smallFacesFixed: Int
             let freeEdgesClosed: Int
-            let selfIntersectionsResolved: Int
+            // nil when self-intersection wasn't checked on both sides; true only if it was
+            // present before and absent after (never fabricated from an unmeasured count).
+            let selfIntersectionResolved: Bool?
         }
     }
 
     static func run(args: [String]) throws -> Int32 {
         let req = try parseRequest(args: args)
         let input = try GraphIO.loadBREP(at: req.inputBrep)
-        let before = snapshot(of: input)
+        let before = snapshot(of: input, selfIntersectionTimeout: req.selfIntersectionTimeout)
 
         let fixer = ShapeFixer(shape: input)
         if let t = req.tolerance     { fixer.setPrecision(t) }
@@ -108,7 +130,7 @@ enum HealCommand: Subcommand {
         let didChange = fixer.perform()
         let healed = fixer.shape ?? input
 
-        let after = snapshot(of: healed)
+        let after = snapshot(of: healed, selfIntersectionTimeout: req.selfIntersectionTimeout)
 
         let outURL = URL(fileURLWithPath: req.outputPath)
         try? FileManager.default.createDirectory(
@@ -126,6 +148,11 @@ enum HealCommand: Subcommand {
             warnings.append("Per-fix --fix-* flags are accepted but currently coalesce into ShapeFixer's precision tuning; granular per-fix gating waits on an upstream OCCTSwift API.")
         }
 
+        let selfIntersectionResolved: Bool? = {
+            guard let b = before.hasSelfIntersection, let a = after.hasSelfIntersection else { return nil }
+            return b && !a
+        }()
+
         try GraphIO.emitJSON(Response(
             outputPath: outURL.path,
             before: before,
@@ -134,22 +161,22 @@ enum HealCommand: Subcommand {
                 smallEdgesFixed: max(0, before.smallEdgeCount - after.smallEdgeCount),
                 smallFacesFixed: max(0, before.smallFaceCount - after.smallFaceCount),
                 freeEdgesClosed: max(0, before.freeEdgeCount - after.freeEdgeCount),
-                selfIntersectionsResolved: max(0, before.selfIntersectionCount - after.selfIntersectionCount)
+                selfIntersectionResolved: selfIntersectionResolved
             ),
             warnings: warnings
         ))
         return 0
     }
 
-    private static func snapshot(of shape: Shape) -> Response.HealthSnapshot {
-        let analysis = shape.analyze()
+    private static func snapshot(of shape: Shape, selfIntersectionTimeout: Double?) -> Response.HealthSnapshot {
+        let analysis = shape.analyze(selfIntersectionTimeout: selfIntersectionTimeout)
         return Response.HealthSnapshot(
             faceCount: shape.faces().count,
             edgeCount: shape.edges().count,
             freeEdgeCount: analysis?.freeEdgeCount ?? 0,
             smallEdgeCount: analysis?.smallEdgeCount ?? 0,
             smallFaceCount: analysis?.smallFaceCount ?? 0,
-            selfIntersectionCount: analysis?.selfIntersectionCount ?? 0,
+            hasSelfIntersection: analysis?.hasSelfIntersection,
             isValid: shape.isValid
         )
     }
@@ -169,6 +196,7 @@ enum HealCommand: Subcommand {
         var tolerance: Double?, maxTol: Double?, minTol: Double?
         var fixSmallEdges = true, fixSmallFaces = true, fixGaps = true
         var fixSelfIntersection = true, fixOrientation = true, unifyDomain = true
+        var selfIntersectionTimeout: Double?
         var i = 1
         while i < args.count {
             switch args[i] {
@@ -203,6 +231,12 @@ enum HealCommand: Subcommand {
             case "--no-fix-orientation":        fixOrientation = false
             case "--unify-domain":              unifyDomain = true
             case "--no-unify-domain":           unifyDomain = false
+            case "--self-intersection-timeout":
+                i += 1
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--self-intersection-timeout")) else {
+                    throw ScriptError.message("--self-intersection-timeout expects a number (seconds)")
+                }
+                selfIntersectionTimeout = d
             default:
                 throw ScriptError.message("Unknown flag: \(args[i])")
             }
@@ -214,7 +248,7 @@ enum HealCommand: Subcommand {
             tolerance: tolerance, maxTolerance: maxTol, minTolerance: minTol,
             fixSmallEdges: fixSmallEdges, fixSmallFaces: fixSmallFaces, fixGaps: fixGaps,
             fixSelfIntersection: fixSelfIntersection, fixOrientation: fixOrientation,
-            unifyDomain: unifyDomain
+            unifyDomain: unifyDomain, selfIntersectionTimeout: selfIntersectionTimeout
         )
     }
 
@@ -229,7 +263,8 @@ enum HealCommand: Subcommand {
             fixGaps: raw.fixGaps ?? true,
             fixSelfIntersection: raw.fixSelfIntersection ?? true,
             fixOrientation: raw.fixOrientation ?? true,
-            unifyDomain: raw.unifyDomain ?? true
+            unifyDomain: raw.unifyDomain ?? true,
+            selfIntersectionTimeout: raw.selfIntersectionTimeout
         )
     }
 }

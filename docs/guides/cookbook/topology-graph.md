@@ -32,11 +32,14 @@ occtkit graph-validate bracket.brep
     "nakedVertexCount": 0,
     "smallEdgeCount": 1,
     "smallFaceCount": 0,
-    "selfIntersecting": false,
+    "selfIntersecting": null,
     "errors": []
   }
 }
 ```
+
+`selfIntersecting` is `null` unless you pass `--self-intersection-timeout <seconds>`: the real
+check is comparatively expensive, so it is opt-in rather than always run (OCCTSwift#763).
 
 If `isValid` is `false`, examine the `healthRecord.errors` list. A shape with topology errors can still be loaded for measurement but compact and dedup on an invalid shape may produce further corruption, fix or heal before proceeding.
 
@@ -159,7 +162,7 @@ occtkit graph-ml bracket_clean.brep --uv-samples 12 --edge-samples 24
 }
 ```
 
-Face indices in `faceAdjacency` and `faceAdjacentFaces` follow `shape.faces()` order: the same `face[N]` scheme `query-topology` emits. Convexity is a property of the dihedral angle between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero).
+Face indices in `faceAdjacency` and `faceAdjacentFaces` follow `shape.faces()` order: the same `face[N]` scheme `query-topology` emits, even on a compound where a face is shared between two solids (`AAG`'s own node index is a distinct, occurrence-based space that only agrees with `shape.faces()` automatically when nothing is shared; OCCTSwift#642, v2.0.0). Convexity is a property of the dihedral angle between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero).
 
 ---
 
@@ -192,9 +195,12 @@ occtkit graph-select bracket_clean.brep --query face-neighbors --face 2
   "neighbors": [
     { "face": 0, "convexity": "convex",  "sharedEdgeCount": 1 },
     { "face": 3, "convexity": "concave", "sharedEdgeCount": 1 }
-  ]
+  ],
+  "warning": null
 }
 ```
+
+`warning` is non-null only when `--face` names a face shared between two solids in a compound: the neighbours above are then the first occurrence's only, and the response says so rather than silently answering for one side.
 
 **Find all boundary edges:**
 
@@ -210,7 +216,7 @@ occtkit graph-select bracket_clean.brep --query edges-class --class boundary
 }
 ```
 
-Face indices follow `shape.faces()` order; edge and vertex indices are BRepGraph indices.
+Face indices follow `shape.faces()` order (see the note on `warning` above for the one case where a caller needs to know that took a resolution step); edge and vertex indices are BRepGraph indices.
 
 ---
 

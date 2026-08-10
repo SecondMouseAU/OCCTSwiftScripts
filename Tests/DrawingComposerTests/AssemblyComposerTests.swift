@@ -4,7 +4,17 @@ import OCCTSwift
 @testable import DrawingComposer
 
 /// General-arrangement / assembly drawing support (OCCTSwiftScripts#50).
-@Suite("Assembly composer")
+//
+// .serialized (OCCTSwiftScripts#111): added alongside the new OcctkitCommandTests suite,
+// whose own tests must not overlap each other over a shared fd redirect (see that suite's
+// doc comment). Making THIS suite serialized too was found empirically necessary:
+// running both suites' underlying OCCTSwift Shape construction concurrently, across
+// threads, produced an intermittent SIGSEGV under Swift Testing's default parallel
+// scheduling (not specific to either suite's own logic: OCCT's kernel has a documented
+// history of thread-safety gaps in this codebase, e.g. the #298 "thread-safe fillet" floor
+// bump). `swift test --no-parallel` also avoids it; this trait means the default `swift
+// test` invocation does too.
+@Suite("Assembly composer", .serialized)
 struct AssemblyComposerTests {
 
     private func gaSpec() -> DrawingSpec {

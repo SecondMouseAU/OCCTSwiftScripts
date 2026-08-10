@@ -50,10 +50,24 @@ enum FeatureRecognizeCommand: Subcommand {
         let shape = try GraphIO.loadBREP(at: path)
         let aag = AAG(shape: shape)
 
+        // OCCTSwift#642 (v2.0.0): PocketFeature.floorFaceIndex / .wallFaceIndices and
+        // detectHoles()'s faceIndex are now OCCURRENCE indices into Shape.orientedFaces(),
+        // not the `face[N]` scheme (Shape.faces(), deduplicated) query-topology emits and
+        // this report's own topologyRefs are documented (above) to align with. Resolve each
+        // through AAGNode.distinctFaceIndex, the bridge OCCTSwift added for exactly this, so
+        // topologyRefs keeps naming the same face query-topology would. On any shape that
+        // shares no face (every single-solid part) distinctFaceIndex == the occurrence index,
+        // so this is a no-op there; it only differs on a multi-solid compound with a face
+        // shared between two solids (a split result), which is exactly the shape AAG's own
+        // pocket/hole detection is meant to run on.
+        func distinctFace(_ occurrenceIndex: Int) -> Int {
+            aag.nodes[occurrenceIndex].distinctFaceIndex
+        }
+
         let pockets = aag.detectPockets().map { p in
             Report.Pocket(
-                floorFaceIndex: p.floorFaceIndex,
-                wallFaceIndices: p.wallFaceIndices,
+                floorFaceIndex: distinctFace(p.floorFaceIndex),
+                wallFaceIndices: p.wallFaceIndices.map(distinctFace),
                 zLevel: p.zLevel,
                 depth: p.depth,
                 isOpen: p.isOpen,
@@ -64,7 +78,7 @@ enum FeatureRecognizeCommand: Subcommand {
             )
         }
         let holes = aag.detectHoles().map { h in
-            Report.Hole(faceIndex: h.faceIndex, radius: h.radius, depth: h.depth)
+            Report.Hole(faceIndex: distinctFace(h.faceIndex), radius: h.radius, depth: h.depth)
         }
 
         var features: [Report.Feature] = []

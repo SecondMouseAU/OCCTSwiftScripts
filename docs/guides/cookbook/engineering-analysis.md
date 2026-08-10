@@ -137,20 +137,24 @@ occtkit heal imported.brep --output imported_healed.brep --tolerance 0.01
   "before": {
     "faceCount": 24, "edgeCount": 72,
     "freeEdgeCount": 3, "smallEdgeCount": 2, "smallFaceCount": 1,
-    "selfIntersectionCount": 0, "isValid": false
+    "hasSelfIntersection": null, "isValid": false
   },
   "after": {
     "faceCount": 24, "edgeCount": 72,
     "freeEdgeCount": 0, "smallEdgeCount": 0, "smallFaceCount": 0,
-    "selfIntersectionCount": 0, "isValid": true
+    "hasSelfIntersection": null, "isValid": true
   },
   "fixes": {
     "smallEdgesFixed": 2, "smallFacesFixed": 1,
-    "freeEdgesClosed": 3, "selfIntersectionsResolved": 0
+    "freeEdgesClosed": 3, "selfIntersectionResolved": null
   },
   "warnings": []
 }
 ```
+
+`hasSelfIntersection` / `selfIntersectionResolved` are `null` unless `--self-intersection-timeout
+<seconds>` is passed: the real check (OCCTSwift#763) is comparatively expensive and this tool runs
+it on both snapshots, so it stays opt-in.
 
 `isValid: true` and `freeEdgeCount: 0` in the `after` snapshot confirm the shell
 is closed. `fixes.freeEdgesClosed: 3` accounts for all three violations from the

@@ -215,8 +215,11 @@ occtkit feature-recognize flange.brep
 
 Use the `features` array as the primary output: the `face[N]` refs in `topologyRefs`
 align directly with the IDs from `query-topology`, so you can cross-reference feature
-membership with surface type or area without reindexing. The top-level `pockets` and
-`holes` arrays carry the same data in a legacy shape for backward compatibility.
+membership with surface type or area without reindexing, true even on a multi-solid
+compound where a face is shared between two solids, where `AAG`'s own indices (occurrence
+indices into `Shape.orientedFaces()`) are resolved back to `shape.faces()`'s index space
+before being reported (OCCTSwift#642, v2.0.0). The top-level `pockets` and `holes` arrays
+carry the same data in a legacy shape for backward compatibility.
 
 AAG detection is rule-based and deterministic (`confidence` is always `1.0`).
 

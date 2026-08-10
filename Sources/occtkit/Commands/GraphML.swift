@@ -75,11 +75,20 @@ enum GraphMLCommand: Subcommand {
         }
 
         // Attributed face-adjacency with per-adjacency convexity, from the AAG.
+        //
+        // OCCTSwift#642 (v2.0.0): AAGEdge.face1Index/face2Index are OCCURRENCE indices into
+        // Shape.orientedFaces(), not `faces[].index` above (BRepGraph-native, already
+        // deduplicated, unaffected by #642). Left unconverted, a shared face on a multi-solid
+        // compound would emit a face1/face2 >= faces.count, a dangling node reference in a
+        // payload that IS a graph (faces[] are the nodes, faceAdjacency the edges), not merely
+        // a mislabeled one. Resolve through AAGNode.distinctFaceIndex so every index in this
+        // payload stays in the one space `faces[].index` defines (no-op on any shape that
+        // shares no face).
         let aag = AAG(shape: shape)
         let faceAdjacency: [Payload.FaceAdjacency] = aag.edges.map {
             Payload.FaceAdjacency(
-                face1: $0.face1Index,
-                face2: $0.face2Index,
+                face1: aag.nodes[$0.face1Index].distinctFaceIndex,
+                face2: aag.nodes[$0.face2Index].distinctFaceIndex,
                 convexity: $0.convexity.label,
                 sharedEdgeCount: $0.sharedEdgeCount
             )

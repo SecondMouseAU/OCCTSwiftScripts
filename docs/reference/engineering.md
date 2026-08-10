@@ -139,8 +139,9 @@ Heal imported or non-watertight geometry via OCCT ShapeFixer; reports before/aft
 | `--fix-self-intersection` / `fixSelfIntersection` | flag | no | Accepted for forward compat; currently coalesces into precision tuning |
 | `--fix-orientation` / `fixOrientation` | flag | no | Accepted for forward compat; currently coalesces into precision tuning |
 | `--unify-domain` / `unifyDomain` | flag | no | Accepted for forward compat; currently coalesces into precision tuning |
+| `--self-intersection-timeout` / `selfIntersectionTimeout` | number (seconds) | no | Opts into the real self-intersection check on both snapshots (see Notes); omitted, `hasSelfIntersection` is `nil` on both |
 
-**Returns**: JSON object with `outputPath`, `before` and `after` health snapshots (each with `faceCount`, `edgeCount`, `freeEdgeCount`, `smallEdgeCount`, `smallFaceCount`, `selfIntersectionCount`, `isValid`), `fixes` (counts of resolved issues), and `warnings` (array).
+**Returns**: JSON object with `outputPath`, `before` and `after` health snapshots (each with `faceCount`, `edgeCount`, `freeEdgeCount`, `smallEdgeCount`, `smallFaceCount`, `hasSelfIntersection`, `isValid`), `fixes` (counts of resolved issues, plus `selfIntersectionResolved`), and `warnings` (array).
 
 **Example**
 
@@ -157,7 +158,7 @@ occtkit heal imported.brep --output imported_healed.brep --tolerance 0.01
     "freeEdgeCount": 3,
     "smallEdgeCount": 2,
     "smallFaceCount": 1,
-    "selfIntersectionCount": 0,
+    "hasSelfIntersection": null,
     "isValid": false
   },
   "after": {
@@ -166,19 +167,21 @@ occtkit heal imported.brep --output imported_healed.brep --tolerance 0.01
     "freeEdgeCount": 0,
     "smallEdgeCount": 0,
     "smallFaceCount": 0,
-    "selfIntersectionCount": 0,
+    "hasSelfIntersection": null,
     "isValid": true
   },
   "fixes": {
     "smallEdgesFixed": 2,
     "smallFacesFixed": 1,
     "freeEdgesClosed": 3,
-    "selfIntersectionsResolved": 0
+    "selfIntersectionResolved": null
   },
   "warnings": []
 }
 ```
 
-**Drives**: `ShapeFixer` (`setPrecision`, `setMaxTolerance`, `setMinTolerance`, `perform`), `Shape.analyze()`, `Shape.isValid`.
+**Drives**: `ShapeFixer` (`setPrecision`, `setMaxTolerance`, `setMinTolerance`, `perform`), `Shape.analyze(selfIntersectionTimeout:)`, `Shape.isValid`.
 
 **Notes**: Per-fix `--fix-*` flags are accepted today for forward compatibility with the issue spec but currently all coalesce into `ShapeFixer`'s precision tuning. Granular per-fix gating awaits an upstream OCCTSwift API. If `ShapeFixer.perform()` reports no changes, both snapshots may be identical.
+
+`hasSelfIntersection` / `selfIntersectionResolved` are `nil` ("not checked"), not `false`/`0`, unless `--self-intersection-timeout` is passed (OCCTSwift#763, v2.0.0: the old `selfIntersectionCount` field this replaces was always `0`, never computed, so its `selfIntersectionsResolved` diff was always a fabricated `0` too). The real check (`Shape.isSelfIntersecting(timeout:)`) is orders of magnitude more expensive than the rest of this snapshot on pathological input (~3000x, per OCCTSwift's own measurement) and this tool runs it twice, so it stays opt-in rather than default-on. `selfIntersectionResolved` is `true` only when a self-intersection was present before and absent after; it is `nil`, not `false`, if either side wasn't checked.
