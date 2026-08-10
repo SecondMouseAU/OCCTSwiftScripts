@@ -15,6 +15,15 @@
 //          .frenet also builds a valid solid but lets the section twist slightly).
 //          Ground/closed ends are out of scope here; this is an open-coil spring.
 //
+// KNOWN ISSUE (OCCTSwift 2.0.0+): this recipe's own reference output.brep was archived
+// as output.brep.pre-2.0.0-reference-see-issue-830 rather than kept live, so
+// Scripts/recipe-check.sh skips the drift compare here (still runs every other check).
+// Under OCCTSwift 2.0.0, this exact recipe's volume reads ~14% high (9765 mm³ vs a
+// hand-calculable ~8577 mm³ for this wire/coil geometry) — looks like a genuine kernel
+// regression in Shape.pipeShell(solid: true) on a helix spine, not a bug in this recipe.
+// Filed as https://github.com/SecondMouseAU/OCCTSwift/issues/830. Once that's fixed,
+// regenerate output.brep and delete the archived copy.
+//
 // Run:  swift run occtkit run recipes/02-helical-spring/main.swift --format brep
 
 import OCCTSwift
