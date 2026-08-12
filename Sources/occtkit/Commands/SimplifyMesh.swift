@@ -38,10 +38,10 @@
 //        "outputPath": "..." }
 
 import Foundation
-import simd
 import OCCTSwift
 import OCCTSwiftMesh
 import ScriptHarness
+import simd
 
 enum SimplifyMeshCommand: Subcommand {
     static let name = "simplify-mesh"
@@ -102,7 +102,8 @@ enum SimplifyMeshCommand: Subcommand {
         params.deflection = req.linearDeflection
         params.angle = req.angularDeflection
         guard let inputMesh = shape.mesh(parameters: params) else {
-            throw ScriptError.message("Mesh generation failed (BRepMesh_IncrementalMesh returned nil)")
+            throw ScriptError.message(
+                "Mesh generation failed (BRepMesh_IncrementalMesh returned nil)")
         }
         let beforeMeanAR = meanAspectRatio(of: inputMesh)
 
@@ -115,21 +116,23 @@ enum SimplifyMeshCommand: Subcommand {
         )
         guard let result = inputMesh.simplified(options) else {
             throw ScriptError.message(
-                "Simplification failed: check options (need exactly one of --target-triangle-count / --target-reduction; values must be in valid ranges)")
+                "Simplification failed: check options (need exactly one of --target-triangle-count / --target-reduction; values must be in valid ranges)"
+            )
         }
         let afterMeanAR = meanAspectRatio(of: result.mesh)
 
         try writeMesh(mesh: result.mesh, path: req.outputPath)
 
-        try GraphIO.emitJSON(Response(
-            beforeTriangleCount: result.beforeTriangleCount,
-            afterTriangleCount: result.afterTriangleCount,
-            qualityDelta: .init(
-                meanAspectRatioDelta: afterMeanAR - beforeMeanAR,
-                hausdorffDistance: result.hausdorffDistance
-            ),
-            outputPath: req.outputPath
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                beforeTriangleCount: result.beforeTriangleCount,
+                afterTriangleCount: result.afterTriangleCount,
+                qualityDelta: .init(
+                    meanAspectRatioDelta: afterMeanAR - beforeMeanAR,
+                    hausdorffDistance: result.hausdorffDistance
+                ),
+                outputPath: req.outputPath
+            ))
         return 0
     }
 
@@ -146,13 +149,18 @@ enum SimplifyMeshCommand: Subcommand {
             let i1 = Int(idxs[t * 3 + 1])
             let i2 = Int(idxs[t * 3 + 2])
             guard i0 < verts.count, i1 < verts.count, i2 < verts.count else { continue }
-            let a = verts[i0], b = verts[i1], c = verts[i2]
+            let a = verts[i0]
+            let b = verts[i1]
+            let c = verts[i2]
             let e0 = simd_length(b - a)
             let e1 = simd_length(c - b)
             let e2 = simd_length(a - c)
             let mn = min(e0, min(e1, e2))
             let mx = max(e0, max(e1, e2))
-            if mn > 1e-9 { sum += Double(mx / mn); n += 1 }
+            if mn > 1e-9 {
+                sum += Double(mx / mn)
+                n += 1
+            }
         }
         return n > 0 ? sum / Double(n) : 1.0
     }
@@ -167,7 +175,8 @@ enum SimplifyMeshCommand: Subcommand {
         switch ext {
         case "stl": try writeASCIISTL(mesh: mesh, to: url)
         case "obj": try writeOBJ(mesh: mesh, to: url)
-        default: throw ScriptError.message("Unsupported --output extension '\(ext)'; use .stl or .obj")
+        default:
+            throw ScriptError.message("Unsupported --output extension '\(ext)'; use .stl or .obj")
         }
     }
 
@@ -181,7 +190,9 @@ enum SimplifyMeshCommand: Subcommand {
             let i1 = Int(idxs[t * 3 + 1])
             let i2 = Int(idxs[t * 3 + 2])
             guard i0 < verts.count, i1 < verts.count, i2 < verts.count else { continue }
-            let a = verts[i0], b = verts[i1], c = verts[i2]
+            let a = verts[i0]
+            let b = verts[i1]
+            let c = verts[i2]
             let n = simd_normalize(simd_cross(b - a, c - a))
             out += "  facet normal \(n.x) \(n.y) \(n.z)\n"
             out += "    outer loop\n"
@@ -195,7 +206,8 @@ enum SimplifyMeshCommand: Subcommand {
         do {
             try out.write(to: url, atomically: true, encoding: .utf8)
         } catch {
-            throw ScriptError.message("Failed to write STL at \(url.path): \(error.localizedDescription)")
+            throw ScriptError.message(
+                "Failed to write STL at \(url.path): \(error.localizedDescription)")
         }
     }
 
@@ -206,7 +218,7 @@ enum SimplifyMeshCommand: Subcommand {
         for v in verts { out += "v \(v.x) \(v.y) \(v.z)\n" }
         let triCount = idxs.count / 3
         for t in 0..<triCount {
-            let i0 = idxs[t * 3] + 1   // OBJ is 1-indexed
+            let i0 = idxs[t * 3] + 1  // OBJ is 1-indexed
             let i1 = idxs[t * 3 + 1] + 1
             let i2 = idxs[t * 3 + 2] + 1
             out += "f \(i0) \(i1) \(i2)\n"
@@ -214,7 +226,8 @@ enum SimplifyMeshCommand: Subcommand {
         do {
             try out.write(to: url, atomically: true, encoding: .utf8)
         } catch {
-            throw ScriptError.message("Failed to write OBJ at \(url.path): \(error.localizedDescription)")
+            throw ScriptError.message(
+                "Failed to write OBJ at \(url.path): \(error.localizedDescription)")
         }
     }
 
@@ -222,10 +235,13 @@ enum SimplifyMeshCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--output") {
+            !args.contains("--output")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
@@ -240,38 +256,46 @@ enum SimplifyMeshCommand: Subcommand {
         var i = 1
         while i < args.count {
             switch args[i] {
-            case "--output":          i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
+            case "--output":
+                i += 1
+                output = try GraphIO.value(args, at: i, flag: "--output")
             case "--target-triangle-count":
                 i += 1
-                guard let n = Int(try GraphIO.value(args, at: i, flag: "--target-triangle-count")) else {
+                guard let n = Int(try GraphIO.value(args, at: i, flag: "--target-triangle-count"))
+                else {
                     throw ScriptError.message("--target-triangle-count expects an integer")
                 }
                 targetTriangleCount = n
             case "--target-reduction":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--target-reduction")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--target-reduction"))
+                else {
                     throw ScriptError.message("--target-reduction expects a number")
                 }
                 targetReduction = d
-            case "--preserve-boundary":             preserveBoundary = true
-            case "--no-preserve-boundary":          preserveBoundary = false
-            case "--preserve-topology":             preserveTopology = true
-            case "--no-preserve-topology":          preserveTopology = false
+            case "--preserve-boundary": preserveBoundary = true
+            case "--no-preserve-boundary": preserveBoundary = false
+            case "--preserve-topology": preserveTopology = true
+            case "--no-preserve-topology": preserveTopology = false
             case "--max-hausdorff-distance":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--max-hausdorff-distance")) else {
+                guard
+                    let d = Double(try GraphIO.value(args, at: i, flag: "--max-hausdorff-distance"))
+                else {
                     throw ScriptError.message("--max-hausdorff-distance expects a number")
                 }
                 maxHausdorff = d
             case "--linear-deflection":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--linear-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--linear-deflection"))
+                else {
                     throw ScriptError.message("--linear-deflection expects a number")
                 }
                 linearDeflection = d
             case "--angular-deflection":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--angular-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--angular-deflection"))
+                else {
                     throw ScriptError.message("--angular-deflection expects a number")
                 }
                 angularDeflection = d

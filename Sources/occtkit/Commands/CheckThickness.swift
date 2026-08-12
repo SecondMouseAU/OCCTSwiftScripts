@@ -32,9 +32,9 @@
 //        "samplingDensity": "..." }
 
 import Foundation
-import simd
 import OCCTSwift
 import ScriptHarness
+import simd
 
 enum CheckThicknessCommand: Subcommand {
     static let name = "check-thickness"
@@ -59,7 +59,7 @@ enum CheckThicknessCommand: Subcommand {
             switch self {
             case .coarse: return 4
             case .medium: return 8
-            case .fine:   return 16
+            case .fine: return 16
             }
         }
     }
@@ -101,30 +101,37 @@ enum CheckThicknessCommand: Subcommand {
             guard let uv = face.uvBounds else { continue }
             for i in 0..<resolution {
                 for j in 0..<resolution {
-                    let u = uv.uMin + (uv.uMax - uv.uMin) * Double(i) / Double(max(1, resolution - 1))
-                    let v = uv.vMin + (uv.vMax - uv.vMin) * Double(j) / Double(max(1, resolution - 1))
+                    let u =
+                        uv.uMin + (uv.uMax - uv.uMin) * Double(i) / Double(max(1, resolution - 1))
+                    let v =
+                        uv.vMin + (uv.vMax - uv.vMin) * Double(j) / Double(max(1, resolution - 1))
                     guard let point = face.point(atU: u, v: v),
-                          let normal = face.normal(atU: u, v: v) else { continue }
+                        let normal = face.normal(atU: u, v: v)
+                    else { continue }
                     let n = simd_normalize(normal)
                     let inward = -n
                     let rayOrigin = point + eps * inward
                     let hits = shape.intersectLine(origin: rayOrigin, direction: inward)
                     // Find the smallest positive parameter; this is the thickness.
-                    guard let nearest = hits
-                        .map(\.parameter)
-                        .filter({ $0 > 0 })
-                        .min() else { continue }
+                    guard
+                        let nearest =
+                            hits
+                            .map(\.parameter)
+                            .filter({ $0 > 0 })
+                            .min()
+                    else { continue }
                     let thickness = nearest
                     sampled += 1
                     sum += thickness
                     if thickness < minT { minT = thickness }
                     if thickness > maxT { maxT = thickness }
                     if let limit = req.minAcceptable, thickness < limit {
-                        thinRegions.append(Response.ThinRegion(
-                            centerPoint: [point.x, point.y, point.z],
-                            thickness: thickness,
-                            faceRefs: ["face[\(faceIndex)]"]
-                        ))
+                        thinRegions.append(
+                            Response.ThinRegion(
+                                centerPoint: [point.x, point.y, point.z],
+                                thickness: thickness,
+                                faceRefs: ["face[\(faceIndex)]"]
+                            ))
                     }
                 }
             }
@@ -145,10 +152,13 @@ enum CheckThicknessCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--min-acceptable"), !args.contains("--sampling-density") {
+            !args.contains("--min-acceptable"), !args.contains("--sampling-density")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
@@ -174,8 +184,9 @@ enum CheckThicknessCommand: Subcommand {
             }
             i += 1
         }
-        return Request(inputBrep: inputBrep, minAcceptable: minAcceptable,
-                       samplingDensity: samplingDensity)
+        return Request(
+            inputBrep: inputBrep, minAcceptable: minAcceptable,
+            samplingDensity: samplingDensity)
     }
 
     private static func decodeJSON(data: Data) throws -> Request {

@@ -33,12 +33,12 @@
 // OffscreenRenderer, cut after OCCTSwiftViewport#20).
 
 import Foundation
-import simd
 import OCCTSwift
-import OCCTSwiftViewport
-import OCCTSwiftTools
 import OCCTSwiftAIS
+import OCCTSwiftTools
+import OCCTSwiftViewport
 import ScriptHarness
+import simd
 
 enum RenderPreviewCommand: Subcommand {
     static let name = "render-preview"
@@ -120,7 +120,7 @@ enum RenderPreviewCommand: Subcommand {
         let background: String?
         // Phase 2 AIS overlays
         let showAxes: Bool?
-        let axesPosition: String?           // "origin" | "center" | "outside" | "x,y,z"
+        let axesPosition: String?  // "origin" | "center" | "outside" | "x,y,z"
         let showWorkplane: String?
         let highlight: [String]?
         let highlightColor: String?
@@ -148,7 +148,9 @@ enum RenderPreviewCommand: Subcommand {
         for (i, path) in req.inputs.enumerated() {
             let shape = try GraphIO.loadBREP(at: path)
             inputShapes.append(shape)
-            let id = (path as NSString).deletingPathExtension.split(separator: "/").last.map(String.init) ?? "body_\(i)"
+            let id =
+                (path as NSString).deletingPathExtension.split(separator: "/").last.map(String.init)
+                ?? "body_\(i)"
             let (body, _) = OCCTSwiftTools.CADFileLoader.shapeToBodyAndMetadata(
                 shape, id: id, color: SIMD4(0.7, 0.7, 0.75, 1.0)  // steel
             )
@@ -194,8 +196,9 @@ enum RenderPreviewCommand: Subcommand {
             for ref in req.highlights {
                 let (kind, idx, label) = subShapeKey(ref)
                 guard let sub = source.subShape(type: kind, index: idx) else {
-                    FileHandle.standardError.write(Data(
-                        "warn: --highlight \(label): sub-shape not found on source\n".utf8))
+                    FileHandle.standardError.write(
+                        Data(
+                            "warn: --highlight \(label): sub-shape not found on source\n".utf8))
                     continue
                 }
                 let (highlightBody, _) = OCCTSwiftTools.CADFileLoader.shapeToBodyAndMetadata(
@@ -216,7 +219,8 @@ enum RenderPreviewCommand: Subcommand {
             at: outURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try MainActor.assumeIsolated {
             guard let renderer = OffscreenRenderer() else {
-                throw ScriptError.message("Headless OffscreenRenderer unavailable (Metal device missing?)")
+                throw ScriptError.message(
+                    "Headless OffscreenRenderer unavailable (Metal device missing?)")
             }
             let options = OffscreenRenderOptions(
                 width: req.width,
@@ -232,11 +236,12 @@ enum RenderPreviewCommand: Subcommand {
             }
         }
 
-        try GraphIO.emitJSON(Response(
-            outputPath: outURL.path,
-            width: req.width, height: req.height,
-            mimeType: "image/png"
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                outputPath: outURL.path,
+                width: req.width, height: req.height,
+                mimeType: "image/png"
+            ))
         return 0
     }
 
@@ -256,13 +261,27 @@ enum RenderPreviewCommand: Subcommand {
             let dir: SIMD3<Float>
             let up: SIMD3<Float>
             switch preset {
-            case .iso:    dir = simd_normalize(SIMD3<Float>(1, -1, 1));  up = SIMD3(0, 0, 1)
-            case .front:  dir = SIMD3<Float>(0, -1, 0);                  up = SIMD3(0, 0, 1)
-            case .back:   dir = SIMD3<Float>(0, 1, 0);                   up = SIMD3(0, 0, 1)
-            case .top:    dir = SIMD3<Float>(0, 0, 1);                   up = SIMD3(0, 1, 0)
-            case .bottom: dir = SIMD3<Float>(0, 0, -1);                  up = SIMD3(0, 1, 0)
-            case .left:   dir = SIMD3<Float>(-1, 0, 0);                  up = SIMD3(0, 0, 1)
-            case .right:  dir = SIMD3<Float>(1, 0, 0);                   up = SIMD3(0, 0, 1)
+            case .iso:
+                dir = simd_normalize(SIMD3<Float>(1, -1, 1))
+                up = SIMD3(0, 0, 1)
+            case .front:
+                dir = SIMD3<Float>(0, -1, 0)
+                up = SIMD3(0, 0, 1)
+            case .back:
+                dir = SIMD3<Float>(0, 1, 0)
+                up = SIMD3(0, 0, 1)
+            case .top:
+                dir = SIMD3<Float>(0, 0, 1)
+                up = SIMD3(0, 1, 0)
+            case .bottom:
+                dir = SIMD3<Float>(0, 0, -1)
+                up = SIMD3(0, 1, 0)
+            case .left:
+                dir = SIMD3<Float>(-1, 0, 0)
+                up = SIMD3(0, 0, 1)
+            case .right:
+                dir = SIMD3<Float>(1, 0, 0)
+                up = SIMD3(0, 0, 1)
             }
             let position = center + dir * distance
             return CameraState.lookAt(target: center, from: position, up: up)
@@ -275,8 +294,8 @@ enum RenderPreviewCommand: Subcommand {
 
     private static func parseBackground(_ s: String) -> SIMD4<Float> {
         switch s {
-        case "light":       return SIMD4(0.92, 0.94, 0.97, 1.0)
-        case "dark":        return SIMD4(0.10, 0.11, 0.13, 1.0)
+        case "light": return SIMD4(0.92, 0.94, 0.97, 1.0)
+        case "dark": return SIMD4(0.10, 0.11, 0.13, 1.0)
         case "transparent": return SIMD4(0.0, 0.0, 0.0, 0.0)
         default:
             // Hex form
@@ -286,7 +305,9 @@ enum RenderPreviewCommand: Subcommand {
             var idx = raw.startIndex
             while idx < raw.endIndex {
                 let next = raw.index(idx, offsetBy: 2)
-                guard let v = UInt8(raw[idx..<next], radix: 16) else { return SIMD4(0.92, 0.94, 0.97, 1.0) }
+                guard let v = UInt8(raw[idx..<next], radix: 16) else {
+                    return SIMD4(0.92, 0.94, 0.97, 1.0)
+                }
                 bytes.append(Float(v) / 255.0)
                 idx = next
             }
@@ -305,7 +326,10 @@ enum RenderPreviewCommand: Subcommand {
         case "flat": return .flat
         case "xray", "x-ray": return .xray
         case "rendered": return .rendered
-        default: throw ScriptError.message("--display-mode must be shaded|wireframe|shaded-with-edges|flat|xray|rendered (got \(s))")
+        default:
+            throw ScriptError.message(
+                "--display-mode must be shaded|wireframe|shaded-with-edges|flat|xray|rendered (got \(s))"
+            )
         }
     }
 
@@ -313,10 +337,13 @@ enum RenderPreviewCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--output") {
+            !args.contains("--output")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
 
         var inputs: [String] = []
         var output: String?
@@ -333,38 +360,52 @@ enum RenderPreviewCommand: Subcommand {
         var axesPosition: AxesPosition = .outside  // default keeps all 3 arrows visible
         var workPlane: WorkPlanePreset?
         var highlights: [TopologyRef] = []
-        var highlightColor = SIMD4<Float>(1.0, 0.65, 0.0, 1.0)  // AIS PresentationStyle.highlighted orange
+        // AIS PresentationStyle.highlighted orange
+        var highlightColor = SIMD4<Float>(1.0, 0.65, 0.0, 1.0)
 
         var i = 0
         while i < args.count {
             let a = args[i]
             switch a {
             case "--output":
-                i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
+                i += 1
+                output = try GraphIO.value(args, at: i, flag: "--output")
             case "--camera":
                 i += 1
                 let s = try GraphIO.value(args, at: i, flag: "--camera")
                 guard let p = CameraSpec.Preset(rawValue: s) else {
-                    throw ScriptError.message("--camera must be iso|front|back|top|bottom|left|right (got \(s))")
+                    throw ScriptError.message(
+                        "--camera must be iso|front|back|top|bottom|left|right (got \(s))")
                 }
                 cameraPreset = p
             case "--camera-position":
-                i += 1; cameraPosition = try parseFloat3(try GraphIO.value(args, at: i, flag: "--camera-position"), name: a)
+                i += 1
+                cameraPosition = try parseFloat3(
+                    try GraphIO.value(args, at: i, flag: "--camera-position"), name: a)
             case "--camera-target":
-                i += 1; cameraTarget = try parseFloat3(try GraphIO.value(args, at: i, flag: "--camera-target"), name: a)
+                i += 1
+                cameraTarget = try parseFloat3(
+                    try GraphIO.value(args, at: i, flag: "--camera-target"), name: a)
             case "--camera-up":
-                i += 1; cameraUp = try parseFloat3(try GraphIO.value(args, at: i, flag: "--camera-up"), name: a)
+                i += 1
+                cameraUp = try parseFloat3(
+                    try GraphIO.value(args, at: i, flag: "--camera-up"), name: a)
             case "--width":
                 i += 1
-                guard let n = Int(try GraphIO.value(args, at: i, flag: "--width")) else { throw ScriptError.message("--width expects an integer") }
+                guard let n = Int(try GraphIO.value(args, at: i, flag: "--width")) else {
+                    throw ScriptError.message("--width expects an integer")
+                }
                 width = n
             case "--height":
                 i += 1
-                guard let n = Int(try GraphIO.value(args, at: i, flag: "--height")) else { throw ScriptError.message("--height expects an integer") }
+                guard let n = Int(try GraphIO.value(args, at: i, flag: "--height")) else {
+                    throw ScriptError.message("--height expects an integer")
+                }
                 height = n
             case "--display-mode":
                 i += 1
-                displayMode = try parseDisplayMode(try GraphIO.value(args, at: i, flag: "--display-mode"))
+                displayMode = try parseDisplayMode(
+                    try GraphIO.value(args, at: i, flag: "--display-mode"))
             case "--background":
                 i += 1
                 background = parseBackground(try GraphIO.value(args, at: i, flag: "--background"))
@@ -372,7 +413,8 @@ enum RenderPreviewCommand: Subcommand {
                 showAxes = true
             case "--axes-position":
                 i += 1
-                axesPosition = try parseAxesPosition(try GraphIO.value(args, at: i, flag: "--axes-position"))
+                axesPosition = try parseAxesPosition(
+                    try GraphIO.value(args, at: i, flag: "--axes-position"))
             case "--show-workplane":
                 i += 1
                 let s = try GraphIO.value(args, at: i, flag: "--show-workplane")
@@ -388,7 +430,8 @@ enum RenderPreviewCommand: Subcommand {
                 }
             case "--highlight-color":
                 i += 1
-                highlightColor = parseBackground(try GraphIO.value(args, at: i, flag: "--highlight-color"))
+                highlightColor = parseBackground(
+                    try GraphIO.value(args, at: i, flag: "--highlight-color"))
             default:
                 if a.hasPrefix("-") { throw ScriptError.message("Unknown flag: \(a)") }
                 inputs.append(a)
@@ -420,10 +463,11 @@ enum RenderPreviewCommand: Subcommand {
 
     // MARK: - AxesPosition
 
-    /// Resolve an `AxesPosition` to a concrete world point. The default
-    /// (`.outside`) anchors the trihedron 20% of the bbox diagonal beyond
-    /// the bbox-min corner, so all three arrows extend INTO the part region
-    /// and stay visible regardless of where the part sits in world space.
+    /// Resolve an `AxesPosition` to a concrete world point.
+    ///
+    /// The default (`.outside`) anchors the trihedron 20% of the bbox diagonal
+    /// beyond the bbox-min corner, so all three arrows extend INTO the part
+    /// region and stay visible regardless of where the part sits in world space.
     private static func resolveAxesAnchor(
         _ position: AxesPosition,
         center: SIMD3<Float>,
@@ -445,8 +489,8 @@ enum RenderPreviewCommand: Subcommand {
 
     private static func parseAxesPosition(_ s: String) throws -> AxesPosition {
         switch s {
-        case "origin":  return .origin
-        case "center":  return .center
+        case "origin": return .origin
+        case "center": return .center
         case "outside": return .outside
         default:
             // Try x,y,z
@@ -465,18 +509,20 @@ enum RenderPreviewCommand: Subcommand {
     private static func parseTopologyRef(_ token: String) throws -> TopologyRef {
         // Split on the bracket; expect exactly `<kind>[<int>]`.
         guard let openBracket = token.firstIndex(of: "["),
-              token.hasSuffix("]") else {
+            token.hasSuffix("]")
+        else {
             throw ScriptError.message(
                 "--highlight token '\(token)' must look like 'face[N]', 'edge[N]', or 'vertex[N]'")
         }
         let kindStr = String(token[token.startIndex..<openBracket]).lowercased()
-        let idxStr = String(token[token.index(after: openBracket)..<token.index(before: token.endIndex)])
+        let idxStr = String(
+            token[token.index(after: openBracket)..<token.index(before: token.endIndex)])
         guard let idx = Int(idxStr) else {
             throw ScriptError.message("--highlight: index in '\(token)' must be an integer")
         }
         switch kindStr {
-        case "face":   return .face(idx)
-        case "edge":   return .edge(idx)
+        case "face": return .face(idx)
+        case "edge": return .edge(idx)
         case "vertex": return .vertex(idx)
         default:
             throw ScriptError.message(
@@ -488,8 +534,8 @@ enum RenderPreviewCommand: Subcommand {
     /// stable label for warnings / body-id construction.
     private static func subShapeKey(_ ref: TopologyRef) -> (ShapeType, Int, String) {
         switch ref {
-        case .face(let i):   return (.face,   i, "face[\(i)]")
-        case .edge(let i):   return (.edge,   i, "edge[\(i)]")
+        case .face(let i): return (.face, i, "face[\(i)]")
+        case .edge(let i): return (.edge, i, "edge[\(i)]")
         case .vertex(let i): return (.vertex, i, "vertex[\(i)]")
         }
     }
@@ -504,9 +550,10 @@ enum RenderPreviewCommand: Subcommand {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
         var camera: CameraSpec = .preset(.iso)
         if let p = raw.cameraPosition, let t = raw.cameraTarget, p.count == 3, t.count == 3 {
-            let up = (raw.cameraUp?.count == 3) ?
-                SIMD3<Float>(raw.cameraUp![0], raw.cameraUp![1], raw.cameraUp![2]) :
-                SIMD3<Float>(0, 0, 1)
+            let up =
+                (raw.cameraUp?.count == 3)
+                ? SIMD3<Float>(raw.cameraUp![0], raw.cameraUp![1], raw.cameraUp![2])
+                : SIMD3<Float>(0, 0, 1)
             camera = .explicit(
                 position: SIMD3(p[0], p[1], p[2]),
                 target: SIMD3(t[0], t[1], t[2]),

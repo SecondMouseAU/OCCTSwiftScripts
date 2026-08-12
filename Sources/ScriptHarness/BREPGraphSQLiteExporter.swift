@@ -8,7 +8,7 @@ import Foundation
 import OCCTSwift
 
 #if canImport(SQLite3)
-import SQLite3
+    import SQLite3
 #endif
 
 /// Exports a `BRepGraph` to a SQLite database.
@@ -19,6 +19,9 @@ public enum BREPGraphSQLiteExporter {
     ///   - graph: The topology graph to export.
     ///   - url: Destination `.sqlite` file URL.
     ///   - description: Optional description stored in metadata.
+    /// - Throws: the underlying `Foundation` I/O error if an existing file at
+    ///   `url` can't be removed, or `SQLiteExportError` if the database can't be
+    ///   opened or a statement can't be prepared.
     public static func export(_ graph: BRepGraph, to url: URL, description: String? = nil) throws {
         // Remove existing file
         if FileManager.default.fileExists(atPath: url.path) {
@@ -50,209 +53,211 @@ public enum BREPGraphSQLiteExporter {
 
     private static func createSchema(_ db: OpaquePointer) throws {
         let ddl = """
-        CREATE TABLE meta (
-            key   TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
+            CREATE TABLE meta (
+                key   TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
 
-        CREATE TABLE stats (
-            category TEXT NOT NULL,
-            key      TEXT NOT NULL,
-            value    INTEGER NOT NULL,
-            PRIMARY KEY (category, key)
-        );
+            CREATE TABLE stats (
+                category TEXT NOT NULL,
+                key      TEXT NOT NULL,
+                value    INTEGER NOT NULL,
+                PRIMARY KEY (category, key)
+            );
 
-        CREATE TABLE validation (
-            is_valid      INTEGER NOT NULL,
-            error_count   INTEGER NOT NULL,
-            warning_count INTEGER NOT NULL
-        );
+            CREATE TABLE validation (
+                is_valid      INTEGER NOT NULL,
+                error_count   INTEGER NOT NULL,
+                warning_count INTEGER NOT NULL
+            );
 
-        CREATE TABLE root_nodes (
-            kind INTEGER NOT NULL,
-            idx  INTEGER NOT NULL,
-            PRIMARY KEY (kind, idx)
-        );
+            CREATE TABLE root_nodes (
+                kind INTEGER NOT NULL,
+                idx  INTEGER NOT NULL,
+                PRIMARY KEY (kind, idx)
+            );
 
-        CREATE TABLE nodes (
-            kind     INTEGER NOT NULL,
-            idx      INTEGER NOT NULL,
-            removed  INTEGER NOT NULL DEFAULT 0,
-            PRIMARY KEY (kind, idx)
-        );
-        CREATE INDEX idx_nodes_kind ON nodes(kind);
+            CREATE TABLE nodes (
+                kind     INTEGER NOT NULL,
+                idx      INTEGER NOT NULL,
+                removed  INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (kind, idx)
+            );
+            CREATE INDEX idx_nodes_kind ON nodes(kind);
 
-        CREATE TABLE vertex_props (
-            idx        INTEGER PRIMARY KEY,
-            x          REAL NOT NULL,
-            y          REAL NOT NULL,
-            z          REAL NOT NULL,
-            tolerance  REAL NOT NULL,
-            edge_count INTEGER NOT NULL
-        );
+            CREATE TABLE vertex_props (
+                idx        INTEGER PRIMARY KEY,
+                x          REAL NOT NULL,
+                y          REAL NOT NULL,
+                z          REAL NOT NULL,
+                tolerance  REAL NOT NULL,
+                edge_count INTEGER NOT NULL
+            );
 
-        CREATE TABLE edge_props (
-            idx              INTEGER PRIMARY KEY,
-            tolerance        REAL    NOT NULL,
-            degenerated      INTEGER NOT NULL,
-            closed           INTEGER NOT NULL,
-            has_curve        INTEGER NOT NULL,
-            has_polygon_3d   INTEGER NOT NULL,
-            same_parameter   INTEGER NOT NULL,
-            same_range       INTEGER NOT NULL,
-            max_continuity   INTEGER NOT NULL,
-            range_first      REAL    NOT NULL,
-            range_last       REAL    NOT NULL,
-            start_vertex     INTEGER,
-            end_vertex       INTEGER,
-            is_boundary      INTEGER NOT NULL,
-            is_manifold      INTEGER NOT NULL,
-            face_count       INTEGER NOT NULL,
-            wire_count       INTEGER NOT NULL,
-            coedge_count     INTEGER NOT NULL
-        );
+            CREATE TABLE edge_props (
+                idx              INTEGER PRIMARY KEY,
+                tolerance        REAL    NOT NULL,
+                degenerated      INTEGER NOT NULL,
+                closed           INTEGER NOT NULL,
+                has_curve        INTEGER NOT NULL,
+                has_polygon_3d   INTEGER NOT NULL,
+                same_parameter   INTEGER NOT NULL,
+                same_range       INTEGER NOT NULL,
+                max_continuity   INTEGER NOT NULL,
+                range_first      REAL    NOT NULL,
+                range_last       REAL    NOT NULL,
+                start_vertex     INTEGER,
+                end_vertex       INTEGER,
+                is_boundary      INTEGER NOT NULL,
+                is_manifold      INTEGER NOT NULL,
+                face_count       INTEGER NOT NULL,
+                wire_count       INTEGER NOT NULL,
+                coedge_count     INTEGER NOT NULL
+            );
 
-        CREATE TABLE face_props (
-            idx                 INTEGER PRIMARY KEY,
-            tolerance           REAL    NOT NULL,
-            has_surface         INTEGER NOT NULL,
-            has_triangulation   INTEGER NOT NULL,
-            natural_restriction INTEGER NOT NULL,
-            wire_count          INTEGER NOT NULL,
-            outer_wire          INTEGER,
-            vertex_ref_count    INTEGER NOT NULL,
-            shell_count         INTEGER NOT NULL,
-            compound_count      INTEGER NOT NULL
-        );
+            CREATE TABLE face_props (
+                idx                 INTEGER PRIMARY KEY,
+                tolerance           REAL    NOT NULL,
+                has_surface         INTEGER NOT NULL,
+                has_triangulation   INTEGER NOT NULL,
+                natural_restriction INTEGER NOT NULL,
+                wire_count          INTEGER NOT NULL,
+                outer_wire          INTEGER,
+                vertex_ref_count    INTEGER NOT NULL,
+                shell_count         INTEGER NOT NULL,
+                compound_count      INTEGER NOT NULL
+            );
 
-        CREATE TABLE wire_props (
-            idx          INTEGER PRIMARY KEY,
-            closed       INTEGER NOT NULL,
-            coedge_count INTEGER NOT NULL,
-            face_count   INTEGER NOT NULL
-        );
+            CREATE TABLE wire_props (
+                idx          INTEGER PRIMARY KEY,
+                closed       INTEGER NOT NULL,
+                coedge_count INTEGER NOT NULL,
+                face_count   INTEGER NOT NULL
+            );
 
-        CREATE TABLE coedge_props (
-            idx         INTEGER PRIMARY KEY,
-            edge_idx    INTEGER NOT NULL,
-            face_idx    INTEGER NOT NULL,
-            seam_pair   INTEGER,
-            has_pcurve  INTEGER NOT NULL,
-            range_first REAL    NOT NULL,
-            range_last  REAL    NOT NULL
-        );
+            CREATE TABLE coedge_props (
+                idx         INTEGER PRIMARY KEY,
+                edge_idx    INTEGER NOT NULL,
+                face_idx    INTEGER NOT NULL,
+                seam_pair   INTEGER,
+                has_pcurve  INTEGER NOT NULL,
+                range_first REAL    NOT NULL,
+                range_last  REAL    NOT NULL
+            );
 
-        CREATE TABLE shell_props (
-            idx            INTEGER PRIMARY KEY,
-            closed         INTEGER NOT NULL,
-            solid_count    INTEGER NOT NULL,
-            compound_count INTEGER NOT NULL
-        );
+            CREATE TABLE shell_props (
+                idx            INTEGER PRIMARY KEY,
+                closed         INTEGER NOT NULL,
+                solid_count    INTEGER NOT NULL,
+                compound_count INTEGER NOT NULL
+            );
 
-        CREATE TABLE solid_props (
-            idx               INTEGER PRIMARY KEY,
-            comp_solid_count  INTEGER NOT NULL,
-            compound_count    INTEGER NOT NULL
-        );
+            CREATE TABLE solid_props (
+                idx               INTEGER PRIMARY KEY,
+                comp_solid_count  INTEGER NOT NULL,
+                compound_count    INTEGER NOT NULL
+            );
 
-        CREATE TABLE compound_props (
-            idx           INTEGER PRIMARY KEY,
-            child_count   INTEGER NOT NULL,
-            parent_count  INTEGER NOT NULL
-        );
+            CREATE TABLE compound_props (
+                idx           INTEGER PRIMARY KEY,
+                child_count   INTEGER NOT NULL,
+                parent_count  INTEGER NOT NULL
+            );
 
-        CREATE TABLE comp_solid_props (
-            idx            INTEGER PRIMARY KEY,
-            solid_count    INTEGER NOT NULL,
-            compound_count INTEGER NOT NULL
-        );
+            CREATE TABLE comp_solid_props (
+                idx            INTEGER PRIMARY KEY,
+                solid_count    INTEGER NOT NULL,
+                compound_count INTEGER NOT NULL
+            );
 
-        CREATE TABLE refs (
-            ref_kind       INTEGER NOT NULL,
-            ref_idx        INTEGER NOT NULL,
-            child_kind     INTEGER NOT NULL,
-            child_idx      INTEGER NOT NULL,
-            orientation    INTEGER NOT NULL DEFAULT 0,
-            removed        INTEGER NOT NULL DEFAULT 0,
-            PRIMARY KEY (ref_kind, ref_idx)
-        );
-        CREATE INDEX idx_refs_child ON refs(child_kind, child_idx);
+            CREATE TABLE refs (
+                ref_kind       INTEGER NOT NULL,
+                ref_idx        INTEGER NOT NULL,
+                child_kind     INTEGER NOT NULL,
+                child_idx      INTEGER NOT NULL,
+                orientation    INTEGER NOT NULL DEFAULT 0,
+                removed        INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (ref_kind, ref_idx)
+            );
+            CREATE INDEX idx_refs_child ON refs(child_kind, child_idx);
 
-        CREATE TABLE face_adjacency (
-            face_a INTEGER NOT NULL,
-            face_b INTEGER NOT NULL,
-            PRIMARY KEY (face_a, face_b)
-        );
-        CREATE INDEX idx_face_adj_b ON face_adjacency(face_b);
+            CREATE TABLE face_adjacency (
+                face_a INTEGER NOT NULL,
+                face_b INTEGER NOT NULL,
+                PRIMARY KEY (face_a, face_b)
+            );
+            CREATE INDEX idx_face_adj_b ON face_adjacency(face_b);
 
-        CREATE TABLE shared_edges (
-            face_a   INTEGER NOT NULL,
-            face_b   INTEGER NOT NULL,
-            edge_idx INTEGER NOT NULL,
-            PRIMARY KEY (face_a, face_b, edge_idx)
-        );
+            CREATE TABLE shared_edges (
+                face_a   INTEGER NOT NULL,
+                face_b   INTEGER NOT NULL,
+                edge_idx INTEGER NOT NULL,
+                PRIMARY KEY (face_a, face_b, edge_idx)
+            );
 
-        CREATE TABLE edge_adjacency (
-            edge_a INTEGER NOT NULL,
-            edge_b INTEGER NOT NULL,
-            PRIMARY KEY (edge_a, edge_b)
-        );
+            CREATE TABLE edge_adjacency (
+                edge_a INTEGER NOT NULL,
+                edge_b INTEGER NOT NULL,
+                PRIMARY KEY (edge_a, edge_b)
+            );
 
-        CREATE TABLE same_domain_faces (
-            face_a INTEGER NOT NULL,
-            face_b INTEGER NOT NULL,
-            PRIMARY KEY (face_a, face_b)
-        );
+            CREATE TABLE same_domain_faces (
+                face_a INTEGER NOT NULL,
+                face_b INTEGER NOT NULL,
+                PRIMARY KEY (face_a, face_b)
+            );
 
-        CREATE TABLE face_edge_incidence (
-            face_idx INTEGER NOT NULL,
-            edge_idx INTEGER NOT NULL,
-            PRIMARY KEY (face_idx, edge_idx)
-        );
-        CREATE INDEX idx_fei_edge ON face_edge_incidence(edge_idx);
+            CREATE TABLE face_edge_incidence (
+                face_idx INTEGER NOT NULL,
+                edge_idx INTEGER NOT NULL,
+                PRIMARY KEY (face_idx, edge_idx)
+            );
+            CREATE INDEX idx_fei_edge ON face_edge_incidence(edge_idx);
 
-        CREATE TABLE edge_vertex_incidence (
-            edge_idx   INTEGER NOT NULL,
-            vertex_idx INTEGER NOT NULL,
-            role       TEXT NOT NULL,
-            PRIMARY KEY (edge_idx, vertex_idx, role)
-        );
-        CREATE INDEX idx_evi_vertex ON edge_vertex_incidence(vertex_idx);
+            CREATE TABLE edge_vertex_incidence (
+                edge_idx   INTEGER NOT NULL,
+                vertex_idx INTEGER NOT NULL,
+                role       TEXT NOT NULL,
+                PRIMARY KEY (edge_idx, vertex_idx, role)
+            );
+            CREATE INDEX idx_evi_vertex ON edge_vertex_incidence(vertex_idx);
 
-        CREATE TABLE vertex_edge_incidence (
-            vertex_idx INTEGER NOT NULL,
-            edge_idx   INTEGER NOT NULL,
-            PRIMARY KEY (vertex_idx, edge_idx)
-        );
+            CREATE TABLE vertex_edge_incidence (
+                vertex_idx INTEGER NOT NULL,
+                edge_idx   INTEGER NOT NULL,
+                PRIMARY KEY (vertex_idx, edge_idx)
+            );
 
-        CREATE TABLE products (
-            idx             INTEGER PRIMARY KEY,
-            is_assembly     INTEGER NOT NULL,
-            is_part         INTEGER NOT NULL,
-            component_count INTEGER NOT NULL,
-            shape_root_kind INTEGER,
-            shape_root_idx  INTEGER
-        );
+            CREATE TABLE products (
+                idx             INTEGER PRIMARY KEY,
+                is_assembly     INTEGER NOT NULL,
+                is_part         INTEGER NOT NULL,
+                component_count INTEGER NOT NULL,
+                shape_root_kind INTEGER,
+                shape_root_idx  INTEGER
+            );
 
-        CREATE TABLE occurrences (
-            idx                     INTEGER PRIMARY KEY,
-            product_idx             INTEGER NOT NULL,
-            parent_product_idx      INTEGER NOT NULL
-            -- OCCT 8.0.0 reshaped assembly topology to Product → Occurrence →
-            -- Product, so an occurrence has only one parent (a product); the
-            -- old parent_occurrence_idx column was removed in v1.0.0.
-        );
+            CREATE TABLE occurrences (
+                idx                     INTEGER PRIMARY KEY,
+                product_idx             INTEGER NOT NULL,
+                parent_product_idx      INTEGER NOT NULL
+                -- OCCT 8.0.0 reshaped assembly topology to Product → Occurrence →
+                -- Product, so an occurrence has only one parent (a product); the
+                -- old parent_occurrence_idx column was removed in v1.0.0.
+            );
 
-        CREATE TABLE root_products (
-            product_idx INTEGER PRIMARY KEY
-        );
-        """
+            CREATE TABLE root_products (
+                product_idx INTEGER PRIMARY KEY
+            );
+            """
         try exec(db, ddl)
     }
 
     // MARK: - Metadata
 
-    private static func insertMeta(_ db: OpaquePointer, graph g: BRepGraph, description: String?) throws {
+    private static func insertMeta(_ db: OpaquePointer, graph g: BRepGraph, description: String?)
+        throws
+    {
         let metaInsert = "INSERT INTO meta (key, value) VALUES (?, ?)"
         try insert(db, metaInsert, "schema_version", "1.0.0")
         try insert(db, metaInsert, "generator", "OCCTSwift/BREPGraph")
@@ -268,29 +273,34 @@ public enum BREPGraphSQLiteExporter {
             ("compounds", s.compounds), ("solids", s.solids), ("shells", s.shells),
             ("faces", s.faces), ("wires", s.wires), ("edges", s.edges),
             ("vertices", s.vertices), ("coedges", s.coedges), ("totalNodes", s.totalNodes),
-            ("compSolids", g.compSolidCount)
+            ("compSolids", g.compSolidCount),
         ]
         for (k, v) in topoStats { try insertStat(db, statInsert, "topology", k, v) }
 
         let geomStats: [(String, Int)] = [
-            ("surfaces", s.surfaces), ("curves3D", s.curves3D), ("curves2D", s.curves2D)
+            ("surfaces", s.surfaces), ("curves3D", s.curves3D), ("curves2D", s.curves2D),
         ]
         for (k, v) in geomStats { try insertStat(db, statInsert, "geometry", k, v) }
 
         let activeStats: [(String, Int)] = [
             ("faces", g.activeFaceCount), ("edges", g.activeEdgeCount),
             ("vertices", g.activeVertexCount), ("surfaces", g.activeSurfaceCount),
-            ("curves3D", g.activeCurve3DCount), ("curves2D", g.activeCurve2DCount)
+            ("curves3D", g.activeCurve3DCount), ("curves2D", g.activeCurve2DCount),
         ]
         for (k, v) in activeStats { try insertStat(db, statInsert, "active", k, v) }
 
         // Validation
         let v = g.validate()
-        try exec(db, "INSERT INTO validation VALUES (\(v.isValid ? 1 : 0), \(v.errorCount), \(v.warningCount))")
+        try exec(
+            db,
+            "INSERT INTO validation VALUES (\(v.isValid ? 1 : 0), \(v.errorCount), \(v.warningCount))"
+        )
 
         // Root nodes
         for root in g.rootNodes {
-            try exec(db, "INSERT INTO root_nodes (kind, idx) VALUES (\(root.kind.rawValue), \(root.index))")
+            try exec(
+                db,
+                "INSERT INTO root_nodes (kind, idx) VALUES (\(root.kind.rawValue), \(root.index))")
         }
     }
 
@@ -299,14 +309,19 @@ public enum BREPGraphSQLiteExporter {
     private static func insertNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         // Vertices
         let nodeInsert = "INSERT INTO nodes (kind, idx, removed) VALUES (?, ?, ?)"
-        let vtxInsert = "INSERT INTO vertex_props (idx, x, y, z, tolerance, edge_count) VALUES (?, ?, ?, ?, ?, ?)"
+        let vtxInsert =
+            "INSERT INTO vertex_props (idx, x, y, z, tolerance, edge_count) VALUES (?, ?, ?, ?, ?, ?)"
         var vtxStmt: OpaquePointer?
         var nodeStmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, vtxInsert, -1, &vtxStmt, nil) == SQLITE_OK,
-              sqlite3_prepare_v2(db, nodeInsert, -1, &nodeStmt, nil) == SQLITE_OK else {
+            sqlite3_prepare_v2(db, nodeInsert, -1, &nodeStmt, nil) == SQLITE_OK
+        else {
             throw SQLiteExportError.prepareFailed
         }
-        defer { sqlite3_finalize(vtxStmt); sqlite3_finalize(nodeStmt) }
+        defer {
+            sqlite3_finalize(vtxStmt)
+            sqlite3_finalize(nodeStmt)
+        }
 
         for i in 0..<g.vertexCount {
             let pt = g.vertexPoint(i)
@@ -354,11 +369,11 @@ public enum BREPGraphSQLiteExporter {
 
     private static func insertEdgeNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = """
-        INSERT INTO edge_props (idx, tolerance, degenerated, closed, has_curve, has_polygon_3d,
-            same_parameter, same_range, max_continuity, range_first, range_last,
-            start_vertex, end_vertex, is_boundary, is_manifold, face_count, wire_count, coedge_count)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """
+            INSERT INTO edge_props (idx, tolerance, degenerated, closed, has_curve, has_polygon_3d,
+                same_parameter, same_range, max_continuity, range_first, range_last,
+                start_vertex, end_vertex, is_boundary, is_manifold, face_count, wire_count, coedge_count)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed
@@ -394,10 +409,16 @@ public enum BREPGraphSQLiteExporter {
             sqlite3_bind_int(stmt, 9, Int32(g.edgeMaxContinuity(i)))
             sqlite3_bind_double(stmt, 10, r.first)
             sqlite3_bind_double(stmt, 11, r.last)
-            if let sv = g.edgeStartVertex(i) { sqlite3_bind_int(stmt, 12, Int32(sv)) }
-            else { sqlite3_bind_null(stmt, 12) }
-            if let ev = g.edgeEndVertex(i) { sqlite3_bind_int(stmt, 13, Int32(ev)) }
-            else { sqlite3_bind_null(stmt, 13) }
+            if let sv = g.edgeStartVertex(i) {
+                sqlite3_bind_int(stmt, 12, Int32(sv))
+            } else {
+                sqlite3_bind_null(stmt, 12)
+            }
+            if let ev = g.edgeEndVertex(i) {
+                sqlite3_bind_int(stmt, 13, Int32(ev))
+            } else {
+                sqlite3_bind_null(stmt, 13)
+            }
             sqlite3_bind_int(stmt, 14, g.isBoundaryEdge(i) ? 1 : 0)
             sqlite3_bind_int(stmt, 15, g.isManifoldEdge(i) ? 1 : 0)
             sqlite3_bind_int(stmt, 16, Int32(g.faces(of: i).count))
@@ -409,10 +430,10 @@ public enum BREPGraphSQLiteExporter {
 
     private static func insertFaceNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
         let sql = """
-        INSERT INTO face_props (idx, tolerance, has_surface, has_triangulation, natural_restriction,
-            wire_count, outer_wire, vertex_ref_count, shell_count, compound_count)
-        VALUES (?,?,?,?,?,?,?,?,?,?)
-        """
+            INSERT INTO face_props (idx, tolerance, has_surface, has_triangulation, natural_restriction,
+                wire_count, outer_wire, vertex_ref_count, shell_count, compound_count)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
+            """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed
@@ -482,7 +503,8 @@ public enum BREPGraphSQLiteExporter {
     }
 
     private static func insertCoEdgeNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
-        let sql = "INSERT INTO coedge_props (idx, edge_idx, face_idx, seam_pair, has_pcurve, range_first, range_last) VALUES (?,?,?,?,?,?,?)"
+        let sql =
+            "INSERT INTO coedge_props (idx, edge_idx, face_idx, seam_pair, has_pcurve, range_first, range_last) VALUES (?,?,?,?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed
@@ -510,8 +532,11 @@ public enum BREPGraphSQLiteExporter {
             sqlite3_bind_int(stmt, 1, Int32(i))
             sqlite3_bind_int(stmt, 2, Int32(g.coedgeEdge(i)))
             sqlite3_bind_int(stmt, 3, Int32(g.coedgeFace(i)))
-            if let sp = g.coedgeSeamPair(i) { sqlite3_bind_int(stmt, 4, Int32(sp)) }
-            else { sqlite3_bind_null(stmt, 4) }
+            if let sp = g.coedgeSeamPair(i) {
+                sqlite3_bind_int(stmt, 4, Int32(sp))
+            } else {
+                sqlite3_bind_null(stmt, 4)
+            }
             sqlite3_bind_int(stmt, 5, g.coedgeHasPCurve(i) ? 1 : 0)
             sqlite3_bind_double(stmt, 6, r.first)
             sqlite3_bind_double(stmt, 7, r.last)
@@ -520,7 +545,8 @@ public enum BREPGraphSQLiteExporter {
     }
 
     private static func insertShellNodes(_ db: OpaquePointer, graph g: BRepGraph) throws {
-        let sql = "INSERT INTO shell_props (idx, closed, solid_count, compound_count) VALUES (?,?,?,?)"
+        let sql =
+            "INSERT INTO shell_props (idx, closed, solid_count, compound_count) VALUES (?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed
@@ -647,7 +673,8 @@ public enum BREPGraphSQLiteExporter {
     // MARK: - References
 
     private static func insertReferences(_ db: OpaquePointer, graph g: BRepGraph) throws {
-        let sql = "INSERT INTO refs (ref_kind, ref_idx, child_kind, child_idx, orientation, removed) VALUES (?,?,?,?,?,?)"
+        let sql =
+            "INSERT INTO refs (ref_kind, ref_idx, child_kind, child_idx, orientation, removed) VALUES (?,?,?,?,?,?)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed
@@ -658,7 +685,7 @@ public enum BREPGraphSQLiteExporter {
             (.shell, g.shellRefCount), (.face, g.faceRefCount),
             (.wire, g.wireRefCount), (.coedge, g.coedgeRefCount),
             (.vertex, g.vertexRefCount), (.solid, g.solidRefCount),
-            (.child, g.childRefCount), (.occurrence, g.occurrenceRefCount)
+            (.child, g.childRefCount), (.occurrence, g.occurrenceRefCount),
         ]
 
         for (refKind, count) in refKinds {
@@ -681,12 +708,16 @@ public enum BREPGraphSQLiteExporter {
     private static func insertAdjacency(_ db: OpaquePointer, graph g: BRepGraph) throws {
         // Face adjacency
         var faStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO face_adjacency (face_a, face_b) VALUES (?,?)", -1, &faStmt, nil)
+        sqlite3_prepare_v2(
+            db, "INSERT OR IGNORE INTO face_adjacency (face_a, face_b) VALUES (?,?)", -1, &faStmt,
+            nil)
         defer { sqlite3_finalize(faStmt) }
 
         // Shared edges
         var seStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO shared_edges (face_a, face_b, edge_idx) VALUES (?,?,?)", -1, &seStmt, nil)
+        sqlite3_prepare_v2(
+            db, "INSERT OR IGNORE INTO shared_edges (face_a, face_b, edge_idx) VALUES (?,?,?)", -1,
+            &seStmt, nil)
         defer { sqlite3_finalize(seStmt) }
 
         for i in 0..<g.faceCount {
@@ -708,26 +739,37 @@ public enum BREPGraphSQLiteExporter {
 
             // Same-domain faces
             for sd in g.sameDomainFaces(of: i) {
-                try exec(db, "INSERT OR IGNORE INTO same_domain_faces (face_a, face_b) VALUES (\(i), \(sd))")
+                try exec(
+                    db,
+                    "INSERT OR IGNORE INTO same_domain_faces (face_a, face_b) VALUES (\(i), \(sd))")
             }
         }
 
         // Edge adjacency
         var eaStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO edge_adjacency (edge_a, edge_b) VALUES (?,?)", -1, &eaStmt, nil)
+        sqlite3_prepare_v2(
+            db, "INSERT OR IGNORE INTO edge_adjacency (edge_a, edge_b) VALUES (?,?)", -1, &eaStmt,
+            nil)
         defer { sqlite3_finalize(eaStmt) }
 
         // Face-edge incidence + edge-vertex incidence
         var feiStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO face_edge_incidence (face_idx, edge_idx) VALUES (?,?)", -1, &feiStmt, nil)
+        sqlite3_prepare_v2(
+            db, "INSERT OR IGNORE INTO face_edge_incidence (face_idx, edge_idx) VALUES (?,?)", -1,
+            &feiStmt, nil)
         defer { sqlite3_finalize(feiStmt) }
 
         var eviStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO edge_vertex_incidence (edge_idx, vertex_idx, role) VALUES (?,?,?)", -1, &eviStmt, nil)
+        sqlite3_prepare_v2(
+            db,
+            "INSERT OR IGNORE INTO edge_vertex_incidence (edge_idx, vertex_idx, role) VALUES (?,?,?)",
+            -1, &eviStmt, nil)
         defer { sqlite3_finalize(eviStmt) }
 
         var veiStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT OR IGNORE INTO vertex_edge_incidence (vertex_idx, edge_idx) VALUES (?,?)", -1, &veiStmt, nil)
+        sqlite3_prepare_v2(
+            db, "INSERT OR IGNORE INTO vertex_edge_incidence (vertex_idx, edge_idx) VALUES (?,?)",
+            -1, &veiStmt, nil)
         defer { sqlite3_finalize(veiStmt) }
 
         for i in 0..<g.edgeCount {
@@ -779,14 +821,18 @@ public enum BREPGraphSQLiteExporter {
             let root = g.productShapeRoot(i)
             let rootKindStr = root.map { "\($0.kind.rawValue)" } ?? "NULL"
             let rootIdxStr = root.map { "\($0.index)" } ?? "NULL"
-            try exec(db, """
+            try exec(
+                db,
+                """
                 INSERT INTO products (idx, is_assembly, is_part, component_count, shape_root_kind, shape_root_idx)
                 VALUES (\(i), \(g.productIsAssembly(i) ? 1 : 0), \(g.productIsPart(i) ? 1 : 0), \(g.productComponentCount(i)), \(rootKindStr), \(rootIdxStr))
                 """)
         }
 
         for i in 0..<g.occurrenceCount {
-            try exec(db, """
+            try exec(
+                db,
+                """
                 INSERT INTO occurrences (idx, product_idx, parent_product_idx)
                 VALUES (\(i), \(g.occurrenceProduct(i)), \(g.occurrenceParentProduct(i)))
                 """)
@@ -801,61 +847,61 @@ public enum BREPGraphSQLiteExporter {
 
     private static func createViews(_ db: OpaquePointer) throws {
         let views = """
-        CREATE VIEW boundary_edges AS
-        SELECT * FROM edge_props WHERE is_boundary = 1;
+            CREATE VIEW boundary_edges AS
+            SELECT * FROM edge_props WHERE is_boundary = 1;
 
-        CREATE VIEW non_manifold_edges AS
-        SELECT * FROM edge_props WHERE is_manifold = 0 AND is_boundary = 0;
+            CREATE VIEW non_manifold_edges AS
+            SELECT * FROM edge_props WHERE is_manifold = 0 AND is_boundary = 0;
 
-        CREATE VIEW manifold_edges AS
-        SELECT * FROM edge_props WHERE is_manifold = 1;
+            CREATE VIEW manifold_edges AS
+            SELECT * FROM edge_props WHERE is_manifold = 1;
 
-        CREATE VIEW free_edges AS
-        SELECT * FROM edge_props WHERE face_count = 0;
+            CREATE VIEW free_edges AS
+            SELECT * FROM edge_props WHERE face_count = 0;
 
-        CREATE VIEW degenerate_edges AS
-        SELECT * FROM edge_props WHERE degenerated = 1;
+            CREATE VIEW degenerate_edges AS
+            SELECT * FROM edge_props WHERE degenerated = 1;
 
-        CREATE VIEW open_shells AS
-        SELECT * FROM shell_props WHERE closed = 0;
+            CREATE VIEW open_shells AS
+            SELECT * FROM shell_props WHERE closed = 0;
 
-        CREATE VIEW open_wires AS
-        SELECT * FROM wire_props WHERE closed = 0;
+            CREATE VIEW open_wires AS
+            SELECT * FROM wire_props WHERE closed = 0;
 
-        CREATE VIEW seam_coedges AS
-        SELECT c1.idx AS coedge_a, c1.seam_pair AS coedge_b,
-               c1.face_idx, c1.edge_idx
-        FROM   coedge_props c1
-        WHERE  c1.seam_pair IS NOT NULL
-          AND  c1.idx < c1.seam_pair;
+            CREATE VIEW seam_coedges AS
+            SELECT c1.idx AS coedge_a, c1.seam_pair AS coedge_b,
+                   c1.face_idx, c1.edge_idx
+            FROM   coedge_props c1
+            WHERE  c1.seam_pair IS NOT NULL
+              AND  c1.idx < c1.seam_pair;
 
-        CREATE VIEW face_valence AS
-        SELECT face_a AS face_idx, COUNT(*) AS neighbor_count
-        FROM   face_adjacency
-        GROUP BY face_a;
+            CREATE VIEW face_valence AS
+            SELECT face_a AS face_idx, COUNT(*) AS neighbor_count
+            FROM   face_adjacency
+            GROUP BY face_a;
 
-        CREATE VIEW vertex_valence AS
-        SELECT vertex_idx, COUNT(*) AS edge_count
-        FROM   vertex_edge_incidence
-        GROUP BY vertex_idx;
+            CREATE VIEW vertex_valence AS
+            SELECT vertex_idx, COUNT(*) AS edge_count
+            FROM   vertex_edge_incidence
+            GROUP BY vertex_idx;
 
-        CREATE VIEW faces_with_holes AS
-        SELECT * FROM face_props WHERE wire_count > 1;
+            CREATE VIEW faces_with_holes AS
+            SELECT * FROM face_props WHERE wire_count > 1;
 
-        CREATE VIEW topology_summary AS
-        SELECT
-            (SELECT COUNT(*) FROM nodes WHERE kind = 0 AND removed = 0) AS solids,
-            (SELECT COUNT(*) FROM nodes WHERE kind = 1 AND removed = 0) AS shells,
-            (SELECT COUNT(*) FROM nodes WHERE kind = 2 AND removed = 0) AS faces,
-            (SELECT COUNT(*) FROM nodes WHERE kind = 3 AND removed = 0) AS wires,
-            (SELECT COUNT(*) FROM nodes WHERE kind = 4 AND removed = 0) AS edges,
-            (SELECT COUNT(*) FROM nodes WHERE kind = 5 AND removed = 0) AS vertices,
-            (SELECT COUNT(*) FROM nodes WHERE kind = 8 AND removed = 0) AS coedges,
-            (SELECT COUNT(*) FROM boundary_edges) AS boundary_edge_count,
-            (SELECT COUNT(*) FROM non_manifold_edges) AS non_manifold_edge_count,
-            (SELECT COUNT(*) FROM degenerate_edges) AS degenerate_edge_count,
-            (SELECT COUNT(*) FROM open_shells) AS open_shell_count;
-        """
+            CREATE VIEW topology_summary AS
+            SELECT
+                (SELECT COUNT(*) FROM nodes WHERE kind = 0 AND removed = 0) AS solids,
+                (SELECT COUNT(*) FROM nodes WHERE kind = 1 AND removed = 0) AS shells,
+                (SELECT COUNT(*) FROM nodes WHERE kind = 2 AND removed = 0) AS faces,
+                (SELECT COUNT(*) FROM nodes WHERE kind = 3 AND removed = 0) AS wires,
+                (SELECT COUNT(*) FROM nodes WHERE kind = 4 AND removed = 0) AS edges,
+                (SELECT COUNT(*) FROM nodes WHERE kind = 5 AND removed = 0) AS vertices,
+                (SELECT COUNT(*) FROM nodes WHERE kind = 8 AND removed = 0) AS coedges,
+                (SELECT COUNT(*) FROM boundary_edges) AS boundary_edge_count,
+                (SELECT COUNT(*) FROM non_manifold_edges) AS non_manifold_edge_count,
+                (SELECT COUNT(*) FROM degenerate_edges) AS degenerate_edge_count,
+                (SELECT COUNT(*) FROM open_shells) AS open_shell_count;
+            """
         try exec(db, views)
     }
 
@@ -871,7 +917,9 @@ public enum BREPGraphSQLiteExporter {
         }
     }
 
-    private static func insert(_ db: OpaquePointer, _ sql: String, _ key: String, _ value: String) throws {
+    private static func insert(_ db: OpaquePointer, _ sql: String, _ key: String, _ value: String)
+        throws
+    {
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed
@@ -882,7 +930,9 @@ public enum BREPGraphSQLiteExporter {
         sqlite3_step(stmt)
     }
 
-    private static func insertStat(_ db: OpaquePointer, _ sql: String, _ category: String, _ key: String, _ value: Int) throws {
+    private static func insertStat(
+        _ db: OpaquePointer, _ sql: String, _ category: String, _ key: String, _ value: Int
+    ) throws {
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             throw SQLiteExportError.prepareFailed

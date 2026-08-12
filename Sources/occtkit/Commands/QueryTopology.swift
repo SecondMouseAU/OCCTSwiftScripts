@@ -25,9 +25,9 @@
 // `boundingBoxOverlap` from the issue is deferred to v2.
 
 import Foundation
-import simd
 import OCCTSwift
 import ScriptHarness
+import simd
 
 enum QueryTopologyCommand: Subcommand {
     static let name = "query-topology"
@@ -114,12 +114,13 @@ enum QueryTopologyCommand: Subcommand {
             truncated = false
         }
 
-        try GraphIO.emitJSON(Response(
-            entity: req.entity.rawValue,
-            results: limited,
-            total: total,
-            truncated: truncated
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                entity: req.entity.rawValue,
+                results: limited,
+                total: total,
+                truncated: truncated
+            ))
         return 0
     }
 
@@ -135,9 +136,10 @@ enum QueryTopologyCommand: Subcommand {
             if let m = filter.minArea, area < m { continue }
             if let m = filter.maxArea, area > m { continue }
             let bb = face.bounds
-            let center = SIMD3<Double>((bb.min.x + bb.max.x) * 0.5,
-                                       (bb.min.y + bb.max.y) * 0.5,
-                                       (bb.min.z + bb.max.z) * 0.5)
+            let center = SIMD3<Double>(
+                (bb.min.x + bb.max.x) * 0.5,
+                (bb.min.y + bb.max.y) * 0.5,
+                (bb.min.z + bb.max.z) * 0.5)
             let normal: SIMD3<Double>? = {
                 guard let uv = face.uvBounds else { return nil }
                 let u = (uv.uMin + uv.uMax) * 0.5
@@ -153,17 +155,19 @@ enum QueryTopologyCommand: Subcommand {
             } else if filter.normalDirection != nil && normal == nil {
                 continue
             }
-            out.append(.init(
-                id: "face[\(i)]",
-                surfaceType: kind,
-                curveType: nil,
-                area: area,
-                length: nil,
-                centerOfMass: [center.x, center.y, center.z],
-                normal: normal.map { [$0.x, $0.y, $0.z] },
-                boundingBox: .init(min: [bb.min.x, bb.min.y, bb.min.z],
-                                   max: [bb.max.x, bb.max.y, bb.max.z])
-            ))
+            out.append(
+                .init(
+                    id: "face[\(i)]",
+                    surfaceType: kind,
+                    curveType: nil,
+                    area: area,
+                    length: nil,
+                    centerOfMass: [center.x, center.y, center.z],
+                    normal: normal.map { [$0.x, $0.y, $0.z] },
+                    boundingBox: .init(
+                        min: [bb.min.x, bb.min.y, bb.min.z],
+                        max: [bb.max.x, bb.max.y, bb.max.z])
+                ))
         }
         return out
     }
@@ -178,20 +182,23 @@ enum QueryTopologyCommand: Subcommand {
             if let m = filter.minLength, length < m { continue }
             if let m = filter.maxLength, length > m { continue }
             let bb = edge.bounds
-            let center = SIMD3<Double>((bb.min.x + bb.max.x) * 0.5,
-                                       (bb.min.y + bb.max.y) * 0.5,
-                                       (bb.min.z + bb.max.z) * 0.5)
-            out.append(.init(
-                id: "edge[\(i)]",
-                surfaceType: nil,
-                curveType: kind,
-                area: nil,
-                length: length,
-                centerOfMass: [center.x, center.y, center.z],
-                normal: nil,
-                boundingBox: .init(min: [bb.min.x, bb.min.y, bb.min.z],
-                                   max: [bb.max.x, bb.max.y, bb.max.z])
-            ))
+            let center = SIMD3<Double>(
+                (bb.min.x + bb.max.x) * 0.5,
+                (bb.min.y + bb.max.y) * 0.5,
+                (bb.min.z + bb.max.z) * 0.5)
+            out.append(
+                .init(
+                    id: "edge[\(i)]",
+                    surfaceType: nil,
+                    curveType: kind,
+                    area: nil,
+                    length: length,
+                    centerOfMass: [center.x, center.y, center.z],
+                    normal: nil,
+                    boundingBox: .init(
+                        min: [bb.min.x, bb.min.y, bb.min.z],
+                        max: [bb.max.x, bb.max.y, bb.max.z])
+                ))
         }
         return out
     }
@@ -201,17 +208,19 @@ enum QueryTopologyCommand: Subcommand {
         var out: [Response.Result] = []
         for (i, p) in pts.enumerated() {
             let bb = (min: p, max: p)
-            out.append(.init(
-                id: "vertex[\(i)]",
-                surfaceType: nil,
-                curveType: nil,
-                area: nil,
-                length: nil,
-                centerOfMass: [p.x, p.y, p.z],
-                normal: nil,
-                boundingBox: .init(min: [bb.min.x, bb.min.y, bb.min.z],
-                                   max: [bb.max.x, bb.max.y, bb.max.z])
-            ))
+            out.append(
+                .init(
+                    id: "vertex[\(i)]",
+                    surfaceType: nil,
+                    curveType: nil,
+                    area: nil,
+                    length: nil,
+                    centerOfMass: [p.x, p.y, p.z],
+                    normal: nil,
+                    boundingBox: .init(
+                        min: [bb.min.x, bb.min.y, bb.min.z],
+                        max: [bb.max.x, bb.max.y, bb.max.z])
+                ))
         }
         return out
     }
@@ -222,7 +231,9 @@ enum QueryTopologyCommand: Subcommand {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
@@ -241,12 +252,15 @@ enum QueryTopologyCommand: Subcommand {
                 entity = e
             case "--filter":
                 i += 1
-                guard i < args.count else { throw ScriptError.message("--filter expects a JSON value") }
+                guard i < args.count else {
+                    throw ScriptError.message("--filter expects a JSON value")
+                }
                 let data = Data(args[i].utf8)
                 do {
                     filter = try JSONDecoder().decode(Filter.self, from: data)
                 } catch {
-                    throw ScriptError.message("Invalid --filter JSON: \(error.localizedDescription)")
+                    throw ScriptError.message(
+                        "Invalid --filter JSON: \(error.localizedDescription)")
                 }
             case "--limit":
                 i += 1
@@ -265,13 +279,14 @@ enum QueryTopologyCommand: Subcommand {
 
     private static func decodeJSON(data: Data) throws -> Request {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
-        return Request(inputBrep: raw.inputBrep, entity: raw.entity,
-                       filter: raw.filter ?? Filter(), limit: raw.limit)
+        return Request(
+            inputBrep: raw.inputBrep, entity: raw.entity,
+            filter: raw.filter ?? Filter(), limit: raw.limit)
     }
 }
 
-private extension Face.SurfaceType {
-    func toString() -> String {
+extension Face.SurfaceType {
+    fileprivate func toString() -> String {
         switch self {
         case .plane: return "plane"
         case .cylinder: return "cylinder"
@@ -288,8 +303,8 @@ private extension Face.SurfaceType {
     }
 }
 
-private extension Edge.CurveType {
-    func toString() -> String {
+extension Edge.CurveType {
+    fileprivate func toString() -> String {
         switch self {
         case .line: return "line"
         case .circle: return "circle"

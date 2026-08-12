@@ -79,8 +79,10 @@ enum AnalyzeClearanceCommand: Subcommand {
         var pairs: [Response.Pair] = []
         for i in 0..<shapes.count {
             for j in (i + 1)..<shapes.count {
-                let a = shapes[i], b = shapes[j]
-                guard let solutions = a.allDistanceSolutions(to: b, maxSolutions: req.maxContacts) else {
+                let a = shapes[i]
+                let b = shapes[j]
+                guard let solutions = a.allDistanceSolutions(to: b, maxSolutions: req.maxContacts)
+                else {
                     throw ScriptError.message(
                         "Distance computation failed for pair (\(req.inputs[i]), \(req.inputs[j]))")
                 }
@@ -90,22 +92,25 @@ enum AnalyzeClearanceCommand: Subcommand {
                 if intersects, let intersection = a.intersection(b), let v = intersection.volume {
                     interferenceVolume = v
                 }
-                let contacts = req.computeContacts ? solutions.map { sol in
-                    Response.Contact(
-                        fromPoint: [sol.point1.x, sol.point1.y, sol.point1.z],
-                        toPoint: [sol.point2.x, sol.point2.y, sol.point2.z],
-                        distance: sol.distance
-                    )
-                } : []
+                let contacts =
+                    req.computeContacts
+                    ? solutions.map { sol in
+                        Response.Contact(
+                            fromPoint: [sol.point1.x, sol.point1.y, sol.point1.z],
+                            toPoint: [sol.point2.x, sol.point2.y, sol.point2.z],
+                            distance: sol.distance
+                        )
+                    } : []
 
-                pairs.append(Response.Pair(
-                    a: req.inputs[i], b: req.inputs[j],
-                    minDistance: minDist,
-                    intersects: intersects,
-                    belowMinClearance: req.minClearance.map { minDist < $0 },
-                    contacts: contacts,
-                    interferenceVolume: interferenceVolume
-                ))
+                pairs.append(
+                    Response.Pair(
+                        a: req.inputs[i], b: req.inputs[j],
+                        minDistance: minDist,
+                        intersects: intersects,
+                        belowMinClearance: req.minClearance.map { minDist < $0 },
+                        contacts: contacts,
+                        interferenceVolume: interferenceVolume
+                    ))
             }
         }
 
@@ -117,10 +122,13 @@ enum AnalyzeClearanceCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           args.count == 1 {
+            args.count == 1
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         var inputs: [String] = []
         var minClearance: Double?
         var maxContacts = 32
@@ -149,8 +157,9 @@ enum AnalyzeClearanceCommand: Subcommand {
             }
             i += 1
         }
-        return Request(inputs: inputs, minClearance: minClearance,
-                       maxContacts: maxContacts, computeContacts: computeContacts)
+        return Request(
+            inputs: inputs, minClearance: minClearance,
+            maxContacts: maxContacts, computeContacts: computeContacts)
     }
 
     private static func decodeJSON(data: Data) throws -> Request {

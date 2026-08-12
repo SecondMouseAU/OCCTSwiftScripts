@@ -77,13 +77,15 @@ enum LoadBrepCommand: Subcommand {
 
         let manifest = ScriptManifest(
             description: "Imported via load-brep",
-            bodies: [BodyDescriptor(
-                id: bodyId,
-                file: "\(bodyId).brep",
-                format: "brep",
-                name: nil,
-                color: req.color.flatMap { parseHexColor($0) }
-            )]
+            bodies: [
+                BodyDescriptor(
+                    id: bodyId,
+                    file: "\(bodyId).brep",
+                    format: "brep",
+                    name: nil,
+                    color: req.color.flatMap { parseHexColor($0) }
+                )
+            ]
         )
         let manifestURL = emitDir.appendingPathComponent("manifest.json")
         try writeManifest(manifest, to: manifestURL)
@@ -96,10 +98,13 @@ enum LoadBrepCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--emit-manifest") {
+            !args.contains("--emit-manifest")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
@@ -112,7 +117,9 @@ enum LoadBrepCommand: Subcommand {
             switch args[i] {
             case "--emit-manifest":
                 i += 1
-                guard i < args.count else { throw ScriptError.message("--emit-manifest expects a value") }
+                guard i < args.count else {
+                    throw ScriptError.message("--emit-manifest expects a value")
+                }
                 emitManifest = args[i]
             case "--id":
                 i += 1
@@ -130,14 +137,16 @@ enum LoadBrepCommand: Subcommand {
             i += 1
         }
         guard let emitManifest else { throw ScriptError.message("--emit-manifest is required") }
-        return Request(inputBrep: inputBrep, emitManifest: emitManifest, id: id, color: color,
-                       allowInvalid: allowInvalid)
+        return Request(
+            inputBrep: inputBrep, emitManifest: emitManifest, id: id, color: color,
+            allowInvalid: allowInvalid)
     }
 
     private static func decodeJSON(data: Data) throws -> Request {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
-        return Request(inputBrep: raw.inputBrep, emitManifest: raw.emitManifest,
-                       id: raw.id, color: raw.color, allowInvalid: raw.allowInvalid ?? false)
+        return Request(
+            inputBrep: raw.inputBrep, emitManifest: raw.emitManifest,
+            id: raw.id, color: raw.color, allowInvalid: raw.allowInvalid ?? false)
     }
 
     // MARK: - Helpers (shared with Import)

@@ -27,9 +27,9 @@
 //     (Rx then Ry then Rz, extrinsic).
 
 import Foundation
-import simd
 import OCCTSwift
 import ScriptHarness
+import simd
 
 enum TransformCommand: Subcommand {
     static let name = "transform"
@@ -69,11 +69,19 @@ enum TransformCommand: Subcommand {
             case vector([Double])
             init(from decoder: Decoder) throws {
                 let c = try decoder.singleValueContainer()
-                if let d = try? c.decode(Double.self) { self = .uniform(d); return }
-                if let v = try? c.decode([Double].self) { self = .vector(v); return }
-                throw DecodingError.typeMismatch(ScaleSpec.self,
-                    .init(codingPath: decoder.codingPath,
-                          debugDescription: "scale must be Number or [x,y,z]"))
+                if let d = try? c.decode(Double.self) {
+                    self = .uniform(d)
+                    return
+                }
+                if let v = try? c.decode([Double].self) {
+                    self = .vector(v)
+                    return
+                }
+                throw DecodingError.typeMismatch(
+                    ScaleSpec.self,
+                    .init(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "scale must be Number or [x,y,z]"))
             }
         }
     }
@@ -153,9 +161,10 @@ enum TransformCommand: Subcommand {
 
     private static func decodeJSONRequest(data: Data) throws -> Request {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
-        var req = Request(inputBrep: raw.inputBrep, outputPath: raw.outputPath,
-                          translate: nil, rotateAxisAngle: nil,
-                          rotateEulerXyz: nil, scale: nil)
+        var req = Request(
+            inputBrep: raw.inputBrep, outputPath: raw.outputPath,
+            translate: nil, rotateAxisAngle: nil,
+            rotateEulerXyz: nil, scale: nil)
         if let t = raw.translate { req.translate = try GraphIO.vec3(t, name: "translate") }
         if let r = raw.rotateAxisAngle {
             guard r.count == 4 else {
@@ -163,15 +172,20 @@ enum TransformCommand: Subcommand {
             }
             req.rotateAxisAngle = (SIMD3(r[0], r[1], r[2]), r[3])
         }
-        if let e = raw.rotateEulerXyz { req.rotateEulerXyz = try GraphIO.vec3(e, name: "rotateEulerXyz") }
+        if let e = raw.rotateEulerXyz {
+            req.rotateEulerXyz = try GraphIO.vec3(e, name: "rotateEulerXyz")
+        }
         if let s = raw.scale {
             switch s {
             case .uniform(let d): req.scale = d
             case .vector(let v):
-                guard v.count == 3 else { throw ScriptError.message("scale vector must be [x,y,z]") }
+                guard v.count == 3 else {
+                    throw ScriptError.message("scale vector must be [x,y,z]")
+                }
                 guard v[0] == v[1] && v[1] == v[2] else {
                     throw ScriptError.message(
-                        "non-uniform scale not supported (OCCTSwift scaled(by:) is uniform); got \(v)")
+                        "non-uniform scale not supported (OCCTSwift scaled(by:) is uniform); got \(v)"
+                    )
                 }
                 req.scale = v[0]
             }
@@ -197,14 +211,16 @@ enum TransformCommand: Subcommand {
             case "--output":
                 output = try GraphIO.valueAfter(a, at: &i, args: args)
             case "--translate":
-                translate = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+                translate = try GraphIO.parseVec3(
+                    try GraphIO.valueAfter(a, at: &i, args: args), name: a)
             case "--rotate-axis-angle":
                 let s = try GraphIO.valueAfter(a, at: &i, args: args)
                 let v = s.split(separator: ",").compactMap { Double($0) }
                 guard v.count == 4 else { throw ScriptError.message("\(a) expects x,y,z,radians") }
                 rotateAxisAngle = (SIMD3(v[0], v[1], v[2]), v[3])
             case "--rotate-euler-xyz":
-                rotateEulerXyz = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+                rotateEulerXyz = try GraphIO.parseVec3(
+                    try GraphIO.valueAfter(a, at: &i, args: args), name: a)
             case "--scale":
                 let s = try GraphIO.valueAfter(a, at: &i, args: args)
                 let v = s.split(separator: ",").compactMap { Double($0) }
@@ -213,7 +229,8 @@ enum TransformCommand: Subcommand {
                 } else if v.count == 3 {
                     guard v[0] == v[1] && v[1] == v[2] else {
                         throw ScriptError.message(
-                            "non-uniform --scale not supported (OCCTSwift scaled(by:) is uniform); got \(v)")
+                            "non-uniform --scale not supported (OCCTSwift scaled(by:) is uniform); got \(v)"
+                        )
                     }
                     scale = v[0]
                 } else {
@@ -227,9 +244,10 @@ enum TransformCommand: Subcommand {
         guard let outputPath = output else {
             throw ScriptError.message("--output is required")
         }
-        let req = Request(inputBrep: inputBrep, outputPath: outputPath,
-                          translate: translate, rotateAxisAngle: rotateAxisAngle,
-                          rotateEulerXyz: rotateEulerXyz, scale: scale)
+        let req = Request(
+            inputBrep: inputBrep, outputPath: outputPath,
+            translate: translate, rotateAxisAngle: rotateAxisAngle,
+            rotateEulerXyz: rotateEulerXyz, scale: scale)
         try validateRotationExclusivity(req)
         return req
     }
@@ -255,12 +273,16 @@ enum TransformCommand: Subcommand {
 
     private static func makeRotation(axis: SIMD3<Double>, angle: Double) -> simd_double4x4 {
         let n = simd_normalize(axis)
-        let c = cos(angle), s = sin(angle), one = 1 - c
-        let x = n.x, y = n.y, z = n.z
+        let c = cos(angle)
+        let s = sin(angle)
+        let one = 1 - c
+        let x = n.x
+        let y = n.y
+        let z = n.z
         return simd_double4x4(
-            SIMD4(c + x*x*one,      y*x*one + z*s,  z*x*one - y*s,  0),
-            SIMD4(x*y*one - z*s,    c + y*y*one,    z*y*one + x*s,  0),
-            SIMD4(x*z*one + y*s,    y*z*one - x*s,  c + z*z*one,    0),
+            SIMD4(c + x * x * one, y * x * one + z * s, z * x * one - y * s, 0),
+            SIMD4(x * y * one - z * s, c + y * y * one, z * y * one + x * s, 0),
+            SIMD4(x * z * one + y * s, y * z * one - x * s, c + z * z * one, 0),
             SIMD4(0, 0, 0, 1)
         )
     }

@@ -22,7 +22,10 @@ struct MLExport: Codable {
     let edges: [Edge]
     let sampling: Sampling
 
-    struct COO: Codable { let sources: [Int]; let targets: [Int] }
+    struct COO: Codable {
+        let sources: [Int]
+        let targets: [Int]
+    }
     struct Face: Codable {
         let index: Int
         let uSamples: Int
@@ -32,8 +35,14 @@ struct MLExport: Codable {
         let gaussianCurvatures: [Double]
         let meanCurvatures: [Double]
     }
-    struct Edge: Codable { let index: Int; let samples: [[Double]] }
-    struct Sampling: Codable { let uvSamples: Int; let edgeSamples: Int }
+    struct Edge: Codable {
+        let index: Int
+        let samples: [[Double]]
+    }
+    struct Sampling: Codable {
+        let uvSamples: Int
+        let edgeSamples: Int
+    }
 }
 
 func parseInt(_ name: String, default def: Int, args: [String]) -> Int {
@@ -41,7 +50,10 @@ func parseInt(_ name: String, default def: Int, args: [String]) -> Int {
     return Int(args[i + 1]) ?? def
 }
 
-FileHandle.standardError.write(Data("DEPRECATED: 'GraphML' standalone target will be removed in a future release. Use 'occtkit graph-ml' instead.\n".utf8))
+FileHandle.standardError.write(
+    Data(
+        "DEPRECATED: 'GraphML' standalone target will be removed in a future release. Use 'occtkit graph-ml' instead.\n"
+            .utf8))
 
 let args = Array(CommandLine.arguments.dropFirst())
 do {
@@ -57,7 +69,8 @@ do {
     let g = graph.exportForML()
 
     let faces: [MLExport.Face] = (0..<graph.faceCount).compactMap { i in
-        guard let s = graph.sampleFaceUVGrid(faceIndex: i, uSamples: uvSamples, vSamples: uvSamples) else {
+        guard let s = graph.sampleFaceUVGrid(faceIndex: i, uSamples: uvSamples, vSamples: uvSamples)
+        else {
             return nil
         }
         return MLExport.Face(
@@ -82,7 +95,8 @@ do {
         faceAdjacentFaces: g.faceAdjacentFaces,
         faceToFace: MLExport.COO(sources: g.faceToFace.sources, targets: g.faceToFace.targets),
         faceToEdge: MLExport.COO(sources: g.faceToEdge.sources, targets: g.faceToEdge.targets),
-        edgeToVertex: MLExport.COO(sources: g.edgeToVertex.sources, targets: g.edgeToVertex.targets),
+        edgeToVertex: MLExport.COO(
+            sources: g.edgeToVertex.sources, targets: g.edgeToVertex.targets),
         faces: faces,
         edges: edges,
         sampling: MLExport.Sampling(uvSamples: uvSamples, edgeSamples: edgeSamples)

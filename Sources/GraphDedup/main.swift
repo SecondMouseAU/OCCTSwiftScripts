@@ -8,7 +8,10 @@ import Foundation
 import OCCTSwift
 import ScriptHarness
 
-FileHandle.standardError.write(Data("DEPRECATED: 'GraphDedup' standalone target will be removed in a future release. Use 'occtkit graph-dedup' instead.\n".utf8))
+FileHandle.standardError.write(
+    Data(
+        "DEPRECATED: 'GraphDedup' standalone target will be removed in a future release. Use 'occtkit graph-dedup' instead.\n"
+            .utf8))
 
 let args = Array(CommandLine.arguments.dropFirst())
 do {

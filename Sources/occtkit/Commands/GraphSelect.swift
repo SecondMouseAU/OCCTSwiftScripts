@@ -39,15 +39,16 @@ extension EdgeConvexity {
     var label: String {
         switch self {
         case .concave: return "concave"
-        case .smooth:  return "smooth"
-        case .convex:  return "convex"
+        case .smooth: return "smooth"
+        case .convex: return "convex"
         }
     }
 }
 
 enum GraphSelectCommand: Subcommand {
     static let name = "graph-select"
-    static let summary = "Query B-rep graph adjacency / selection (face neighbours, edge faces, vertex edges, convexity)"
+    static let summary =
+        "Query B-rep graph adjacency / selection (face neighbours, edge faces, vertex edges, convexity)"
     static let usage = """
         Usage:
           graph-select <shape.brep> --query <type> [ids]
@@ -66,7 +67,11 @@ enum GraphSelectCommand: Subcommand {
 
     // MARK: responses
 
-    struct NeighbourOut: Encodable { let face: Int; let convexity: String; let sharedEdgeCount: Int }
+    struct NeighbourOut: Encodable {
+        let face: Int
+        let convexity: String
+        let sharedEdgeCount: Int
+    }
     struct FaceNeighboursResponse: Encodable {
         let query = "face-neighbors"
         let face: Int
@@ -93,7 +98,12 @@ enum GraphSelectCommand: Subcommand {
         let vertex: Int
         let edges: [Int]
     }
-    struct FaceAdj: Encodable { let face1: Int; let face2: Int; let convexity: String; let sharedEdgeCount: Int }
+    struct FaceAdj: Encodable {
+        let face1: Int
+        let face2: Int
+        let convexity: String
+        let sharedEdgeCount: Int
+    }
     struct FaceAdjacencyResponse: Encodable {
         let query = "face-adjacency"
         let faceCount: Int
@@ -135,21 +145,24 @@ enum GraphSelectCommand: Subcommand {
             let node = aag.nodes[occurrence]
             let neighbors = aag.neighbors(of: occurrence).sorted().map { nb -> NeighbourOut in
                 let e = aag.edge(between: occurrence, and: nb)
-                return NeighbourOut(face: aag.nodes[nb].distinctFaceIndex,
-                                    convexity: (e?.convexity ?? .smooth).label,
-                                    sharedEdgeCount: e?.sharedEdgeCount ?? 0)
+                return NeighbourOut(
+                    face: aag.nodes[nb].distinctFaceIndex,
+                    convexity: (e?.convexity ?? .smooth).label,
+                    sharedEdgeCount: e?.sharedEdgeCount ?? 0)
             }
-            let warning = occurrences.count > 1
+            let warning =
+                occurrences.count > 1
                 ? "face \(face) is shared between \(occurrences.count) solids in this compound; reporting the first occurrence's neighbours only, the other side's are omitted"
                 : nil
-            try GraphIO.emitJSON(FaceNeighboursResponse(
-                face: face,
-                isPlanar: node.isPlanar,
-                isVertical: node.isVertical,
-                isHorizontal: node.isHorizontal,
-                normal: node.normal.map { [$0.x, $0.y, $0.z] },
-                neighbors: neighbors,
-                warning: warning))
+            try GraphIO.emitJSON(
+                FaceNeighboursResponse(
+                    face: face,
+                    isPlanar: node.isPlanar,
+                    isVertical: node.isVertical,
+                    isHorizontal: node.isHorizontal,
+                    normal: node.normal.map { [$0.x, $0.y, $0.z] },
+                    neighbors: neighbors,
+                    warning: warning))
 
         case "edge-faces":
             let g = try GraphIO.buildGraph(from: shape)
@@ -157,13 +170,14 @@ enum GraphSelectCommand: Subcommand {
             guard edge >= 0 && edge < g.edgeCount else {
                 throw ScriptError.message("edge \(edge) out of range (0..<\(g.edgeCount))")
             }
-            try GraphIO.emitJSON(EdgeFacesResponse(
-                edge: edge,
-                faces: g.faces(of: edge),
-                startVertex: g.edgeStartVertex(edge),
-                endVertex: g.edgeEndVertex(edge),
-                boundary: g.isBoundaryEdge(edge),
-                manifold: g.isManifoldEdge(edge)))
+            try GraphIO.emitJSON(
+                EdgeFacesResponse(
+                    edge: edge,
+                    faces: g.faces(of: edge),
+                    startVertex: g.edgeStartVertex(edge),
+                    endVertex: g.edgeEndVertex(edge),
+                    boundary: g.isBoundaryEdge(edge),
+                    manifold: g.isManifoldEdge(edge)))
 
         case "vertex-edges":
             let g = try GraphIO.buildGraph(from: shape)
@@ -179,26 +193,29 @@ enum GraphSelectCommand: Subcommand {
             // face-neighbors case above and the file-level doc comment); faceCount follows
             // suit so every index in this response stays < faceCount.
             let adjacencies = aag.edges.map {
-                FaceAdj(face1: aag.nodes[$0.face1Index].distinctFaceIndex,
-                        face2: aag.nodes[$0.face2Index].distinctFaceIndex,
-                        convexity: $0.convexity.label, sharedEdgeCount: $0.sharedEdgeCount)
+                FaceAdj(
+                    face1: aag.nodes[$0.face1Index].distinctFaceIndex,
+                    face2: aag.nodes[$0.face2Index].distinctFaceIndex,
+                    convexity: $0.convexity.label, sharedEdgeCount: $0.sharedEdgeCount)
             }
-            try GraphIO.emitJSON(FaceAdjacencyResponse(faceCount: shape.faces().count, adjacencies: adjacencies))
+            try GraphIO.emitJSON(
+                FaceAdjacencyResponse(faceCount: shape.faces().count, adjacencies: adjacencies))
 
         case "edges-class":
             let g = try GraphIO.buildGraph(from: shape)
             let kind = value("--class", in: args) ?? "boundary"
             let matches: [Int] = (0..<g.edgeCount).filter { i in
                 switch kind {
-                case "boundary":     return g.isBoundaryEdge(i)
+                case "boundary": return g.isBoundaryEdge(i)
                 case "non-manifold": return !g.isManifoldEdge(i)
-                case "seam":         return g.edgeCoEdges(i).contains { g.coedgeSeamPair($0) != nil }
-                case "degenerate":   return g.isEdgeDegenerated(i)
-                default:             return false
+                case "seam": return g.edgeCoEdges(i).contains { g.coedgeSeamPair($0) != nil }
+                case "degenerate": return g.isEdgeDegenerated(i)
+                default: return false
                 }
             }
             guard ["boundary", "non-manifold", "seam", "degenerate"].contains(kind) else {
-                throw ScriptError.message("--class must be boundary | non-manifold | seam | degenerate")
+                throw ScriptError.message(
+                    "--class must be boundary | non-manifold | seam | degenerate")
             }
             try GraphIO.emitJSON(EdgesClassResponse(class: kind, edges: matches))
 

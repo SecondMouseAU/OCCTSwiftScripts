@@ -56,8 +56,9 @@ enum PatternCommand: Subcommand {
     private enum Kind {
         case mirror(planeOrigin: SIMD3<Double>, planeNormal: SIMD3<Double>)
         case linear(direction: SIMD3<Double>, spacing: Double, count: Int)
-        case circular(axisOrigin: SIMD3<Double>, axisDirection: SIMD3<Double>,
-                      totalCount: Int, totalAngle: Double)
+        case circular(
+            axisOrigin: SIMD3<Double>, axisDirection: SIMD3<Double>,
+            totalCount: Int, totalAngle: Double)
     }
 
     private struct JSONRequest: Decodable {
@@ -104,8 +105,10 @@ enum PatternCommand: Subcommand {
         return 0
     }
 
-    private static func generatePieces(input: Shape, inputType: ShapeType,
-                                        kind: Kind) throws -> [Shape] {
+    private static func generatePieces(
+        input: Shape, inputType: ShapeType,
+        kind: Kind
+    ) throws -> [Shape] {
         switch kind {
         case .mirror(let origin, let normal):
             guard let mirrored = input.mirrored(planeNormal: normal, planeOrigin: origin) else {
@@ -116,7 +119,8 @@ enum PatternCommand: Subcommand {
             guard count >= 1 else {
                 throw ScriptError.message("--count must be >= 1")
             }
-            guard let compound = input.linearPattern(direction: dir, spacing: spacing, count: count) else {
+            guard let compound = input.linearPattern(direction: dir, spacing: spacing, count: count)
+            else {
                 throw ScriptError.message("linearPattern failed")
             }
             return decompose(compound: compound, expecting: inputType, expectedCount: count)
@@ -124,22 +128,27 @@ enum PatternCommand: Subcommand {
             guard totalCount >= 1 else {
                 throw ScriptError.message("--total-count must be >= 1")
             }
-            guard let compound = input.circularPattern(
-                axisPoint: axisOrigin, axisDirection: axisDir,
-                count: totalCount, angle: totalAngle
-            ) else {
+            guard
+                let compound = input.circularPattern(
+                    axisPoint: axisOrigin, axisDirection: axisDir,
+                    count: totalCount, angle: totalAngle
+                )
+            else {
                 throw ScriptError.message("circularPattern failed")
             }
             return decompose(compound: compound, expecting: inputType, expectedCount: totalCount)
         }
     }
 
-    private static func decompose(compound: Shape, expecting type: ShapeType,
-                                   expectedCount: Int) -> [Shape] {
+    private static func decompose(
+        compound: Shape, expecting type: ShapeType,
+        expectedCount: Int
+    ) -> [Shape] {
         let extracted = compound.subShapes(ofType: type)
         if !extracted.isEmpty { return extracted }
         // fall back: maybe input was a wire/edge, try common types
-        for fallback: ShapeType in [.solid, .shell, .face, .wire, .edge, .vertex] where fallback != type {
+        for fallback: ShapeType in [.solid, .shell, .face, .wire, .edge, .vertex]
+        where fallback != type {
             let pieces = compound.subShapes(ofType: fallback)
             if !pieces.isEmpty { return pieces }
         }
@@ -173,19 +182,26 @@ enum PatternCommand: Subcommand {
                 planeNormal: try requireMirrorNormal(raw))
         case "linear":
             guard let dir = raw.direction.map({ try? GraphIO.vec3($0, name: "direction") }) ?? nil,
-                  let spacing = raw.spacing,
-                  let count = raw.count else {
+                let spacing = raw.spacing,
+                let count = raw.count
+            else {
                 throw ScriptError.message("linear: direction, spacing, count are required")
             }
             return .linear(direction: dir, spacing: spacing, count: count)
         case "circular":
-            guard let axisOrigin = raw.axisOrigin.map({ try? GraphIO.vec3($0, name: "axisOrigin") }) ?? nil,
-                  let axisDir = raw.axisDirection.map({ try? GraphIO.vec3($0, name: "axisDirection") }) ?? nil,
-                  let totalCount = raw.totalCount else {
-                throw ScriptError.message("circular: axisOrigin, axisDirection, totalCount are required")
+            guard
+                let axisOrigin = raw.axisOrigin.map({ try? GraphIO.vec3($0, name: "axisOrigin") })
+                    ?? nil,
+                let axisDir = raw.axisDirection.map({ try? GraphIO.vec3($0, name: "axisDirection") }
+                ) ?? nil,
+                let totalCount = raw.totalCount
+            else {
+                throw ScriptError.message(
+                    "circular: axisOrigin, axisDirection, totalCount are required")
             }
-            return .circular(axisOrigin: axisOrigin, axisDirection: axisDir,
-                             totalCount: totalCount, totalAngle: raw.totalAngle ?? 0)
+            return .circular(
+                axisOrigin: axisOrigin, axisDirection: axisDir,
+                totalCount: totalCount, totalAngle: raw.totalAngle ?? 0)
         default:
             throw ScriptError.message("Unknown kind: \(raw.kind) (expected mirror|linear|circular)")
         }
@@ -210,26 +226,41 @@ enum PatternCommand: Subcommand {
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
-        var kind: String?, outputDir: String?
+        var kind: String?
+        var outputDir: String?
         var plane: String? = nil
-        var direction: SIMD3<Double>?, spacing: Double?, count: Int?
-        var axisOrigin: SIMD3<Double>?, axisDirection: SIMD3<Double>?
-        var totalCount: Int?, totalAngle: Double = 0
+        var direction: SIMD3<Double>?
+        var spacing: Double?
+        var count: Int?
+        var axisOrigin: SIMD3<Double>?
+        var axisDirection: SIMD3<Double>?
+        var totalCount: Int?
+        var totalAngle: Double = 0
 
         var i = 1
         while i < args.count {
             let a = args[i]
             switch a {
-            case "--kind":             kind = try GraphIO.valueAfter(a, at: &i, args: args)
-            case "--output-dir":       outputDir = try GraphIO.valueAfter(a, at: &i, args: args)
-            case "--plane":            plane = try GraphIO.valueAfter(a, at: &i, args: args)
-            case "--direction":        direction = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
-            case "--spacing":          spacing = try parseDouble(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
-            case "--count":            count = try parseInt(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
-            case "--axis-origin":      axisOrigin = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
-            case "--axis-direction":   axisDirection = try GraphIO.parseVec3(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
-            case "--total-count":      totalCount = try parseInt(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
-            case "--total-angle":      totalAngle = try parseDouble(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--kind": kind = try GraphIO.valueAfter(a, at: &i, args: args)
+            case "--output-dir": outputDir = try GraphIO.valueAfter(a, at: &i, args: args)
+            case "--plane": plane = try GraphIO.valueAfter(a, at: &i, args: args)
+            case "--direction":
+                direction = try GraphIO.parseVec3(
+                    try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--spacing":
+                spacing = try parseDouble(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--count":
+                count = try parseInt(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--axis-origin":
+                axisOrigin = try GraphIO.parseVec3(
+                    try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--axis-direction":
+                axisDirection = try GraphIO.parseVec3(
+                    try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--total-count":
+                totalCount = try parseInt(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
+            case "--total-angle":
+                totalAngle = try parseDouble(try GraphIO.valueAfter(a, at: &i, args: args), name: a)
             default: throw ScriptError.message("Unknown flag: \(a)")
             }
             i += 1
@@ -240,7 +271,8 @@ enum PatternCommand: Subcommand {
         let resolvedKind: Kind
         switch kind {
         case "mirror":
-            resolvedKind = .mirror(planeOrigin: .zero, planeNormal: try resolveMirrorNormal(plane: plane))
+            resolvedKind = .mirror(
+                planeOrigin: .zero, planeNormal: try resolveMirrorNormal(plane: plane))
         case "linear":
             guard let direction, let spacing, let count else {
                 throw ScriptError.message("linear: --direction, --spacing, --count required")
@@ -251,8 +283,9 @@ enum PatternCommand: Subcommand {
                 throw ScriptError.message(
                     "circular: --axis-origin, --axis-direction, --total-count required")
             }
-            resolvedKind = .circular(axisOrigin: axisOrigin, axisDirection: axisDirection,
-                                     totalCount: totalCount, totalAngle: totalAngle)
+            resolvedKind = .circular(
+                axisOrigin: axisOrigin, axisDirection: axisDirection,
+                totalCount: totalCount, totalAngle: totalAngle)
         default:
             throw ScriptError.message("--kind must be mirror|linear|circular")
         }
@@ -261,7 +294,8 @@ enum PatternCommand: Subcommand {
 
     private static func resolveMirrorNormal(plane: String?) throws -> SIMD3<Double> {
         guard let plane else {
-            throw ScriptError.message("mirror: --plane is required (xy|yz|zx or 'ox,oy,oz;nx,ny,nz')")
+            throw ScriptError.message(
+                "mirror: --plane is required (xy|yz|zx or 'ox,oy,oz;nx,ny,nz')")
         }
         if plane.contains(";") {
             let parts = plane.split(separator: ";", maxSplits: 1).map(String.init)

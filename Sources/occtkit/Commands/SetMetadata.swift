@@ -93,7 +93,8 @@ enum SetMetadataCommand: Subcommand {
             switch req.scope {
             case .document:
                 guard let main = document.mainLabel ?? document.rootNodes.first else {
-                    throw ScriptError.message("Document has no main/root label to attach metadata to")
+                    throw ScriptError.message(
+                        "Document has no main/root label to attach metadata to")
                 }
                 return main
             case .component:
@@ -108,13 +109,32 @@ enum SetMetadataCommand: Subcommand {
         }()
 
         var applied: [String: String] = [:]
-        if let v = req.title       { _ = target.setNamedString("title", value: v); applied["title"] = v }
-        if let v = req.drawnBy     { _ = target.setNamedString("drawnBy", value: v); applied["drawnBy"] = v }
-        if let v = req.material    { _ = target.setNamedString("material", value: v); applied["material"] = v }
-        if let v = req.weight      { _ = target.setNamedReal("weight", value: v); applied["weight"] = "\(v)" }
-        if let v = req.revision    { _ = target.setNamedString("revision", value: v); applied["revision"] = v }
-        if let v = req.partNumber  { _ = target.setNamedString("partNumber", value: v); applied["partNumber"] = v }
-        if req.scope == .component, let v = req.title { _ = target.setName(v) }  // also set TDataStd_Name on components
+        if let v = req.title {
+            _ = target.setNamedString("title", value: v)
+            applied["title"] = v
+        }
+        if let v = req.drawnBy {
+            _ = target.setNamedString("drawnBy", value: v)
+            applied["drawnBy"] = v
+        }
+        if let v = req.material {
+            _ = target.setNamedString("material", value: v)
+            applied["material"] = v
+        }
+        if let v = req.weight {
+            _ = target.setNamedReal("weight", value: v)
+            applied["weight"] = "\(v)"
+        }
+        if let v = req.revision {
+            _ = target.setNamedString("revision", value: v)
+            applied["revision"] = v
+        }
+        if let v = req.partNumber {
+            _ = target.setNamedString("partNumber", value: v)
+            applied["partNumber"] = v
+        }
+        // also set TDataStd_Name on components
+        if req.scope == .component, let v = req.title { _ = target.setName(v) }
 
         for (k, v) in req.customAttrs {
             _ = target.setNamedString(k, value: v)
@@ -142,24 +162,32 @@ enum SetMetadataCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--output") {
+            !args.contains("--output")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputPath = args.first, !inputPath.hasPrefix("-") else {
             throw ScriptError.message("Missing input positional argument")
         }
         var output: String?
         var scope: Scope = .document
         var componentId: Int64?
-        var title: String?, drawnBy: String?, material: String?
-        var revision: String?, partNumber: String?
+        var title: String?
+        var drawnBy: String?
+        var material: String?
+        var revision: String?
+        var partNumber: String?
         var weight: Double?
         var customAttrs: [String: String] = [:]
         var i = 1
         while i < args.count {
             switch args[i] {
-            case "--output":         i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
+            case "--output":
+                i += 1
+                output = try GraphIO.value(args, at: i, flag: "--output")
             case "--scope":
                 i += 1
                 let raw = try GraphIO.value(args, at: i, flag: "--scope")
@@ -174,24 +202,35 @@ enum SetMetadataCommand: Subcommand {
                     throw ScriptError.message("--component-id expects an int64")
                 }
                 componentId = n
-            case "--title":          i += 1; title = try GraphIO.value(args, at: i, flag: "--title")
-            case "--drawn-by":       i += 1; drawnBy = try GraphIO.value(args, at: i, flag: "--drawn-by")
-            case "--material":       i += 1; material = try GraphIO.value(args, at: i, flag: "--material")
+            case "--title":
+                i += 1
+                title = try GraphIO.value(args, at: i, flag: "--title")
+            case "--drawn-by":
+                i += 1
+                drawnBy = try GraphIO.value(args, at: i, flag: "--drawn-by")
+            case "--material":
+                i += 1
+                material = try GraphIO.value(args, at: i, flag: "--material")
             case "--weight":
                 i += 1
                 guard let d = Double(try GraphIO.value(args, at: i, flag: "--weight")) else {
                     throw ScriptError.message("--weight expects a number")
                 }
                 weight = d
-            case "--revision":       i += 1; revision = try GraphIO.value(args, at: i, flag: "--revision")
-            case "--part-number":    i += 1; partNumber = try GraphIO.value(args, at: i, flag: "--part-number")
+            case "--revision":
+                i += 1
+                revision = try GraphIO.value(args, at: i, flag: "--revision")
+            case "--part-number":
+                i += 1
+                partNumber = try GraphIO.value(args, at: i, flag: "--part-number")
             case "--custom-attr":
                 i += 1
                 let pair = try GraphIO.value(args, at: i, flag: "--custom-attr")
                 guard let eq = pair.firstIndex(of: "=") else {
                     throw ScriptError.message("--custom-attr expects key=value (got \(pair))")
                 }
-                customAttrs[String(pair[pair.startIndex..<eq])] = String(pair[pair.index(after: eq)...])
+                customAttrs[String(pair[pair.startIndex..<eq])] = String(
+                    pair[pair.index(after: eq)...])
             default:
                 throw ScriptError.message("Unknown flag: \(args[i])")
             }
@@ -218,4 +257,3 @@ enum SetMetadataCommand: Subcommand {
         )
     }
 }
-

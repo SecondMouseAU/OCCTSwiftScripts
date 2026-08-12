@@ -51,10 +51,15 @@ enum ReconstructCommand: Subcommand {
         let annotations: [AnnotationReport]
     }
     struct SkippedReport: Encodable {
-        let id: String; let stage: String; let reason: String; let detail: String?
+        let id: String
+        let stage: String
+        let reason: String
+        let detail: String?
     }
     struct AnnotationReport: Encodable {
-        let id: String; let kind: String; let detail: String?
+        let id: String
+        let kind: String
+        let detail: String?
     }
 
     static func run(args: [String]) throws -> Int32 {
@@ -127,18 +132,20 @@ enum ReconstructCommand: Subcommand {
                 let (reasonName, detail): (String, String?) = {
                     switch s.reason {
                     case .underDetermined(let d): return ("under_determined", d)
-                    case .occtFailure(let d):     return ("occt_failure", d)
-                    case .unresolvedRef(let d):   return ("unresolved_ref", d)
-                    case .unsupported(let d):     return ("unsupported", d)
+                    case .occtFailure(let d): return ("occt_failure", d)
+                    case .unresolvedRef(let d): return ("unresolved_ref", d)
+                    case .unsupported(let d): return ("unsupported", d)
                     }
                 }()
-                return SkippedReport(id: s.featureID, stage: s.stage.rawValue,
-                                     reason: reasonName, detail: detail)
+                return SkippedReport(
+                    id: s.featureID, stage: s.stage.rawValue,
+                    reason: reasonName, detail: detail)
             },
             annotations: result.annotations.map { a in
                 switch a.kind {
                 case .thread(let spec, let holeRef, let length):
-                    let detail = "spec=\(spec); hole=\(holeRef)" + (length.map { "; length=\($0)" } ?? "")
+                    let detail =
+                        "spec=\(spec); hole=\(holeRef)" + (length.map { "; length=\($0)" } ?? "")
                     return AnnotationReport(id: a.featureID, kind: "thread", detail: detail)
                 }
             }

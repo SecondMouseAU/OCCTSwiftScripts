@@ -83,16 +83,18 @@ enum MeasureDeviationCommand: Subcommand {
             throw ScriptError.message("Failed to tessellate '\(req.b)' for deviation")
         }
         guard let fwd = directedDeviation(source: aTris, target: bTris, maxSamples: req.maxSamples),
-              let rev = directedDeviation(source: bTris, target: aTris, maxSamples: req.maxSamples) else {
+            let rev = directedDeviation(source: bTris, target: aTris, maxSamples: req.maxSamples)
+        else {
             throw ScriptError.message("Deviation computation failed (empty tessellation)")
         }
 
-        try GraphIO.emitJSON(Response(
-            deflection: defl,
-            fromToTo: fwd,
-            toToFrom: rev,
-            symmetricHausdorff: Swift.max(fwd.max, rev.max)
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                deflection: defl,
+                fromToTo: fwd,
+                toToFrom: rev,
+                symmetricHausdorff: Swift.max(fwd.max, rev.max)
+            ))
         return 0
     }
 
@@ -109,10 +111,12 @@ enum MeasureDeviationCommand: Subcommand {
             params.deflection = deflection
             params.internalVertices = true
             params.inParallel = true
-            params.allowQualityDecrease = true   // honour the requested deflection (#211)
+            params.allowQualityDecrease = true  // honour the requested deflection (#211)
             guard let mesh = shape.mesh(parameters: params) else { return nil }
 
-            let verts = mesh.vertices.map { SIMD3<Double>(Double($0.x), Double($0.y), Double($0.z)) }
+            let verts = mesh.vertices.map {
+                SIMD3<Double>(Double($0.x), Double($0.y), Double($0.z))
+            }
             let idx = mesh.indices
             guard !verts.isEmpty, idx.count >= 3, let kd = KDTree(points: verts) else { return nil }
 
@@ -121,25 +125,37 @@ enum MeasureDeviationCommand: Subcommand {
             var adj = [[Int]](repeating: [], count: verts.count)
             var t = 0
             while t + 2 < idx.count {
-                let a = idx[t], b = idx[t + 1], c = idx[t + 2]
+                let a = idx[t]
+                let b = idx[t + 1]
+                let c = idx[t + 2]
                 let ti = tris.count
                 tris.append((a, b, c))
-                adj[Int(a)].append(ti); adj[Int(b)].append(ti); adj[Int(c)].append(ti)
+                adj[Int(a)].append(ti)
+                adj[Int(b)].append(ti)
+                adj[Int(c)].append(ti)
                 t += 3
             }
-            self.vertices = verts; self.triangles = tris; self.kd = kd; self.incident = adj
+            self.vertices = verts
+            self.triangles = tris
+            self.kd = kd
+            self.incident = adj
         }
     }
 
     // ── directed deviation ──────────────────────────────────────────────
 
-    static func directedDeviation(source: TriMesh, target: TriMesh, maxSamples: Int) -> DirectionStat? {
+    static func directedDeviation(source: TriMesh, target: TriMesh, maxSamples: Int)
+        -> DirectionStat?
+    {
         let n = source.vertices.count
         guard n > 0 else { return nil }
         let stride = maxSamples > 0 ? Swift.max(1, (n + maxSamples - 1) / maxSamples) : 1
         let k = 6
 
-        var maxD = 0.0, sumSq = 0.0, sum = 0.0, count = 0
+        var maxD = 0.0
+        var sumSq = 0.0
+        var sum = 0.0
+        var count = 0
         var worst = SIMD3<Double>(0, 0, 0)
         var stamp = [Int](repeating: -1, count: target.triangles.count)
 
@@ -155,16 +171,24 @@ enum MeasureDeviationCommand: Subcommand {
                     for ti in target.incident[vi] where stamp[ti] != i {
                         stamp[ti] = i
                         let (a, b, c) = target.triangles[ti]
-                        let d = pointTriangleDistance(p, target.vertices[Int(a)],
-                                                      target.vertices[Int(b)], target.vertices[Int(c)])
+                        let d = pointTriangleDistance(
+                            p, target.vertices[Int(a)],
+                            target.vertices[Int(b)], target.vertices[Int(c)])
                         if d < best { best = d }
                     }
                 }
-                if best == .greatestFiniteMagnitude, let nv = target.kd.nearest(to: p) { best = nv.distance }
+                if best == .greatestFiniteMagnitude, let nv = target.kd.nearest(to: p) {
+                    best = nv.distance
+                }
             }
             if best != .greatestFiniteMagnitude {
-                if best > maxD { maxD = best; worst = p }
-                sumSq += best * best; sum += best; count += 1
+                if best > maxD {
+                    maxD = best
+                    worst = p
+                }
+                sumSq += best * best
+                sum += best
+                count += 1
             }
             i += stride
         }
@@ -188,24 +212,38 @@ enum MeasureDeviationCommand: Subcommand {
 
     /// Closest-point-on-triangle distance, Ericson "Real-Time Collision
     /// Detection" §5.1.5.
-    static func pointTriangleDistance(_ p: SIMD3<Double>, _ a: SIMD3<Double>,
-                                      _ b: SIMD3<Double>, _ c: SIMD3<Double>) -> Double {
-        let ab = b - a, ac = c - a, ap = p - a
-        let d1 = simd_dot(ab, ap), d2 = simd_dot(ac, ap)
+    static func pointTriangleDistance(
+        _ p: SIMD3<Double>, _ a: SIMD3<Double>,
+        _ b: SIMD3<Double>, _ c: SIMD3<Double>
+    ) -> Double {
+        let ab = b - a
+        let ac = c - a
+        let ap = p - a
+        let d1 = simd_dot(ab, ap)
+        let d2 = simd_dot(ac, ap)
         if d1 <= 0 && d2 <= 0 { return simd_length(ap) }
         let bp = p - b
-        let d3 = simd_dot(ab, bp), d4 = simd_dot(ac, bp)
+        let d3 = simd_dot(ab, bp)
+        let d4 = simd_dot(ac, bp)
         if d3 >= 0 && d4 <= d3 { return simd_length(bp) }
         let vc = d1 * d4 - d3 * d2
-        if vc <= 0 && d1 >= 0 && d3 <= 0 { let v = d1 / (d1 - d3); return simd_length(p - (a + v * ab)) }
+        if vc <= 0 && d1 >= 0 && d3 <= 0 {
+            let v = d1 / (d1 - d3)
+            return simd_length(p - (a + v * ab))
+        }
         let cp = p - c
-        let d5 = simd_dot(ab, cp), d6 = simd_dot(ac, cp)
+        let d5 = simd_dot(ab, cp)
+        let d6 = simd_dot(ac, cp)
         if d6 >= 0 && d5 <= d6 { return simd_length(cp) }
         let vb = d5 * d2 - d1 * d6
-        if vb <= 0 && d2 >= 0 && d6 <= 0 { let w = d2 / (d2 - d6); return simd_length(p - (a + w * ac)) }
+        if vb <= 0 && d2 >= 0 && d6 <= 0 {
+            let w = d2 / (d2 - d6)
+            return simd_length(p - (a + w * ac))
+        }
         let va = d3 * d6 - d5 * d4
         if va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0 {
-            let w = (d4 - d3) / ((d4 - d3) + (d5 - d6)); return simd_length(p - (b + w * (c - b)))
+            let w = (d4 - d3) / ((d4 - d3) + (d5 - d6))
+            return simd_length(p - (b + w * (c - b)))
         }
         let denom = 1.0 / (va + vb + vc)
         return simd_length(p - (a + ab * (vb * denom) + ac * (vc * denom)))
@@ -250,7 +288,8 @@ enum MeasureDeviationCommand: Subcommand {
 
     private static func decodeJSON(data: Data) throws -> Request {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
-        return Request(a: raw.a, b: raw.b, deflection: raw.deflection,
-                       maxSamples: raw.maxSamples ?? 20_000)
+        return Request(
+            a: raw.a, b: raw.b, deflection: raw.deflection,
+            maxSamples: raw.maxSamples ?? 20_000)
     }
 }

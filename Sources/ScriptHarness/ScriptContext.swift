@@ -47,27 +47,31 @@ public final class ScriptContext: Sendable {
     public init(exportSTEP: Bool = true, metadata: ManifestMetadata? = nil) {
         let dir: URL
         #if os(macOS)
-        let home = FileManager.default.homeDirectoryForCurrentUser
+            let home = FileManager.default.homeDirectoryForCurrentUser
 
-        // Prefer iCloud Drive for cross-device sync (Mac → iPhone)
-        let iCloudDir = home
-            .appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")
-            .appendingPathComponent("OCCTSwiftScripts/output")
-        let localDir = home.appendingPathComponent(".occtswift-scripts/output")
+            // Prefer iCloud Drive for cross-device sync (Mac → iPhone)
+            let iCloudDir =
+                home
+                .appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")
+                .appendingPathComponent("OCCTSwiftScripts/output")
+            let localDir = home.appendingPathComponent(".occtswift-scripts/output")
 
-        if FileManager.default.fileExists(atPath: iCloudDir.deletingLastPathComponent().deletingLastPathComponent().path) {
-            dir = iCloudDir
-        } else {
-            dir = localDir
-        }
+            if FileManager.default.fileExists(
+                atPath: iCloudDir.deletingLastPathComponent().deletingLastPathComponent().path)
+            {
+                dir = iCloudDir
+            } else {
+                dir = localDir
+            }
         #else
-        // iOS/sandboxed platforms: homeDirectoryForCurrentUser and the
-        // ~/Library/Mobile Documents iCloud path are unavailable. Write into
-        // the app sandbox's Documents directory, which is the iCloud-syncable
-        // location on iOS when the app declares a ubiquity container.
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-            ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        dir = documents.appendingPathComponent("OCCTSwiftScripts/output")
+            // iOS/sandboxed platforms: homeDirectoryForCurrentUser and the
+            // ~/Library/Mobile Documents iCloud path are unavailable. Write into
+            // the app sandbox's Documents directory, which is the iCloud-syncable
+            // location on iOS when the app declares a ubiquity container.
+            let documents =
+                FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+                ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+            dir = documents.appendingPathComponent("OCCTSwiftScripts/output")
         #endif
         self.outputDir = dir
         self.exportSTEP = exportSTEP
@@ -86,7 +90,9 @@ public final class ScriptContext: Sendable {
 
     // MARK: - Add Shape (solids, shells, compounds)
 
-    /// Add a shape to the output. Writes BREP immediately.
+    /// Add a shape to the output.
+    ///
+    /// Writes BREP immediately.
     public func add(
         _ shape: Shape,
         id: String? = nil,
@@ -117,8 +123,10 @@ public final class ScriptContext: Sendable {
 
     // MARK: - Add Wire (profiles, sketches, paths)
 
-    /// Add a wire to the output. Displayed as wireframe in the viewport.
-    /// Useful for sketches, profiles, sweep paths, construction geometry.
+    /// Add a wire to the output.
+    ///
+    /// Displayed as wireframe in the viewport. Useful for sketches, profiles,
+    /// sweep paths, construction geometry.
     public func add(
         _ wire: Wire,
         id: String? = nil,
@@ -133,7 +141,9 @@ public final class ScriptContext: Sendable {
 
     // MARK: - Add Edge
 
-    /// Add a single edge to the output. Displayed as wireframe.
+    /// Add a single edge to the output.
+    ///
+    /// Displayed as wireframe.
     public func add(
         _ edge: Edge,
         id: String? = nil,
@@ -148,7 +158,9 @@ public final class ScriptContext: Sendable {
 
     // MARK: - Add multiple shapes at once
 
-    /// Add multiple shapes as a compound. Useful for assembly results.
+    /// Add multiple shapes as a compound.
+    ///
+    /// Useful for assembly results.
     public func addCompound(
         _ shapes: [Shape],
         id: String? = nil,
@@ -163,12 +175,17 @@ public final class ScriptContext: Sendable {
 
     // MARK: - Add BRepGraph
 
-    /// Add a topology graph to the output. Exports as JSON and optionally SQLite.
+    /// Add a topology graph to the output.
+    ///
+    /// Exports as JSON and optionally SQLite.
+    ///
     /// - Parameters:
     ///   - graph: The topology graph to export.
     ///   - id: Graph identifier (default: `"graph-N"`).
     ///   - sourceBodyId: Optional body ID this graph was built from.
     ///   - sqlite: Whether to also export a SQLite database (default: true).
+    /// - Throws: `ScriptError.conversionFailed` if a prior conversion left the graph in a bad
+    ///   state, or an underlying I/O error if the JSON/SQLite export fails to write.
     public func addGraph(
         _ graph: BRepGraph,
         id: String? = nil,
@@ -209,6 +226,7 @@ public final class ScriptContext: Sendable {
     }
 
     /// Build and export topology graphs for all shapes added so far.
+    ///
     /// Convenience method, builds a `BRepGraph` per shape and exports each.
     public func addGraphsForAllShapes(sqlite: Bool = true) throws {
         for (shape, bodyID) in shapes.all {
@@ -220,6 +238,7 @@ public final class ScriptContext: Sendable {
     // MARK: - Emit
 
     /// Write manifest.json (trigger file) and optional STEP export.
+    ///
     /// Call this LAST after all geometry is added.
     public func emit(description: String? = nil) throws {
         // Write combined STEP for external tool interop
@@ -268,19 +287,19 @@ public final class ScriptContext: Sendable {
 // MARK: - Predefined Colors
 
 extension ScriptContext {
-    /// Common colors for quick use: `ctx.add(shape, color: .blue)`
+    /// Common colors for quick use: `ctx.add(shape, color: .blue)`.
     public enum Colors {
-        public static let red:    [Float] = [0.9, 0.2, 0.2, 1.0]
-        public static let green:  [Float] = [0.2, 0.8, 0.3, 1.0]
-        public static let blue:   [Float] = [0.3, 0.5, 0.9, 1.0]
+        public static let red: [Float] = [0.9, 0.2, 0.2, 1.0]
+        public static let green: [Float] = [0.2, 0.8, 0.3, 1.0]
+        public static let blue: [Float] = [0.3, 0.5, 0.9, 1.0]
         public static let yellow: [Float] = [1.0, 0.9, 0.2, 1.0]
         public static let orange: [Float] = [0.9, 0.5, 0.2, 1.0]
         public static let purple: [Float] = [0.6, 0.3, 0.8, 1.0]
-        public static let cyan:   [Float] = [0.2, 0.8, 0.9, 1.0]
-        public static let white:  [Float] = [0.9, 0.9, 0.9, 1.0]
-        public static let gray:   [Float] = [0.5, 0.5, 0.5, 1.0]
-        public static let steel:  [Float] = [0.7, 0.7, 0.75, 1.0]
-        public static let brass:  [Float] = [0.8, 0.7, 0.3, 1.0]
+        public static let cyan: [Float] = [0.2, 0.8, 0.9, 1.0]
+        public static let white: [Float] = [0.9, 0.9, 0.9, 1.0]
+        public static let gray: [Float] = [0.5, 0.5, 0.5, 1.0]
+        public static let steel: [Float] = [0.7, 0.7, 0.75, 1.0]
+        public static let brass: [Float] = [0.8, 0.7, 0.3, 1.0]
         public static let copper: [Float] = [0.8, 0.5, 0.3, 1.0]
     }
 }

@@ -21,7 +21,8 @@ enum GraphCompactCommand: Subcommand {
         }
         try GraphIO.writeBREP(rebuilt, to: outPath)
 
-        try GraphIO.emitJSON(GraphIO.CompactReport(nodesBefore: nodesBefore, result: result, output: outPath))
+        try GraphIO.emitJSON(
+            GraphIO.CompactReport(nodesBefore: nodesBefore, result: result, output: outPath))
         return 0
     }
 }

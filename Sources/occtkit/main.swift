@@ -19,15 +19,17 @@
 // to occtkit's own stdout). EOF on stdin → exit 0.
 
 import Foundation
+
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #endif
 
 @MainActor
 func printHelp() {
-    var msg = "occtkit: OCCTSwift script suite\n\nUSAGE:\n  occtkit <subcommand> [args...]\n  occtkit <subcommand> --serve   (read JSONL requests on stdin)\n\nSUBCOMMANDS:\n"
+    var msg =
+        "occtkit: OCCTSwift script suite\n\nUSAGE:\n  occtkit <subcommand> [args...]\n  occtkit <subcommand> --serve   (read JSONL requests on stdin)\n\nSUBCOMMANDS:\n"
     for cmd in Registry.all {
         msg += "  \(cmd.name.padding(toLength: 20, withPad: " ", startingAt: 0))\(cmd.summary)\n"
     }
@@ -92,21 +94,23 @@ func handleServeLine(cmd: any Subcommand.Type, line: Data) {
     do {
         req = try JSONDecoder().decode(ServeRequest.self, from: line)
     } catch {
-        emitResponse(ServeResponse(
-            ok: false, exit: 1, stdout: "", stderr: "",
-            error: "invalid request JSON: \(error.localizedDescription)"
-        ))
+        emitResponse(
+            ServeResponse(
+                ok: false, exit: 1, stdout: "", stderr: "",
+                error: "invalid request JSON: \(error.localizedDescription)"
+            ))
         return
     }
 
     let captured = captureOutput { try cmd.run(args: req.args) }
-    emitResponse(ServeResponse(
-        ok: captured.error == nil && captured.exit == 0,
-        exit: captured.exit,
-        stdout: String(data: captured.stdoutData, encoding: .utf8) ?? "",
-        stderr: String(data: captured.stderrData, encoding: .utf8) ?? "",
-        error: captured.error
-    ))
+    emitResponse(
+        ServeResponse(
+            ok: captured.error == nil && captured.exit == 0,
+            exit: captured.exit,
+            stdout: String(data: captured.stdoutData, encoding: .utf8) ?? "",
+            stderr: String(data: captured.stderrData, encoding: .utf8) ?? "",
+            error: captured.error
+        ))
 }
 
 func emitResponse(_ response: ServeResponse) {
@@ -193,7 +197,8 @@ func runWithoutCapture(_ work: () throws -> Int32) -> CapturedOutput {
         let exitCode = try work()
         return CapturedOutput(exit: exitCode, error: nil, stdoutData: Data(), stderrData: Data())
     } catch {
-        return CapturedOutput(exit: 1, error: error.localizedDescription, stdoutData: Data(), stderrData: Data())
+        return CapturedOutput(
+            exit: 1, error: error.localizedDescription, stdoutData: Data(), stderrData: Data())
     }
 }
 

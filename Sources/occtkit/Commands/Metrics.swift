@@ -72,7 +72,8 @@ enum MetricsCommand: Subcommand {
         let want = req.metrics
         func wants(_ name: String) -> Bool { want == nil || want!.contains(name) }
 
-        let inertia = wants("volume") || wants("centerOfMass") || wants("principalAxes")
+        let inertia =
+            wants("volume") || wants("centerOfMass") || wants("principalAxes")
             ? shape.volumeInertia : nil
 
         let bb: Response.BoundingBox? = {
@@ -89,7 +90,8 @@ enum MetricsCommand: Subcommand {
         // (control-point hull). Tight extent for curved geometry. (OCCTMCP #44)
         let bbOptimal: Response.BoundingBox? = {
             guard want != nil, want!.contains("boundingBoxOptimal"),
-                  let o = shape.boundingBoxOptimal() else { return nil }
+                let o = shape.boundingBoxOptimal()
+            else { return nil }
             return .init(
                 min: [o.min.x, o.min.y, o.min.z],
                 max: [o.max.x, o.max.y, o.max.z]
@@ -110,17 +112,19 @@ enum MetricsCommand: Subcommand {
 
         let solidCount: Int? = wants("solidCount") ? shape.subShapeCount(ofType: .solid) : nil
 
-        try GraphIO.emitJSON(Response(
-            volume: wants("volume") ? inertia?.volume : nil,
-            surfaceArea: wants("surfaceArea") ? shape.surfaceArea : nil,
-            centerOfMass: wants("centerOfMass") ? inertia.map { v in
-                [v.centerOfMass.x, v.centerOfMass.y, v.centerOfMass.z]
-            } : nil,
-            boundingBox: bb,
-            boundingBoxOptimal: bbOptimal,
-            principalAxes: pa,
-            solidCount: solidCount
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                volume: wants("volume") ? inertia?.volume : nil,
+                surfaceArea: wants("surfaceArea") ? shape.surfaceArea : nil,
+                centerOfMass: wants("centerOfMass")
+                    ? inertia.map { v in
+                        [v.centerOfMass.x, v.centerOfMass.y, v.centerOfMass.z]
+                    } : nil,
+                boundingBox: bb,
+                boundingBoxOptimal: bbOptimal,
+                principalAxes: pa,
+                solidCount: solidCount
+            ))
         return 0
     }
 
@@ -128,7 +132,9 @@ enum MetricsCommand: Subcommand {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-") {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         // Flag form
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
@@ -151,7 +157,8 @@ enum MetricsCommand: Subcommand {
 
     private static func decodeJSON(data: Data) throws -> Request {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
-        return Request(inputBrep: raw.inputBrep,
-                       metrics: raw.metrics.map(Set.init))
+        return Request(
+            inputBrep: raw.inputBrep,
+            metrics: raw.metrics.map(Set.init))
     }
 }

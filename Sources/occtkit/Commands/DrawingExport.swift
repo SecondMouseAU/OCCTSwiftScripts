@@ -12,8 +12,8 @@
 //   drawing-export                  (read JSON spec from stdin)
 //   drawing-export <spec.json>      (read JSON spec from file)
 
-import Foundation
 import DrawingComposer
+import Foundation
 import OCCTSwift
 import ScriptHarness
 
@@ -75,15 +75,17 @@ enum DrawingExportCommand: Subcommand {
             throw ScriptError.message("DXF write failed: \(error.localizedDescription)")
         }
 
-        try GraphIO.emitJSON(Report(
-            output: outputPath,
-            sheet: "\(spec.sheet.size.rawValue.uppercased()) \(spec.sheet.orientation.rawValue)",
-            projection: spec.sheet.projection.rawValue,
-            scale: result.scaleLabel,
-            viewCount: result.viewCount,
-            sectionCount: result.sectionCount,
-            detailCount: result.detailCount
-        ))
+        try GraphIO.emitJSON(
+            Report(
+                output: outputPath,
+                sheet:
+                    "\(spec.sheet.size.rawValue.uppercased()) \(spec.sheet.orientation.rawValue)",
+                projection: spec.sheet.projection.rawValue,
+                scale: result.scaleLabel,
+                viewCount: result.viewCount,
+                sectionCount: result.sectionCount,
+                detailCount: result.detailCount
+            ))
         return 0
     }
 }
