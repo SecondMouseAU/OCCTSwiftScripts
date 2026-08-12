@@ -7,7 +7,10 @@
 
 import Foundation
 
-FileHandle.standardError.write(Data("DEPRECATED: 'OCCTRunner' standalone target will be removed in a future release. Use 'occtkit run' instead.\n".utf8))
+FileHandle.standardError.write(
+    Data(
+        "DEPRECATED: 'OCCTRunner' standalone target will be removed in a future release. Use 'occtkit run' instead.\n"
+            .utf8))
 
 // MARK: - Configuration
 
@@ -40,10 +43,15 @@ func parseArgs() -> RunnerConfig {
         case "--format":
             i += 1
             guard i < args.count else { fatal("--format requires a value") }
-            formats = Set(args[i].split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) })
+            formats = Set(
+                args[i].split(separator: ",").map {
+                    String($0).trimmingCharacters(in: .whitespaces)
+                })
             let invalid = formats.subtracting(RunnerConfig.allFormats)
             if !invalid.isEmpty {
-                fatal("Unknown format(s): \(invalid.sorted().joined(separator: ", ")). Valid: \(RunnerConfig.allFormats.sorted().joined(separator: ", "))")
+                fatal(
+                    "Unknown format(s): \(invalid.sorted().joined(separator: ", ")). Valid: \(RunnerConfig.allFormats.sorted().joined(separator: ", "))"
+                )
             }
         case "--output", "-o":
             i += 1
@@ -74,22 +82,22 @@ func parseArgs() -> RunnerConfig {
 
 func printUsage() {
     let usage = """
-    OCCTRunner: Run OCCTSwift geometry scripts
+        OCCTRunner: Run OCCTSwift geometry scripts
 
-    USAGE:
-      occtrunner <script.swift> [options]
+        USAGE:
+          occtrunner <script.swift> [options]
 
-    OPTIONS:
-      --format <formats>   Comma-separated output formats (default: brep,step)
-                           Valid: brep, step, graph-json, graph-sqlite
-      --output, -o <dir>   Output directory (default: ~/.occtswift-scripts/output/)
-      --help, -h           Show this help
+        OPTIONS:
+          --format <formats>   Comma-separated output formats (default: brep,step)
+                               Valid: brep, step, graph-json, graph-sqlite
+          --output, -o <dir>   Output directory (default: ~/.occtswift-scripts/output/)
+          --help, -h           Show this help
 
-    EXAMPLES:
-      occtrunner bracket.swift
-      occtrunner bracket.swift --format brep,step,graph-json,graph-sqlite
-      occtrunner bracket.swift --format graph-json -o ./output
-    """
+        EXAMPLES:
+          occtrunner bracket.swift
+          occtrunner bracket.swift --format brep,step,graph-json,graph-sqlite
+          occtrunner bracket.swift --format graph-json -o ./output
+        """
     print(usage)
 }
 
@@ -122,31 +130,31 @@ func ensureWorkspace() throws {
     try fm.createDirectory(at: sourcesDir, withIntermediateDirectories: true)
 
     let packageContent = """
-    // swift-tools-version: 6.0
-    import PackageDescription
+        // swift-tools-version: 6.0
+        import PackageDescription
 
-    let package = Package(
-        name: "OCCTSwiftUserScript",
-        platforms: [
-            .macOS(.v15)
-        ],
-        dependencies: [
-            .package(url: "https://github.com/SecondMouseAU/OCCTSwiftScripts.git", from: "1.0.0"),
-        ],
-        targets: [
-            .executableTarget(
-                name: "Script",
-                dependencies: [
-                    .product(name: "ScriptHarness", package: "OCCTSwiftScripts"),
-                ],
-                path: "Sources/Script",
-                swiftSettings: [
-                    .swiftLanguageMode(.v6)
-                ]
-            ),
-        ]
-    )
-    """
+        let package = Package(
+            name: "OCCTSwiftUserScript",
+            platforms: [
+                .macOS(.v15)
+            ],
+            dependencies: [
+                .package(url: "https://github.com/SecondMouseAU/OCCTSwiftScripts.git", from: "1.0.0"),
+            ],
+            targets: [
+                .executableTarget(
+                    name: "Script",
+                    dependencies: [
+                        .product(name: "ScriptHarness", package: "OCCTSwiftScripts"),
+                    ],
+                    path: "Sources/Script",
+                    swiftSettings: [
+                        .swiftLanguageMode(.v6)
+                    ]
+                ),
+            ]
+        )
+        """
     try packageContent.write(to: packageSwift, atomically: true, encoding: .utf8)
 }
 
@@ -180,7 +188,8 @@ func prepareScript(_ config: RunnerConfig) throws -> URL {
         )
     }
 
-    let destURL = workspaceDir
+    let destURL =
+        workspaceDir
         .appendingPathComponent("Sources/Script")
         .appendingPathComponent("main.swift")
     try source.write(to: destURL, atomically: true, encoding: .utf8)
@@ -231,7 +240,8 @@ func copyOutput(_ config: RunnerConfig) throws {
     let home = fm.homeDirectoryForCurrentUser
 
     // Find the actual output directory (iCloud or local)
-    let iCloudDir = home
+    let iCloudDir =
+        home
         .appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")
         .appendingPathComponent("OCCTSwiftScripts/output")
     let localDir = home.appendingPathComponent(".occtswift-scripts/output")

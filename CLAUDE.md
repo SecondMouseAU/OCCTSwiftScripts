@@ -19,7 +19,7 @@ reference; the bundle holds the standing policies, the public component surface,
 references. Record durable decisions and policies as OKF entries, not only in chat or commit
 messages.
 
-**Read `okf/policies/` before starting work. All seven are mandatory:**
+**Read `okf/policies/` before starting work. All eight are mandatory:**
 
 - [context-first](okf/policies/context-first.md): look OCCT / OCCTSwift documentation up via
   the `context` MCP, then context7 for external libraries, then other ecosystem repos' docs.
@@ -45,6 +45,10 @@ messages.
 - [issue-tracking](okf/policies/issue-tracking.md): every issue carries a `type:*` and a
   `priority:*` label. A multi-phase initiative gets its own project board rather than being
   folded into the default backlog view.
+- [code-style](okf/policies/code-style.md): naming/API shape follows the Swift API Design
+  Guidelines, formatting follows Google's Swift Style Guide via `swift-format` (blocking CI),
+  SwiftLint is scoped to `orphaned_doc_comment` only. Doc comments stay a terse one-sentence
+  summary; `docs/` is the single source of truth for design rationale, not a second copy of it.
 
 `Scripts/policy-check.sh` (CI: `.github/workflows/docs-consistency.yml`) asserts this list stays
 in step with `okf/policies/`, so adding a policy file without listing it here fails the build.

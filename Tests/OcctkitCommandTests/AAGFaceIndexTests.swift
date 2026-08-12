@@ -16,9 +16,10 @@
 // the upstream repro exactly, rather than a fixture invented for this test, since the
 // upstream doc comments already pin the expected counts (11 distinct faces, 12 occurrences).
 
-import Testing
 import Foundation
 import OCCTSwift
+import Testing
+
 @testable import occtkit
 
 // .serialized: every test below redirects the process's real fd 1 (stdout) via dup2 to
@@ -92,7 +93,10 @@ struct AAGFaceIndexTests {
         let faceCount: Int
         let adjacencies: [FaceAdjWire]
     }
-    private struct FaceAdjWire: Decodable { let face1: Int; let face2: Int }
+    private struct FaceAdjWire: Decodable {
+        let face1: Int
+        let face2: Int
+    }
     private struct FaceNeighborsWire: Decodable {
         let face: Int
         let neighbors: [NeighborWire]
@@ -134,7 +138,9 @@ struct AAGFaceIndexTests {
         // index: ground-truth this against AAG directly (not against the JSON, which is
         // exactly what could hide the bug if the fix were a no-op).
         let aag = AAG(shape: compound)
-        let byDistinctIndex = Dictionary(grouping: aag.nodes.indices) { aag.nodes[$0].distinctFaceIndex }
+        let byDistinctIndex = Dictionary(grouping: aag.nodes.indices) {
+            aag.nodes[$0].distinctFaceIndex
+        }
         let sharedFaces = byDistinctIndex.filter { $0.value.count > 1 }
         #expect(sharedFaces.count == 1)
         #expect(sharedFaces.first?.value.count == 2)
@@ -147,7 +153,9 @@ struct AAGFaceIndexTests {
         defer { try? FileManager.default.removeItem(at: url) }
 
         let aag = AAG(shape: compound)
-        let byDistinctIndex = Dictionary(grouping: aag.nodes.indices) { aag.nodes[$0].distinctFaceIndex }
+        let byDistinctIndex = Dictionary(grouping: aag.nodes.indices) {
+            aag.nodes[$0].distinctFaceIndex
+        }
         let sharedDistinctIndex = try #require(byDistinctIndex.first { $0.value.count > 1 }?.key)
 
         let stdout = try captureStdout {

@@ -65,10 +65,14 @@ enum RunCommand: Subcommand {
             case "--format":
                 i += 1
                 guard i < args.count else { throw ScriptError.message("--format requires a value") }
-                formats = Set(args[i].split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) })
+                formats = Set(
+                    args[i].split(separator: ",").map {
+                        String($0).trimmingCharacters(in: .whitespaces)
+                    })
                 let invalid = formats.subtracting(Config.allFormats)
                 if !invalid.isEmpty {
-                    throw ScriptError.message("Unknown format(s): \(invalid.sorted().joined(separator: ", "))")
+                    throw ScriptError.message(
+                        "Unknown format(s): \(invalid.sorted().joined(separator: ", "))")
                 }
             case "--output", "-o":
                 i += 1
@@ -78,7 +82,9 @@ enum RunCommand: Subcommand {
                 if args[i].hasPrefix("-") {
                     throw ScriptError.message("Unknown option: \(args[i])")
                 }
-                if scriptPath != nil { throw ScriptError.message("Multiple script files specified") }
+                if scriptPath != nil {
+                    throw ScriptError.message("Multiple script files specified")
+                }
                 scriptPath = args[i]
             }
             i += 1
@@ -142,12 +148,13 @@ enum RunCommand: Subcommand {
     /// worse than none, because it reads as handled.
     private static func escapedForManifest(_ s: String) -> String {
         s.replacingOccurrences(of: "\\", with: "\\\\")
-         .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\"", with: "\\\"")
     }
 
     private static func resolveScriptsDep() -> ScriptsDep {
         if let p = ProcessInfo.processInfo.environment["OCCTKIT_SCRIPTS_PATH"],
-           FileManager.default.fileExists(atPath: p + "/Package.swift") {
+            FileManager.default.fileExists(atPath: p + "/Package.swift")
+        {
             return pathDep(p)
         }
         // argv[0] is typically <pkg>/.build/<cfg>/occtkit when run via `swift run`
@@ -156,14 +163,17 @@ enum RunCommand: Subcommand {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        if FileManager.default.fileExists(atPath: candidate.appendingPathComponent("Package.swift").path) {
+        if FileManager.default.fileExists(
+            atPath: candidate.appendingPathComponent("Package.swift").path)
+        {
             return pathDep(candidate.path)
         }
         // A URL dependency's identity is the last path component of the URL minus
         // any .git suffix, so this one is "OCCTSwiftScripts" regardless of where
         // the consumer checked anything out.
         return ScriptsDep(
-            declaration: ".package(url: \"https://github.com/SecondMouseAU/OCCTSwiftScripts.git\", from: \"1.0.0\")",
+            declaration:
+                ".package(url: \"https://github.com/SecondMouseAU/OCCTSwiftScripts.git\", from: \"1.0.0\")",
             identity: "OCCTSwiftScripts"
         )
     }
@@ -176,27 +186,27 @@ enum RunCommand: Subcommand {
 
         let scriptsDep = resolveScriptsDep()
         let packageContent = """
-        // swift-tools-version: 6.0
-        import PackageDescription
+            // swift-tools-version: 6.0
+            import PackageDescription
 
-        let package = Package(
-            name: "OCCTSwiftUserScript",
-            platforms: [.macOS(.v15)],
-            dependencies: [
-                \(scriptsDep.declaration),
-            ],
-            targets: [
-                .executableTarget(
-                    name: "Script",
-                    dependencies: [
-                        .product(name: "ScriptHarness", package: "\(escapedForManifest(scriptsDep.identity))"),
-                    ],
-                    path: "Sources/Script",
-                    swiftSettings: [.swiftLanguageMode(.v6)]
-                ),
-            ]
-        )
-        """
+            let package = Package(
+                name: "OCCTSwiftUserScript",
+                platforms: [.macOS(.v15)],
+                dependencies: [
+                    \(scriptsDep.declaration),
+                ],
+                targets: [
+                    .executableTarget(
+                        name: "Script",
+                        dependencies: [
+                            .product(name: "ScriptHarness", package: "\(escapedForManifest(scriptsDep.identity))"),
+                        ],
+                        path: "Sources/Script",
+                        swiftSettings: [.swiftLanguageMode(.v6)]
+                    ),
+                ]
+            )
+            """
         try packageContent.write(to: packageSwift, atomically: true, encoding: .utf8)
     }
 
@@ -213,11 +223,14 @@ enum RunCommand: Subcommand {
             }
         }
         if !config.formats.contains("step") {
-            source = source.replacingOccurrences(of: "ScriptContext()", with: "ScriptContext(exportSTEP: false)")
-            source = source.replacingOccurrences(of: "ScriptContext(exportSTEP: true", with: "ScriptContext(exportSTEP: false")
+            source = source.replacingOccurrences(
+                of: "ScriptContext()", with: "ScriptContext(exportSTEP: false)")
+            source = source.replacingOccurrences(
+                of: "ScriptContext(exportSTEP: true", with: "ScriptContext(exportSTEP: false")
         }
 
-        let destURL = workspaceDir
+        let destURL =
+            workspaceDir
             .appendingPathComponent("Sources/Script")
             .appendingPathComponent("main.swift")
         try source.write(to: destURL, atomically: true, encoding: .utf8)
@@ -233,13 +246,17 @@ enum RunCommand: Subcommand {
         try buildProcess.run()
         buildProcess.waitUntilExit()
         if buildProcess.terminationStatus != 0 {
-            let errorOutput = String(data: buildPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+            let errorOutput =
+                String(data: buildPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+                ?? ""
             throw ScriptError.message("Build failed:\n\(errorOutput)")
         }
 
         let runProcess = Process()
         runProcess.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
-        runProcess.arguments = ["run", "--skip-build", "--package-path", workspaceDir.path, "Script"]
+        runProcess.arguments = [
+            "run", "--skip-build", "--package-path", workspaceDir.path, "Script",
+        ]
         runProcess.currentDirectoryURL = workspaceDir
         try runProcess.run()
         runProcess.waitUntilExit()
@@ -252,7 +269,8 @@ enum RunCommand: Subcommand {
         guard let outputDir = config.outputDir else { return }
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
-        let iCloud = home.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output")
+        let iCloud = home.appendingPathComponent(
+            "Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output")
         let local = home.appendingPathComponent(".occtswift-scripts/output")
         let sourceDir = fm.fileExists(atPath: iCloud.path) ? iCloud : local
         guard fm.fileExists(atPath: sourceDir.path) else { return }

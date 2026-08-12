@@ -24,11 +24,14 @@ enum GraphMLCommand: Subcommand {
         let faceAdjacency: [FaceAdjacency]
         let sampling: Sampling
 
-        struct COO: Codable { let sources: [Int]; let targets: [Int] }
+        struct COO: Codable {
+            let sources: [Int]
+            let targets: [Int]
+        }
         struct FaceAdjacency: Codable {
             let face1: Int
             let face2: Int
-            let convexity: String   // convex | concave | smooth
+            let convexity: String  // convex | concave | smooth
             let sharedEdgeCount: Int
         }
         struct Face: Codable {
@@ -40,8 +43,14 @@ enum GraphMLCommand: Subcommand {
             let gaussianCurvatures: [Double]
             let meanCurvatures: [Double]
         }
-        struct Edge: Codable { let index: Int; let samples: [[Double]] }
-        struct Sampling: Codable { let uvSamples: Int; let edgeSamples: Int }
+        struct Edge: Codable {
+            let index: Int
+            let samples: [[Double]]
+        }
+        struct Sampling: Codable {
+            let uvSamples: Int
+            let edgeSamples: Int
+        }
     }
 
     static func run(args: [String]) throws -> Int32 {
@@ -56,7 +65,10 @@ enum GraphMLCommand: Subcommand {
         let g = graph.exportForML()
 
         let faces: [Payload.Face] = (0..<graph.faceCount).compactMap { i in
-            guard let s = graph.sampleFaceUVGrid(faceIndex: i, uSamples: uvSamples, vSamples: uvSamples) else {
+            guard
+                let s = graph.sampleFaceUVGrid(
+                    faceIndex: i, uSamples: uvSamples, vSamples: uvSamples)
+            else {
                 return nil
             }
             return Payload.Face(
@@ -101,7 +113,8 @@ enum GraphMLCommand: Subcommand {
             faceAdjacentFaces: g.faceAdjacentFaces,
             faceToFace: Payload.COO(sources: g.faceToFace.sources, targets: g.faceToFace.targets),
             faceToEdge: Payload.COO(sources: g.faceToEdge.sources, targets: g.faceToEdge.targets),
-            edgeToVertex: Payload.COO(sources: g.edgeToVertex.sources, targets: g.edgeToVertex.targets),
+            edgeToVertex: Payload.COO(
+                sources: g.edgeToVertex.sources, targets: g.edgeToVertex.targets),
             faces: faces,
             edges: edges,
             faceAdjacency: faceAdjacency,

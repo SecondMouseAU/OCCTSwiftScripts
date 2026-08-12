@@ -33,8 +33,13 @@ enum DXFExportCommand: Subcommand {
             case "--view":
                 i += 1
                 guard i < args.count else { throw ScriptError.message("--view requires x,y,z") }
-                let parts = args[i].split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
-                guard parts.count == 3 else { throw ScriptError.message("--view expects three comma-separated numbers, got \(args[i])") }
+                let parts = args[i].split(separator: ",").compactMap {
+                    Double($0.trimmingCharacters(in: .whitespaces))
+                }
+                guard parts.count == 3 else {
+                    throw ScriptError.message(
+                        "--view expects three comma-separated numbers, got \(args[i])")
+                }
                 view = SIMD3(parts[0], parts[1], parts[2])
             case "--deflection":
                 i += 1
@@ -57,16 +62,18 @@ enum DXFExportCommand: Subcommand {
         let shape = try GraphIO.loadBREP(at: inPath)
         let outURL = URL(fileURLWithPath: outPath)
         do {
-            try Exporter.writeDXF(shape: shape, to: outURL, viewDirection: view, deflection: deflection)
+            try Exporter.writeDXF(
+                shape: shape, to: outURL, viewDirection: view, deflection: deflection)
         } catch {
             throw ScriptError.message("DXF export failed: \(error.localizedDescription)")
         }
 
-        try GraphIO.emitJSON(Report(
-            output: outPath,
-            view: [view.x, view.y, view.z],
-            deflection: deflection
-        ))
+        try GraphIO.emitJSON(
+            Report(
+                output: outPath,
+                view: [view.x, view.y, view.z],
+                deflection: deflection
+            ))
         return 0
     }
 }

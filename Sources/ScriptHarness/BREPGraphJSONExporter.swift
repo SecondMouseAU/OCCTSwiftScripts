@@ -14,6 +14,8 @@ public enum BREPGraphJSONExporter {
     ///   - graph: The topology graph to export.
     ///   - url: Destination file URL.
     ///   - description: Optional description for the metadata.
+    /// - Throws: an `EncodingError` if `doc` fails to encode, or the underlying
+    ///   `Foundation` I/O error if the write to `url` fails.
     public static func export(_ graph: BRepGraph, to url: URL, description: String? = nil) throws {
         let doc = buildDocument(graph, description: description)
         let encoder = JSONEncoder()
@@ -56,7 +58,8 @@ public enum BREPGraphJSONExporter {
         )
 
         let v = g.validate()
-        let validation = ValidationBlock(isValid: v.isValid, errorCount: v.errorCount, warningCount: v.warningCount)
+        let validation = ValidationBlock(
+            isValid: v.isValid, errorCount: v.errorCount, warningCount: v.warningCount)
 
         let roots = g.rootNodes.map { RootNodeEntry(kind: nodeKindName($0.kind), index: $0.index) }
 
@@ -90,14 +93,15 @@ public enum BREPGraphJSONExporter {
         for i in 0..<g.vertexCount {
             let pt = g.vertexPoint(i)
             let edgeList = g.edges(of: i)
-            vertices.append(VertexNode(
-                index: i,
-                point: PointXYZ(x: pt.x, y: pt.y, z: pt.z),
-                tolerance: g.vertexTolerance(i),
-                edgeCount: edgeList.count,
-                edges: edgeList,
-                removed: g.isRemoved(nodeKind: .vertex, nodeIndex: i)
-            ))
+            vertices.append(
+                VertexNode(
+                    index: i,
+                    point: PointXYZ(x: pt.x, y: pt.y, z: pt.z),
+                    tolerance: g.vertexTolerance(i),
+                    edgeCount: edgeList.count,
+                    edges: edgeList,
+                    removed: g.isRemoved(nodeKind: .vertex, nodeIndex: i)
+                ))
         }
 
         // Edges
@@ -108,29 +112,30 @@ public enum BREPGraphJSONExporter {
             let wireList = g.edgeWires(i)
             let coedgeList = g.edgeCoEdges(i)
             let adjList = g.adjacentEdges(of: i)
-            edges.append(EdgeNode(
-                index: i,
-                tolerance: g.edgeTolerance(i),
-                degenerated: g.isEdgeDegenerated(i),
-                closed: g.isEdgeClosed(i),
-                hasCurve: g.edgeHasCurve(i),
-                hasPolygon3D: g.edgeHasPolygon3D(i),
-                sameParameter: g.isEdgeSameParameter(i),
-                sameRange: g.isEdgeSameRange(i),
-                maxContinuity: g.edgeMaxContinuity(i),
-                range: RangeBlock(first: r.first, last: r.last),
-                startVertex: g.edgeStartVertex(i),
-                endVertex: g.edgeEndVertex(i),
-                boundary: g.isBoundaryEdge(i),
-                manifold: g.isManifoldEdge(i),
-                faceCount: faceList.count,
-                faces: faceList,
-                wireCount: wireList.count,
-                wires: wireList,
-                coedges: coedgeList,
-                adjacentEdges: adjList,
-                removed: g.isRemoved(nodeKind: .edge, nodeIndex: i)
-            ))
+            edges.append(
+                EdgeNode(
+                    index: i,
+                    tolerance: g.edgeTolerance(i),
+                    degenerated: g.isEdgeDegenerated(i),
+                    closed: g.isEdgeClosed(i),
+                    hasCurve: g.edgeHasCurve(i),
+                    hasPolygon3D: g.edgeHasPolygon3D(i),
+                    sameParameter: g.isEdgeSameParameter(i),
+                    sameRange: g.isEdgeSameRange(i),
+                    maxContinuity: g.edgeMaxContinuity(i),
+                    range: RangeBlock(first: r.first, last: r.last),
+                    startVertex: g.edgeStartVertex(i),
+                    endVertex: g.edgeEndVertex(i),
+                    boundary: g.isBoundaryEdge(i),
+                    manifold: g.isManifoldEdge(i),
+                    faceCount: faceList.count,
+                    faces: faceList,
+                    wireCount: wireList.count,
+                    wires: wireList,
+                    coedges: coedgeList,
+                    adjacentEdges: adjList,
+                    removed: g.isRemoved(nodeKind: .edge, nodeIndex: i)
+                ))
         }
 
         // Faces
@@ -139,98 +144,105 @@ public enum BREPGraphJSONExporter {
             let adjFaces = g.adjacentFaces(of: i)
             let sdFaces = g.sameDomainFaces(of: i)
             let shells = g.faceShells(i)
-            faces.append(FaceNode(
-                index: i,
-                tolerance: g.faceTolerance(i),
-                hasSurface: g.faceHasSurface(i),
-                hasTriangulation: g.faceHasTriangulation(i),
-                naturalRestriction: g.isFaceNaturalRestriction(i),
-                wireCount: g.faceWireCount(i),
-                outerWire: g.outerWire(of: i),
-                vertexRefCount: g.faceVertexRefCount(i),
-                shellCount: shells.count,
-                shells: shells,
-                compoundCount: g.faceCompoundCount(i),
-                adjacentFaces: adjFaces,
-                sameDomainFaces: sdFaces,
-                removed: g.isRemoved(nodeKind: .face, nodeIndex: i)
-            ))
+            faces.append(
+                FaceNode(
+                    index: i,
+                    tolerance: g.faceTolerance(i),
+                    hasSurface: g.faceHasSurface(i),
+                    hasTriangulation: g.faceHasTriangulation(i),
+                    naturalRestriction: g.isFaceNaturalRestriction(i),
+                    wireCount: g.faceWireCount(i),
+                    outerWire: g.outerWire(of: i),
+                    vertexRefCount: g.faceVertexRefCount(i),
+                    shellCount: shells.count,
+                    shells: shells,
+                    compoundCount: g.faceCompoundCount(i),
+                    adjacentFaces: adjFaces,
+                    sameDomainFaces: sdFaces,
+                    removed: g.isRemoved(nodeKind: .face, nodeIndex: i)
+                ))
         }
 
         // Wires
         var wires: [WireNode] = []
         for i in 0..<g.wireCount {
             let wireFaceList = g.wireFaces(i)
-            wires.append(WireNode(
-                index: i,
-                closed: g.isWireClosed(i),
-                coedgeCount: g.wireCoEdgeCount(i),
-                faceCount: wireFaceList.count,
-                faces: wireFaceList,
-                removed: g.isRemoved(nodeKind: .wire, nodeIndex: i)
-            ))
+            wires.append(
+                WireNode(
+                    index: i,
+                    closed: g.isWireClosed(i),
+                    coedgeCount: g.wireCoEdgeCount(i),
+                    faceCount: wireFaceList.count,
+                    faces: wireFaceList,
+                    removed: g.isRemoved(nodeKind: .wire, nodeIndex: i)
+                ))
         }
 
         // CoEdges
         var coedges: [CoEdgeNode] = []
         for i in 0..<g.coedgeCount {
             let r = g.coedgeRange(i)
-            coedges.append(CoEdgeNode(
-                index: i,
-                edge: g.coedgeEdge(i),
-                face: g.coedgeFace(i),
-                seamPair: g.coedgeSeamPair(i),
-                hasPCurve: g.coedgeHasPCurve(i),
-                range: RangeBlock(first: r.first, last: r.last),
-                removed: g.isRemoved(nodeKind: .coedge, nodeIndex: i)
-            ))
+            coedges.append(
+                CoEdgeNode(
+                    index: i,
+                    edge: g.coedgeEdge(i),
+                    face: g.coedgeFace(i),
+                    seamPair: g.coedgeSeamPair(i),
+                    hasPCurve: g.coedgeHasPCurve(i),
+                    range: RangeBlock(first: r.first, last: r.last),
+                    removed: g.isRemoved(nodeKind: .coedge, nodeIndex: i)
+                ))
         }
 
         // Shells
         var shells: [ShellNode] = []
         for i in 0..<g.shellCount {
             let solidList = g.shellSolids(i)
-            shells.append(ShellNode(
-                index: i,
-                closed: g.isShellClosed(i),
-                solidCount: solidList.count,
-                solids: solidList,
-                compoundCount: g.shellCompoundCount(i),
-                removed: g.isRemoved(nodeKind: .shell, nodeIndex: i)
-            ))
+            shells.append(
+                ShellNode(
+                    index: i,
+                    closed: g.isShellClosed(i),
+                    solidCount: solidList.count,
+                    solids: solidList,
+                    compoundCount: g.shellCompoundCount(i),
+                    removed: g.isRemoved(nodeKind: .shell, nodeIndex: i)
+                ))
         }
 
         // Solids
         var solids: [SolidNode] = []
         for i in 0..<g.solidCount {
-            solids.append(SolidNode(
-                index: i,
-                compSolidCount: g.solidCompSolidCount(i),
-                compoundCount: g.solidCompoundCount(i),
-                removed: g.isRemoved(nodeKind: .solid, nodeIndex: i)
-            ))
+            solids.append(
+                SolidNode(
+                    index: i,
+                    compSolidCount: g.solidCompSolidCount(i),
+                    compoundCount: g.solidCompoundCount(i),
+                    removed: g.isRemoved(nodeKind: .solid, nodeIndex: i)
+                ))
         }
 
         // Compounds
         var compounds: [CompoundNode] = []
         for i in 0..<g.compoundCount {
-            compounds.append(CompoundNode(
-                index: i,
-                childCount: g.compoundChildCount(i),
-                parentCount: g.compoundParentCount(i),
-                removed: g.isRemoved(nodeKind: .compound, nodeIndex: i)
-            ))
+            compounds.append(
+                CompoundNode(
+                    index: i,
+                    childCount: g.compoundChildCount(i),
+                    parentCount: g.compoundParentCount(i),
+                    removed: g.isRemoved(nodeKind: .compound, nodeIndex: i)
+                ))
         }
 
         // CompSolids
         var compSolids: [CompSolidNode] = []
         for i in 0..<g.compSolidCount {
-            compSolids.append(CompSolidNode(
-                index: i,
-                solidCount: g.compSolidSolidCount(i),
-                compoundCount: g.compSolidCompoundCount(i),
-                removed: g.isRemoved(nodeKind: .compSolid, nodeIndex: i)
-            ))
+            compSolids.append(
+                CompSolidNode(
+                    index: i,
+                    solidCount: g.compSolidSolidCount(i),
+                    compoundCount: g.compSolidCompoundCount(i),
+                    removed: g.isRemoved(nodeKind: .compSolid, nodeIndex: i)
+                ))
         }
 
         return NodesBlock(
@@ -253,13 +265,14 @@ public enum BREPGraphJSONExporter {
             var entries: [RefEntry] = []
             for i in 0..<count {
                 guard let childKind = g.refChildNodeKind(refKind, refIndex: i) else { continue }
-                entries.append(RefEntry(
-                    index: i,
-                    childKind: nodeKindName(childKind),
-                    childIndex: g.refChildNodeIndex(refKind, refIndex: i),
-                    orientation: g.refOrientation(refKind, refIndex: i),
-                    removed: g.isRefRemoved(refKind, refIndex: i)
-                ))
+                entries.append(
+                    RefEntry(
+                        index: i,
+                        childKind: nodeKindName(childKind),
+                        childIndex: g.refChildNodeIndex(refKind, refIndex: i),
+                        orientation: g.refOrientation(refKind, refIndex: i),
+                        removed: g.isRefRemoved(refKind, refIndex: i)
+                    ))
             }
             return entries
         }
@@ -279,22 +292,33 @@ public enum BREPGraphJSONExporter {
     // MARK: - Adjacency (COO sparse)
 
     static func buildAdjacency(_ g: BRepGraph) -> AdjacencyBlock {
-        var f2fSrc: [Int] = [], f2fTgt: [Int] = []
-        var f2eSrc: [Int] = [], f2eTgt: [Int] = []
-        var e2vSrc: [Int] = [], e2vTgt: [Int] = []
+        var f2fSrc: [Int] = []
+        var f2fTgt: [Int] = []
+        var f2eSrc: [Int] = []
+        var f2eTgt: [Int] = []
+        var e2vSrc: [Int] = []
+        var e2vTgt: [Int] = []
 
         for i in 0..<g.faceCount {
             for adj in g.adjacentFaces(of: i) {
-                f2fSrc.append(i); f2fTgt.append(adj)
+                f2fSrc.append(i)
+                f2fTgt.append(adj)
             }
         }
 
         for i in 0..<g.edgeCount {
             for f in g.faces(of: i) {
-                f2eSrc.append(f); f2eTgt.append(i)
+                f2eSrc.append(f)
+                f2eTgt.append(i)
             }
-            if let sv = g.edgeStartVertex(i) { e2vSrc.append(i); e2vTgt.append(sv) }
-            if let ev = g.edgeEndVertex(i) { e2vSrc.append(i); e2vTgt.append(ev) }
+            if let sv = g.edgeStartVertex(i) {
+                e2vSrc.append(i)
+                e2vTgt.append(sv)
+            }
+            if let ev = g.edgeEndVertex(i) {
+                e2vSrc.append(i)
+                e2vTgt.append(ev)
+            }
         }
 
         return AdjacencyBlock(
@@ -310,23 +334,25 @@ public enum BREPGraphJSONExporter {
         var products: [ProductEntry] = []
         for i in 0..<g.productCount {
             let root = g.productShapeRoot(i)
-            products.append(ProductEntry(
-                index: i,
-                isAssembly: g.productIsAssembly(i),
-                isPart: g.productIsPart(i),
-                componentCount: g.productComponentCount(i),
-                shapeRootKind: root.map { nodeKindName($0.kind) },
-                shapeRootIndex: root?.index
-            ))
+            products.append(
+                ProductEntry(
+                    index: i,
+                    isAssembly: g.productIsAssembly(i),
+                    isPart: g.productIsPart(i),
+                    componentCount: g.productComponentCount(i),
+                    shapeRootKind: root.map { nodeKindName($0.kind) },
+                    shapeRootIndex: root?.index
+                ))
         }
 
         var occurrences: [OccurrenceEntry] = []
         for i in 0..<g.occurrenceCount {
-            occurrences.append(OccurrenceEntry(
-                index: i,
-                productIndex: g.occurrenceProduct(i),
-                parentProductIndex: g.occurrenceParentProduct(i)
-            ))
+            occurrences.append(
+                OccurrenceEntry(
+                    index: i,
+                    productIndex: g.occurrenceProduct(i),
+                    parentProductIndex: g.occurrenceParentProduct(i)
+                ))
         }
 
         return AssemblyBlock(
@@ -382,7 +408,8 @@ struct StatsBlock: Codable {
 }
 
 struct TopologyStats: Codable {
-    let compounds, compSolids, solids, shells, faces, wires, edges, vertices, coedges, totalNodes: Int
+    let compounds, compSolids, solids, shells, faces, wires, edges, vertices, coedges,
+        totalNodes: Int
 }
 
 struct GeometryStats: Codable {

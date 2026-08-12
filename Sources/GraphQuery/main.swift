@@ -11,7 +11,7 @@ import Foundation
 import ScriptHarness
 
 #if canImport(SQLite3)
-import SQLite3
+    import SQLite3
 #endif
 
 struct Query: Codable {
@@ -40,11 +40,18 @@ struct Query: Codable {
     struct Valence: Codable {
         let face: Stat
         let vertex: Stat
-        struct Stat: Codable { let max: Int; let mean: Double; let count: Int }
+        struct Stat: Codable {
+            let max: Int
+            let mean: Double
+            let count: Int
+        }
     }
 }
 
-FileHandle.standardError.write(Data("DEPRECATED: 'GraphQuery' standalone target will be removed in a future release. Use 'occtkit graph-query' instead.\n".utf8))
+FileHandle.standardError.write(
+    Data(
+        "DEPRECATED: 'GraphQuery' standalone target will be removed in a future release. Use 'occtkit graph-query' instead.\n"
+            .utf8))
 
 let args = Array(CommandLine.arguments.dropFirst())
 do {
@@ -85,33 +92,37 @@ do {
     }
 
     var summaryStmt: OpaquePointer?
-    guard sqlite3_prepare_v2(db, "SELECT * FROM topology_summary", -1, &summaryStmt, nil) == SQLITE_OK,
-          sqlite3_step(summaryStmt) == SQLITE_ROW else {
+    guard
+        sqlite3_prepare_v2(db, "SELECT * FROM topology_summary", -1, &summaryStmt, nil)
+            == SQLITE_OK,
+        sqlite3_step(summaryStmt) == SQLITE_ROW
+    else {
         sqlite3_finalize(summaryStmt)
-        throw ScriptError.message("topology_summary view missing or empty, is this a BREPGraph SQLite file?")
+        throw ScriptError.message(
+            "topology_summary view missing or empty, is this a BREPGraph SQLite file?")
     }
     let summary = Query.Summary(
-        solids:           Int(sqlite3_column_int64(summaryStmt, 0)),
-        shells:           Int(sqlite3_column_int64(summaryStmt, 1)),
-        faces:            Int(sqlite3_column_int64(summaryStmt, 2)),
-        wires:            Int(sqlite3_column_int64(summaryStmt, 3)),
-        edges:            Int(sqlite3_column_int64(summaryStmt, 4)),
-        vertices:         Int(sqlite3_column_int64(summaryStmt, 5)),
-        coedges:          Int(sqlite3_column_int64(summaryStmt, 6)),
-        boundaryEdges:    Int(sqlite3_column_int64(summaryStmt, 7)),
+        solids: Int(sqlite3_column_int64(summaryStmt, 0)),
+        shells: Int(sqlite3_column_int64(summaryStmt, 1)),
+        faces: Int(sqlite3_column_int64(summaryStmt, 2)),
+        wires: Int(sqlite3_column_int64(summaryStmt, 3)),
+        edges: Int(sqlite3_column_int64(summaryStmt, 4)),
+        vertices: Int(sqlite3_column_int64(summaryStmt, 5)),
+        coedges: Int(sqlite3_column_int64(summaryStmt, 6)),
+        boundaryEdges: Int(sqlite3_column_int64(summaryStmt, 7)),
         nonManifoldEdges: Int(sqlite3_column_int64(summaryStmt, 8)),
-        degenerateEdges:  Int(sqlite3_column_int64(summaryStmt, 9)),
-        openShells:       Int(sqlite3_column_int64(summaryStmt, 10))
+        degenerateEdges: Int(sqlite3_column_int64(summaryStmt, 9)),
+        openShells: Int(sqlite3_column_int64(summaryStmt, 10))
     )
     sqlite3_finalize(summaryStmt)
 
     let counts = Query.Counts(
-        freeEdges:      scalarInt("SELECT COUNT(*) FROM free_edges"),
-        openWires:      scalarInt("SELECT COUNT(*) FROM open_wires"),
+        freeEdges: scalarInt("SELECT COUNT(*) FROM free_edges"),
+        openWires: scalarInt("SELECT COUNT(*) FROM open_wires"),
         facesWithHoles: scalarInt("SELECT COUNT(*) FROM faces_with_holes")
     )
     let v = Query.Valence(
-        face:   valence(view: "face_valence",   column: "neighbor_count"),
+        face: valence(view: "face_valence", column: "neighbor_count"),
         vertex: valence(view: "vertex_valence", column: "edge_count")
     )
 

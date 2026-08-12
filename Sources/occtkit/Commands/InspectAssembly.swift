@@ -18,9 +18,9 @@
 //   2. JSON form:  { "inputPath": "...", "depth": N }
 
 import Foundation
-import simd
 import OCCTSwift
 import ScriptHarness
+import simd
 
 enum InspectAssemblyCommand: Subcommand {
     static let name = "inspect-assembly"
@@ -81,14 +81,17 @@ enum InspectAssemblyCommand: Subcommand {
                 color: nil, material: nil, layer: nil,
                 children: [], referredTo: nil
             )
-            try GraphIO.emitJSON(Response(
-                root: node, totalComponents: 1, totalInstances: 0, totalReferences: 0
-            ))
+            try GraphIO.emitJSON(
+                Response(
+                    root: node, totalComponents: 1, totalInstances: 0, totalReferences: 0
+                ))
             return 0
         }
 
         let document = try loadDocument(path: req.inputPath)
-        var components = 0, instances = 0, references = 0
+        var components = 0
+        var instances = 0
+        var references = 0
 
         let roots = document.rootNodes
         let topLevelNode: Response.Node?
@@ -96,15 +99,17 @@ enum InspectAssemblyCommand: Subcommand {
         case 0:
             topLevelNode = nil
         case 1:
-            topLevelNode = walk(node: roots[0], depthRemaining: req.depth,
-                                components: &components, instances: &instances,
-                                references: &references)
+            topLevelNode = walk(
+                node: roots[0], depthRemaining: req.depth,
+                components: &components, instances: &instances,
+                references: &references)
         default:
             // Synthetic root wrapping multiple top-level shapes.
             let children = roots.compactMap {
-                walk(node: $0, depthRemaining: req.depth,
-                     components: &components, instances: &instances,
-                     references: &references)
+                walk(
+                    node: $0, depthRemaining: req.depth,
+                    components: &components, instances: &instances,
+                    references: &references)
             }
             topLevelNode = Response.Node(
                 id: "label_0", name: nil, isAssembly: true,
@@ -114,12 +119,13 @@ enum InspectAssemblyCommand: Subcommand {
             )
         }
 
-        try GraphIO.emitJSON(Response(
-            root: topLevelNode,
-            totalComponents: components,
-            totalInstances: instances,
-            totalReferences: references
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                root: topLevelNode,
+                totalComponents: components,
+                totalInstances: instances,
+                totalReferences: references
+            ))
         return 0
     }
 
@@ -152,16 +158,20 @@ enum InspectAssemblyCommand: Subcommand {
 
         var kids: [Response.Node] = []
         for child in node.children {
-            kids.append(walk(node: child, depthRemaining: nextDepth,
-                             components: &components, instances: &instances,
-                             references: &references))
+            kids.append(
+                walk(
+                    node: child, depthRemaining: nextDepth,
+                    components: &components, instances: &instances,
+                    references: &references))
         }
         return makeNode(node, children: kids, referredTo: referredTo)
     }
 
-    private static func makeNode(_ node: AssemblyNode,
-                                  children: [Response.Node],
-                                  referredTo: Response.ReferredTo?) -> Response.Node {
+    private static func makeNode(
+        _ node: AssemblyNode,
+        children: [Response.Node],
+        referredTo: Response.ReferredTo?
+    ) -> Response.Node {
         let xform = flatten4x4(node.transform)
         let color: [Float]? = node.color.map {
             [Float($0.red), Float($0.green), Float($0.blue), Float($0.alpha)]
@@ -195,7 +205,8 @@ enum InspectAssemblyCommand: Subcommand {
             return doc
         default:
             throw ScriptError.message(
-                "Unsupported input extension '\(ext)'. Use .step / .stp / .xbf, or .brep for a degenerate single-node response.")
+                "Unsupported input extension '\(ext)'. Use .step / .stp / .xbf, or .brep for a degenerate single-node response."
+            )
         }
     }
 
@@ -205,17 +216,20 @@ enum InspectAssemblyCommand: Subcommand {
     }
 
     static func identityFloat4x4() -> [Float] {
-        [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]
+        [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
     }
 
     // MARK: - Request parsing
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--depth") {
+            !args.contains("--depth")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputPath = args.first, !inputPath.hasPrefix("-") else {
             throw ScriptError.message("Missing input positional argument")
         }

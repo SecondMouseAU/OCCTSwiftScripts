@@ -8,7 +8,10 @@ import Foundation
 import OCCTSwift
 import ScriptHarness
 
-FileHandle.standardError.write(Data("DEPRECATED: 'GraphCompact' standalone target will be removed in a future release. Use 'occtkit graph-compact' instead.\n".utf8))
+FileHandle.standardError.write(
+    Data(
+        "DEPRECATED: 'GraphCompact' standalone target will be removed in a future release. Use 'occtkit graph-compact' instead.\n"
+            .utf8))
 
 let args = Array(CommandLine.arguments.dropFirst())
 do {
@@ -25,7 +28,8 @@ do {
         throw ScriptError.message("Compact succeeded but graph has no root nodes to rebuild")
     }
     try GraphIO.writeBREP(rebuilt, to: outPath)
-    try GraphIO.emitJSON(GraphIO.CompactReport(nodesBefore: nodesBefore, result: result, output: outPath))
+    try GraphIO.emitJSON(
+        GraphIO.CompactReport(nodesBefore: nodesBefore, result: result, output: outPath))
 } catch {
     FileHandle.standardError.write(Data("Error: \(error.localizedDescription)\n".utf8))
     exit(1)

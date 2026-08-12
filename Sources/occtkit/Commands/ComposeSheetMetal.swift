@@ -95,11 +95,12 @@ enum ComposeSheetMetalCommand: Subcommand {
         let outURL = outDir.appendingPathComponent("\(outputName).brep")
         try GraphIO.writeBREP(shape, to: outURL.path)
 
-        try GraphIO.emitJSON(Response(
-            shape: outURL.path,
-            flanges: flanges.count,
-            bends: bends.count
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                shape: outURL.path,
+                flanges: flanges.count,
+                bends: bends.count
+            ))
         return 0
     }
 

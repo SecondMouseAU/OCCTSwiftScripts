@@ -100,12 +100,13 @@ enum BooleanCommand: Subcommand {
             at: outURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try GraphIO.writeBREP(result, to: outURL.path)
 
-        try GraphIO.emitJSON(Response(
-            outputPath: outURL.path,
-            volume: result.volume,
-            isValid: result.isValid,
-            warnings: warnings
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                outputPath: outURL.path,
+                volume: result.volume,
+                isValid: result.isValid,
+                warnings: warnings
+            ))
         return 0
     }
 
@@ -119,21 +120,25 @@ enum BooleanCommand: Subcommand {
             // bare `boolean` with no args, or a positional that isn't a .json: treat as stdin JSON
             // unless flags are present
             if !args.contains("--op") {
-                return try GraphIO.decodeJSON(Request.self, from: FileHandle.standardInput.readDataToEndOfFile())
+                return try GraphIO.decodeJSON(
+                    Request.self, from: FileHandle.standardInput.readDataToEndOfFile())
             }
         }
         return try parseFlags(args: args)
     }
 
     private static func parseFlags(args: [String]) throws -> Request {
-        var op: String?, a: String?, b: String?, output: String?
+        var op: String?
+        var a: String?
+        var b: String?
+        var output: String?
         var i = 0
         while i < args.count {
             let arg = args[i]
             switch arg {
-            case "--op":     op = try GraphIO.valueAfter(arg, at: &i, args: args)
-            case "--a":      a = try GraphIO.valueAfter(arg, at: &i, args: args)
-            case "--b":      b = try GraphIO.valueAfter(arg, at: &i, args: args)
+            case "--op": op = try GraphIO.valueAfter(arg, at: &i, args: args)
+            case "--a": a = try GraphIO.valueAfter(arg, at: &i, args: args)
+            case "--b": b = try GraphIO.valueAfter(arg, at: &i, args: args)
             case "--output": output = try GraphIO.valueAfter(arg, at: &i, args: args)
             default:
                 throw ScriptError.message("Unknown flag: \(arg)")

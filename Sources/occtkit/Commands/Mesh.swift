@@ -34,9 +34,9 @@
 //        "parallel": <bool>, "outputPath": "...", "returnGeometry": <bool> }
 
 import Foundation
-import simd
 import OCCTSwift
 import ScriptHarness
+import simd
 
 enum MeshCommand: Subcommand {
     static let name = "mesh"
@@ -83,8 +83,8 @@ enum MeshCommand: Subcommand {
             let nonManifoldEdges: Int
         }
         struct Geometry: Encodable {
-            let vertices: [Float]   // [x0,y0,z0, x1,y1,z1, ...]
-            let indices: [UInt32]   // [i0,i1,i2, ...]
+            let vertices: [Float]  // [x0,y0,z0, x1,y1,z1, ...]
+            let indices: [UInt32]  // [i0,i1,i2, ...]
         }
     }
 
@@ -99,7 +99,8 @@ enum MeshCommand: Subcommand {
         params.angle = req.angularDeflection
         params.inParallel = req.parallel
         guard let mesh = shape.mesh(parameters: params) else {
-            throw ScriptError.message("Mesh generation failed (BRepMesh_IncrementalMesh returned nil)")
+            throw ScriptError.message(
+                "Mesh generation failed (BRepMesh_IncrementalMesh returned nil)")
         }
 
         let triangleCount = mesh.triangleCount
@@ -128,13 +129,14 @@ enum MeshCommand: Subcommand {
             )
         }
 
-        try GraphIO.emitJSON(Response(
-            triangleCount: triangleCount,
-            vertexCount: vertexCount,
-            quality: quality,
-            geometry: geometry,
-            outputPath: outputPathOut
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                triangleCount: triangleCount,
+                vertexCount: vertexCount,
+                quality: quality,
+                geometry: geometry,
+                outputPath: outputPathOut
+            ))
         return 0
     }
 
@@ -152,7 +154,8 @@ enum MeshCommand: Subcommand {
                     "Unsupported --output extension '\(ext)'; use .stl or .obj")
             }
         } catch {
-            throw ScriptError.message("Failed to write mesh to \(path): \(error.localizedDescription)")
+            throw ScriptError.message(
+                "Failed to write mesh to \(path): \(error.localizedDescription)")
         }
     }
 
@@ -174,8 +177,12 @@ enum MeshCommand: Subcommand {
             let i0 = idxs[t * 3 + 0]
             let i1 = idxs[t * 3 + 1]
             let i2 = idxs[t * 3 + 2]
-            guard Int(i0) < verts.count, Int(i1) < verts.count, Int(i2) < verts.count else { continue }
-            let a = verts[Int(i0)], b = verts[Int(i1)], c = verts[Int(i2)]
+            guard Int(i0) < verts.count, Int(i1) < verts.count, Int(i2) < verts.count else {
+                continue
+            }
+            let a = verts[Int(i0)]
+            let b = verts[Int(i1)]
+            let c = verts[Int(i2)]
             let e0 = simd_length(b - a)
             let e1 = simd_length(c - b)
             let e2 = simd_length(a - c)
@@ -212,11 +219,14 @@ enum MeshCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--linear-deflection") && !args.contains("--angular-deflection") &&
-            !args.contains("--output") {
+            !args.contains("--linear-deflection") && !args.contains("--angular-deflection")
+                && !args.contains("--output")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
@@ -230,20 +240,24 @@ enum MeshCommand: Subcommand {
             switch args[i] {
             case "--linear-deflection":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--linear-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--linear-deflection"))
+                else {
                     throw ScriptError.message("--linear-deflection expects a number")
                 }
                 linear = d
             case "--angular-deflection":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--angular-deflection")) else {
+                guard let d = Double(try GraphIO.value(args, at: i, flag: "--angular-deflection"))
+                else {
                     throw ScriptError.message("--angular-deflection expects a number")
                 }
                 angular = d
-            case "--parallel":               parallel = true
-            case "--output":                 i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
-            case "--no-return-geometry":     returnGeometry = false
-            case "--return-geometry":        returnGeometry = true
+            case "--parallel": parallel = true
+            case "--output":
+                i += 1
+                output = try GraphIO.value(args, at: i, flag: "--output")
+            case "--no-return-geometry": returnGeometry = false
+            case "--return-geometry": returnGeometry = true
             default: throw ScriptError.message("Unknown flag: \(args[i])")
             }
             i += 1

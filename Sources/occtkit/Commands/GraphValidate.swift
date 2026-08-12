@@ -26,7 +26,8 @@ import ScriptHarness
 
 enum GraphValidateCommand: Subcommand {
     static let name = "graph-validate"
-    static let summary = "Validate a BREP shape's topology graph and surface a structured health record"
+    static let summary =
+        "Validate a BREP shape's topology graph and surface a structured health record"
     static let usage = "Usage: graph-validate <shape.brep> [--self-intersection-timeout d]"
 
     struct Response: Encodable {
@@ -68,12 +69,13 @@ enum GraphValidateCommand: Subcommand {
             errors: []
         )
 
-        try GraphIO.emitJSON(Response(
-            isValid: validation.isValid,
-            errorCount: validation.errorCount,
-            warningCount: validation.warningCount,
-            healthRecord: record
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                isValid: validation.isValid,
+                errorCount: validation.errorCount,
+                warningCount: validation.warningCount,
+                healthRecord: record
+            ))
         return 0
     }
 

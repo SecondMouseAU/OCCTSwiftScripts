@@ -80,25 +80,29 @@ enum MeasureDistanceCommand: Subcommand {
         }
         let minDistance = solutions.map { $0.distance }.min() ?? 0
 
-        let contacts = req.computeContacts ? solutions.map { sol in
-            Response.Contact(
-                fromPoint: [sol.point1.x, sol.point1.y, sol.point1.z],
-                toPoint: [sol.point2.x, sol.point2.y, sol.point2.z],
-                distance: sol.distance
-            )
-        } : []
+        let contacts =
+            req.computeContacts
+            ? solutions.map { sol in
+                Response.Contact(
+                    fromPoint: [sol.point1.x, sol.point1.y, sol.point1.z],
+                    toPoint: [sol.point2.x, sol.point2.y, sol.point2.z],
+                    distance: sol.distance
+                )
+            } : []
 
-        try GraphIO.emitJSON(Response(
-            minDistance: minDistance,
-            isParallel: false,  // shape-shape: not meaningful (edge-edge has its own API)
-            contacts: contacts
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                minDistance: minDistance,
+                isParallel: false,  // shape-shape: not meaningful (edge-edge has its own API)
+                contacts: contacts
+            ))
         return 0
     }
 
     /// Resolve an optional sub-entity ref. v1: only "point:x,y,z" is supported;
     /// any other ref form falls through to the whole-BREP load.
-    private static func resolveShape(brepPath: String, ref: String?, label: String) throws -> Shape {
+    private static func resolveShape(brepPath: String, ref: String?, label: String) throws -> Shape
+    {
         if let ref, ref.hasPrefix("point:") {
             let coords = ref.dropFirst("point:".count)
             let v = coords.split(separator: ",").compactMap { Double($0) }
@@ -117,7 +121,8 @@ enum MeasureDistanceCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           args.count == 1 || args[1].hasPrefix("-") == false {
+            args.count == 1 || args[1].hasPrefix("-") == false
+        {
             // .json with no other positional likely means JSON file
             if args.count == 1 {
                 return try decodeJSON(data: try GraphIO.readFile(first))
@@ -133,14 +138,17 @@ enum MeasureDistanceCommand: Subcommand {
         guard args.count >= 2, !args[0].hasPrefix("-"), !args[1].hasPrefix("-") else {
             throw ScriptError.message("Expected: <a.brep> <b.brep> [flags]")
         }
-        var fromRef: String?, toRef: String?
+        var fromRef: String?
+        var toRef: String?
         var computeContacts = false
         var i = 2
         while i < args.count {
             switch args[i] {
             case "--from-ref":
                 i += 1
-                guard i < args.count else { throw ScriptError.message("--from-ref expects a value") }
+                guard i < args.count else {
+                    throw ScriptError.message("--from-ref expects a value")
+                }
                 fromRef = args[i]
             case "--to-ref":
                 i += 1
@@ -153,13 +161,15 @@ enum MeasureDistanceCommand: Subcommand {
             }
             i += 1
         }
-        return Request(a: args[0], b: args[1], fromRef: fromRef, toRef: toRef,
-                       computeContacts: computeContacts)
+        return Request(
+            a: args[0], b: args[1], fromRef: fromRef, toRef: toRef,
+            computeContacts: computeContacts)
     }
 
     private static func decodeJSON(data: Data) throws -> Request {
         let raw = try GraphIO.decodeJSON(JSONRequest.self, from: data)
-        return Request(a: raw.a, b: raw.b, fromRef: raw.fromRef, toRef: raw.toRef,
-                       computeContacts: raw.computeContacts ?? false)
+        return Request(
+            a: raw.a, b: raw.b, fromRef: raw.fromRef, toRef: raw.toRef,
+            computeContacts: raw.computeContacts ?? false)
     }
 }

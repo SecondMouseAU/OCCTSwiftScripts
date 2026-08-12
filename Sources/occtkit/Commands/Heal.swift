@@ -124,9 +124,9 @@ enum HealCommand: Subcommand {
         let before = snapshot(of: input, selfIntersectionTimeout: req.selfIntersectionTimeout)
 
         let fixer = ShapeFixer(shape: input)
-        if let t = req.tolerance     { fixer.setPrecision(t) }
-        if let t = req.maxTolerance  { fixer.setMaxTolerance(t) }
-        if let t = req.minTolerance  { fixer.setMinTolerance(t) }
+        if let t = req.tolerance { fixer.setPrecision(t) }
+        if let t = req.maxTolerance { fixer.setMaxTolerance(t) }
+        if let t = req.minTolerance { fixer.setMinTolerance(t) }
         let didChange = fixer.perform()
         let healed = fixer.shape ?? input
 
@@ -139,36 +139,45 @@ enum HealCommand: Subcommand {
 
         var warnings: [String] = []
         if !didChange {
-            warnings.append("ShapeFixer.perform() reported no changes; before/after may be identical")
+            warnings.append(
+                "ShapeFixer.perform() reported no changes; before/after may be identical")
         }
-        if !req.fixSmallEdges || !req.fixSmallFaces || !req.fixGaps ||
-            !req.fixSelfIntersection || !req.fixOrientation || !req.unifyDomain {
+        if !req.fixSmallEdges || !req.fixSmallFaces || !req.fixGaps || !req.fixSelfIntersection
+            || !req.fixOrientation || !req.unifyDomain
+        {
             // Default-true flags being explicitly disabled is meaningless under the
             // current ShapeFixer surface. Note it once.
-            warnings.append("Per-fix --fix-* flags are accepted but currently coalesce into ShapeFixer's precision tuning; granular per-fix gating waits on an upstream OCCTSwift API.")
+            warnings.append(
+                "Per-fix --fix-* flags are accepted but currently coalesce into ShapeFixer's precision tuning; granular per-fix gating waits on an upstream OCCTSwift API."
+            )
         }
 
         let selfIntersectionResolved: Bool? = {
-            guard let b = before.hasSelfIntersection, let a = after.hasSelfIntersection else { return nil }
+            guard let b = before.hasSelfIntersection, let a = after.hasSelfIntersection else {
+                return nil
+            }
             return b && !a
         }()
 
-        try GraphIO.emitJSON(Response(
-            outputPath: outURL.path,
-            before: before,
-            after: after,
-            fixes: Response.Fixes(
-                smallEdgesFixed: max(0, before.smallEdgeCount - after.smallEdgeCount),
-                smallFacesFixed: max(0, before.smallFaceCount - after.smallFaceCount),
-                freeEdgesClosed: max(0, before.freeEdgeCount - after.freeEdgeCount),
-                selfIntersectionResolved: selfIntersectionResolved
-            ),
-            warnings: warnings
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                outputPath: outURL.path,
+                before: before,
+                after: after,
+                fixes: Response.Fixes(
+                    smallEdgesFixed: max(0, before.smallEdgeCount - after.smallEdgeCount),
+                    smallFacesFixed: max(0, before.smallFaceCount - after.smallFaceCount),
+                    freeEdgesClosed: max(0, before.freeEdgeCount - after.freeEdgeCount),
+                    selfIntersectionResolved: selfIntersectionResolved
+                ),
+                warnings: warnings
+            ))
         return 0
     }
 
-    private static func snapshot(of shape: Shape, selfIntersectionTimeout: Double?) -> Response.HealthSnapshot {
+    private static func snapshot(of shape: Shape, selfIntersectionTimeout: Double?)
+        -> Response.HealthSnapshot
+    {
         let analysis = shape.analyze(selfIntersectionTimeout: selfIntersectionTimeout)
         return Response.HealthSnapshot(
             faceCount: shape.faces().count,
@@ -185,22 +194,33 @@ enum HealCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--output") {
+            !args.contains("--output")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputBrep = args.first, !inputBrep.hasPrefix("-") else {
             throw ScriptError.message("Missing input BREP positional argument")
         }
         var output: String?
-        var tolerance: Double?, maxTol: Double?, minTol: Double?
-        var fixSmallEdges = true, fixSmallFaces = true, fixGaps = true
-        var fixSelfIntersection = true, fixOrientation = true, unifyDomain = true
+        var tolerance: Double?
+        var maxTol: Double?
+        var minTol: Double?
+        var fixSmallEdges = true
+        var fixSmallFaces = true
+        var fixGaps = true
+        var fixSelfIntersection = true
+        var fixOrientation = true
+        var unifyDomain = true
         var selfIntersectionTimeout: Double?
         var i = 1
         while i < args.count {
             switch args[i] {
-            case "--output":            i += 1; output = try GraphIO.value(args, at: i, flag: "--output")
+            case "--output":
+                i += 1
+                output = try GraphIO.value(args, at: i, flag: "--output")
             case "--tolerance":
                 i += 1
                 guard let d = Double(try GraphIO.value(args, at: i, flag: "--tolerance")) else {
@@ -219,22 +239,26 @@ enum HealCommand: Subcommand {
                     throw ScriptError.message("--min-tolerance expects a number")
                 }
                 minTol = d
-            case "--fix-small-edges":           fixSmallEdges = true
-            case "--no-fix-small-edges":        fixSmallEdges = false
-            case "--fix-small-faces":           fixSmallFaces = true
-            case "--no-fix-small-faces":        fixSmallFaces = false
-            case "--fix-gaps":                  fixGaps = true
-            case "--no-fix-gaps":               fixGaps = false
-            case "--fix-self-intersection":     fixSelfIntersection = true
-            case "--no-fix-self-intersection":  fixSelfIntersection = false
-            case "--fix-orientation":           fixOrientation = true
-            case "--no-fix-orientation":        fixOrientation = false
-            case "--unify-domain":              unifyDomain = true
-            case "--no-unify-domain":           unifyDomain = false
+            case "--fix-small-edges": fixSmallEdges = true
+            case "--no-fix-small-edges": fixSmallEdges = false
+            case "--fix-small-faces": fixSmallFaces = true
+            case "--no-fix-small-faces": fixSmallFaces = false
+            case "--fix-gaps": fixGaps = true
+            case "--no-fix-gaps": fixGaps = false
+            case "--fix-self-intersection": fixSelfIntersection = true
+            case "--no-fix-self-intersection": fixSelfIntersection = false
+            case "--fix-orientation": fixOrientation = true
+            case "--no-fix-orientation": fixOrientation = false
+            case "--unify-domain": unifyDomain = true
+            case "--no-unify-domain": unifyDomain = false
             case "--self-intersection-timeout":
                 i += 1
-                guard let d = Double(try GraphIO.value(args, at: i, flag: "--self-intersection-timeout")) else {
-                    throw ScriptError.message("--self-intersection-timeout expects a number (seconds)")
+                guard
+                    let d = Double(
+                        try GraphIO.value(args, at: i, flag: "--self-intersection-timeout"))
+                else {
+                    throw ScriptError.message(
+                        "--self-intersection-timeout expects a number (seconds)")
                 }
                 selfIntersectionTimeout = d
             default:

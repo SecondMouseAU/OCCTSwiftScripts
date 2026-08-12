@@ -38,8 +38,8 @@ enum FeatureRecognizeCommand: Subcommand {
 
         struct Feature: Codable {
             let id: String
-            let kind: String           // "pocket" | "hole"
-            let confidence: Double     // 1.0, AAG is rule-based, no probabilistic score
+            let kind: String  // "pocket" | "hole"
+            let confidence: Double  // 1.0, AAG is rule-based, no probabilistic score
             let params: [String: Double]
             let topologyRefs: [String]
         }
@@ -85,31 +85,33 @@ enum FeatureRecognizeCommand: Subcommand {
         for (i, p) in pockets.enumerated() {
             var refs = ["face[\(p.floorFaceIndex)]"]
             refs.append(contentsOf: p.wallFaceIndices.map { "face[\($0)]" })
-            features.append(Report.Feature(
-                id: "feat[\(features.count)]",
-                kind: "pocket",
-                confidence: 1.0,
-                params: [
-                    "zLevel": p.zLevel,
-                    "depth": p.depth,
-                    "isOpen": p.isOpen ? 1.0 : 0.0,
-                    "pocketIndex": Double(i),
-                ],
-                topologyRefs: refs
-            ))
+            features.append(
+                Report.Feature(
+                    id: "feat[\(features.count)]",
+                    kind: "pocket",
+                    confidence: 1.0,
+                    params: [
+                        "zLevel": p.zLevel,
+                        "depth": p.depth,
+                        "isOpen": p.isOpen ? 1.0 : 0.0,
+                        "pocketIndex": Double(i),
+                    ],
+                    topologyRefs: refs
+                ))
         }
         for (i, h) in holes.enumerated() {
-            features.append(Report.Feature(
-                id: "feat[\(features.count)]",
-                kind: "hole",
-                confidence: 1.0,
-                params: [
-                    "radius": h.radius,
-                    "depth": h.depth,
-                    "holeIndex": Double(i),
-                ],
-                topologyRefs: ["face[\(h.faceIndex)]"]
-            ))
+            features.append(
+                Report.Feature(
+                    id: "feat[\(features.count)]",
+                    kind: "hole",
+                    confidence: 1.0,
+                    params: [
+                        "radius": h.radius,
+                        "depth": h.depth,
+                        "holeIndex": Double(i),
+                    ],
+                    topologyRefs: ["face[\(h.faceIndex)]"]
+                ))
         }
 
         try GraphIO.emitJSON(Report(pockets: pockets, holes: holes, features: features))

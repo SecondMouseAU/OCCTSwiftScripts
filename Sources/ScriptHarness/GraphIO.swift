@@ -22,6 +22,7 @@ public enum GraphIO {
     }
 
     /// Read the flag value at `i`, throwing if the flag was the last token.
+    ///
     /// Use when the caller has already advanced past the flag itself.
     public static func value(_ args: [String], at i: Int, flag: String) throws -> String {
         guard i < args.count else { throw ScriptError.message("\(flag) expects a value") }
@@ -29,8 +30,10 @@ public enum GraphIO {
     }
 
     /// Read the value following `flag`, advancing `i` past it.
+    ///
     /// Throws if `flag` is the last token.
-    public static func valueAfter(_ flag: String, at i: inout Int, args: [String]) throws -> String {
+    public static func valueAfter(_ flag: String, at i: inout Int, args: [String]) throws -> String
+    {
         i += 1
         return try value(args, at: i, flag: flag)
     }
@@ -49,19 +52,27 @@ public enum GraphIO {
         do {
             return try Shape.loadBREP(from: url)
         } catch {
-            throw ScriptError.message("Failed to load BREP at \(path): \(error.localizedDescription)")
+            throw ScriptError.message(
+                "Failed to load BREP at \(path): \(error.localizedDescription)")
         }
     }
 
-    /// - Parameter allowInvalid: skip the `shape.isValid` write gate so an
-    ///   in-progress / loose-face reconstruction can be persisted as-is
-    ///   (OCCTSwift ≥ 1.8.0; loadBREP doesn't gate on read).
-    public static func writeBREP(_ shape: Shape, to path: String, allowInvalid: Bool = false) throws {
+    /// - Parameters:
+    ///   - shape: The shape to write.
+    ///   - path: Destination file path.
+    ///   - allowInvalid: skip the `shape.isValid` write gate so an
+    ///     in-progress / loose-face reconstruction can be persisted as-is
+    ///     (OCCTSwift ≥ 1.8.0; loadBREP doesn't gate on read).
+    /// - Throws: `ScriptError.message` wrapping the underlying error if
+    ///   `Exporter.writeBREP` fails to write.
+    public static func writeBREP(_ shape: Shape, to path: String, allowInvalid: Bool = false) throws
+    {
         let url = URL(fileURLWithPath: path)
         do {
             try Exporter.writeBREP(shape: shape, to: url, allowInvalid: allowInvalid)
         } catch {
-            throw ScriptError.message("Failed to write BREP at \(path): \(error.localizedDescription)")
+            throw ScriptError.message(
+                "Failed to write BREP at \(path): \(error.localizedDescription)")
         }
     }
 
@@ -75,6 +86,7 @@ public enum GraphIO {
     }
 
     /// Rebuild a Shape from the graph's roots.
+    ///
     /// Single root → that shape; multiple → wrapped in a compound.
     public static func rebuildShape(from graph: BRepGraph) -> Shape? {
         let roots = graph.rootNodes
@@ -102,9 +114,12 @@ public enum GraphIO {
     }
 
     /// Decode `data` into `T`, wrapping any decoding failure in a `ScriptError`.
+    ///
     /// Commands whose wire schema differs from their internal request type decode
     /// the wire type here and map the result themselves.
-    public static func decodeJSON<T: Decodable>(_ type: T.Type = T.self, from data: Data) throws -> T {
+    public static func decodeJSON<T: Decodable>(_ type: T.Type = T.self, from data: Data) throws
+        -> T
+    {
         do {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {

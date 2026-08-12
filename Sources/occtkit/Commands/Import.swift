@@ -32,9 +32,9 @@
 //     "warnings": ["..."] }
 
 import Foundation
-import simd
 import OCCTSwift
 import ScriptHarness
+import simd
 
 enum ImportCommand: Subcommand {
     static let name = "import"
@@ -84,7 +84,7 @@ enum ImportCommand: Subcommand {
         struct Component: Encodable {
             let id: String
             let name: String?
-            let transform: [Float]      // 4x4 column-major
+            let transform: [Float]  // 4x4 column-major
             let color: [Float]?
             let children: [Component]
         }
@@ -95,7 +95,8 @@ enum ImportCommand: Subcommand {
         let format = try resolveFormat(format: req.format, path: req.inputPath)
         var warnings: [String] = []
         if req.healOnImport {
-            warnings.append("--heal-on-import: accepted but not yet wired (waits on OCCTSwiftScripts#21)")
+            warnings.append(
+                "--heal-on-import: accepted but not yet wired (waits on OCCTSwiftScripts#21)")
         }
 
         let emitDir = URL(fileURLWithPath: req.emitManifest)
@@ -114,7 +115,8 @@ enum ImportCommand: Subcommand {
             )
         } else {
             if req.preserveAssembly && format != .step {
-                warnings.append("--preserve-assembly is STEP-only for v1; falling back to single-body import")
+                warnings.append(
+                    "--preserve-assembly is STEP-only for v1; falling back to single-body import")
             }
             let shape = try loadSingleShape(format: format, path: req.inputPath)
             let id = "\(req.idPrefix)_0"
@@ -131,11 +133,12 @@ enum ImportCommand: Subcommand {
         let manifestURL = emitDir.appendingPathComponent("manifest.json")
         try LoadBrepCommand.writeManifest(manifest, to: manifestURL)
 
-        try GraphIO.emitJSON(Response(
-            addedBodyIds: addedIds,
-            assembly: assembly,
-            warnings: warnings
-        ))
+        try GraphIO.emitJSON(
+            Response(
+                addedBodyIds: addedIds,
+                assembly: assembly,
+                warnings: warnings
+            ))
         return 0
     }
 
@@ -147,8 +150,8 @@ enum ImportCommand: Subcommand {
         switch ext {
         case "step", "stp": return .step
         case "iges", "igs": return .iges
-        case "stl":         return .stl
-        case "obj":         return .obj
+        case "stl": return .stl
+        case "obj": return .obj
         default:
             throw ScriptError.message(
                 "Cannot auto-detect format from extension '\(ext)'; pass --format explicitly")
@@ -170,7 +173,9 @@ enum ImportCommand: Subcommand {
                 fatalError("auto should have been resolved to a concrete format")
             }
         } catch {
-            throw ScriptError.message("Failed to load \(format.rawValue.uppercased()) at \(path): \(error.localizedDescription)")
+            throw ScriptError.message(
+                "Failed to load \(format.rawValue.uppercased()) at \(path): \(error.localizedDescription)"
+            )
         }
     }
 
@@ -226,27 +231,33 @@ enum ImportCommand: Subcommand {
         if let shape = node.shape {
             let bodyURL = emitDir.appendingPathComponent("\(id).brep")
             try GraphIO.writeBREP(shape, to: bodyURL.path, allowInvalid: allowInvalid)
-            bodies.append(BodyDescriptor(
-                id: id,
-                file: "\(id).brep",
-                format: "brep",
-                name: node.name,
-                color: node.color.map { [Float($0.red), Float($0.green), Float($0.blue), Float($0.alpha)] }
-            ))
+            bodies.append(
+                BodyDescriptor(
+                    id: id,
+                    file: "\(id).brep",
+                    format: "brep",
+                    name: node.name,
+                    color: node.color.map {
+                        [Float($0.red), Float($0.green), Float($0.blue), Float($0.alpha)]
+                    }
+                ))
             addedIds.append(id)
         }
 
         let xform = node.transform
         let transform = flatten4x4(xform)
-        let color = node.color.map { [Float($0.red), Float($0.green), Float($0.blue), Float($0.alpha)] }
+        let color = node.color.map {
+            [Float($0.red), Float($0.green), Float($0.blue), Float($0.alpha)]
+        }
 
         var children: [Response.Component] = []
         for child in node.children {
-            children.append(try walkNode(
-                node: child, idPrefix: idPrefix, parentPathSegment: id,
-                emitDir: emitDir, allowInvalid: allowInvalid,
-                bodies: &bodies, addedIds: &addedIds, counter: &counter
-            ))
+            children.append(
+                try walkNode(
+                    node: child, idPrefix: idPrefix, parentPathSegment: id,
+                    emitDir: emitDir, allowInvalid: allowInvalid,
+                    bodies: &bodies, addedIds: &addedIds, counter: &counter
+                ))
         }
 
         return Response.Component(
@@ -267,10 +278,13 @@ enum ImportCommand: Subcommand {
 
     private static func parseRequest(args: [String]) throws -> Request {
         if let first = args.first, first.hasSuffix(".json"), !first.hasPrefix("-"),
-           !args.contains("--emit-manifest") {
+            !args.contains("--emit-manifest")
+        {
             return try decodeJSON(data: try GraphIO.readFile(first))
         }
-        if args.isEmpty { return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile()) }
+        if args.isEmpty {
+            return try decodeJSON(data: FileHandle.standardInput.readDataToEndOfFile())
+        }
         guard let inputPath = args.first, !inputPath.hasPrefix("-") else {
             throw ScriptError.message("Missing input path positional argument")
         }
@@ -284,7 +298,8 @@ enum ImportCommand: Subcommand {
         while i < args.count {
             switch args[i] {
             case "--emit-manifest":
-                i += 1; emitManifest = try valueOrThrow(args: args, i: i, flag: "--emit-manifest")
+                i += 1
+                emitManifest = try valueOrThrow(args: args, i: i, flag: "--emit-manifest")
             case "--format":
                 i += 1
                 let v = try valueOrThrow(args: args, i: i, flag: "--format")
@@ -293,7 +308,8 @@ enum ImportCommand: Subcommand {
                 }
                 format = f
             case "--id-prefix":
-                i += 1; idPrefix = try valueOrThrow(args: args, i: i, flag: "--id-prefix")
+                i += 1
+                idPrefix = try valueOrThrow(args: args, i: i, flag: "--id-prefix")
             case "--preserve-assembly":
                 preserveAssembly = true
             case "--heal-on-import":
@@ -306,9 +322,10 @@ enum ImportCommand: Subcommand {
             i += 1
         }
         guard let emitManifest else { throw ScriptError.message("--emit-manifest is required") }
-        return Request(inputPath: inputPath, emitManifest: emitManifest, format: format,
-                       idPrefix: idPrefix, preserveAssembly: preserveAssembly,
-                       healOnImport: healOnImport, allowInvalid: allowInvalid)
+        return Request(
+            inputPath: inputPath, emitManifest: emitManifest, format: format,
+            idPrefix: idPrefix, preserveAssembly: preserveAssembly,
+            healOnImport: healOnImport, allowInvalid: allowInvalid)
     }
 
     private static func valueOrThrow(args: [String], i: Int, flag: String) throws -> String {
