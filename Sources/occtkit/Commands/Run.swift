@@ -243,12 +243,9 @@ enum RunCommand: Subcommand {
         buildProcess.currentDirectoryURL = workspaceDir
         let buildPipe = Pipe()
         buildProcess.standardError = buildPipe
-        try buildProcess.run()
-        buildProcess.waitUntilExit()
-        if buildProcess.terminationStatus != 0 {
-            let errorOutput =
-                String(data: buildPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
-                ?? ""
+        let (buildStatus, buildStderr) = try runDrainingStderr(buildProcess, pipe: buildPipe)
+        if buildStatus != 0 {
+            let errorOutput = String(data: buildStderr, encoding: .utf8) ?? ""
             throw ScriptError.message("Build failed:\n\(errorOutput)")
         }
 
@@ -262,6 +259,42 @@ enum RunCommand: Subcommand {
         runProcess.waitUntilExit()
         if runProcess.terminationStatus != 0 {
             throw ScriptError.message("Script exited with code \(runProcess.terminationStatus)")
+        }
+    }
+
+    /// Runs `process`, draining the stderr in `pipe` to EOF before waiting for exit,
+    /// and returns its termination status alongside everything it wrote.
+    ///
+    /// Not `private`: `Tests/OcctkitCommandTests/RunBuildPipeDrainTests.swift` exercises
+    /// this directly against a cheap synthetic subprocess rather than a real `swift build`,
+    /// which would need to resolve and compile the whole OCCTSwift dependency graph just to
+    /// reach the code path under test. Still module-internal, not part of the public API.
+    ///
+    /// `waitUntilExit()` blocks until the child closes its stdout/stderr descriptors.
+    /// A child that writes more than the pipe's OS buffer (~64KB on macOS) before
+    /// exiting blocks on its own `write()` once that buffer fills, since nothing is
+    /// reading it, so calling `waitUntilExit()` before draining the pipe can deadlock
+    /// both sides indefinitely instead of failing cleanly with the diagnostics it was
+    /// about to report (OCCTSwiftScripts#116; the same class of bug fixed on the
+    /// OCCTParts side in SecondMouseAU/OCCTParts#23).
+    ///
+    /// `run()`, the drain, and `waitUntilExit()` all happen on one `DispatchQueue.global()`
+    /// worker, libdispatch's own pool rather than Swift Concurrency's cooperative one, so
+    /// this can't be starved by that pool being busy or small even if a future caller
+    /// invokes it from an async context. Reading to EOF before `waitUntilExit()` (rather
+    /// than concurrently with it) is safe and sufficient: EOF on the read end means the
+    /// child has closed its stderr fd, which happens no later than process exit, so
+    /// `waitUntilExit()` afterward returns promptly either way. Using `sync`'s rethrowing
+    /// return value, rather than a semaphore plus captured `var`s, sidesteps Swift 6's
+    /// concurrently-executing-code mutation diagnostics on those captures.
+    static func runDrainingStderr(_ process: Process, pipe: Pipe) throws -> (
+        status: Int32, stderr: Data
+    ) {
+        try DispatchQueue.global(qos: .utility).sync {
+            try process.run()
+            let stderrData = pipe.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            return (process.terminationStatus, stderrData)
         }
     }
 
