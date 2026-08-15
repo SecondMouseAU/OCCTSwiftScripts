@@ -9,54 +9,64 @@
 // report. Real trigger: a genuine compile error with full Swift 6 strict-concurrency
 // diagnostics, or verbose SPM build output.
 //
-// This exercises the extracted `runDrainingStderr(_:pipe:)` helper directly against a
-// cheap synthetic subprocess (`yes | head`) rather than a real `swift build` invocation,
-// which would need to resolve and compile the whole OCCTSwift dependency graph just to
-// reach the code path under test. `yes | head -c` reproduces the one property that matters
-// here, a child writing well past the pipe buffer before exiting, in milliseconds.
+// The fix moved capture off pipes entirely onto a temp file (mirroring `main.swift`'s
+// `captureOutput`), so the specific pipe/ordering bug this issue describes can't recur by
+// construction. What's still worth a permanent regression test is the contract that
+// motivated the fix: a subprocess writing well past the old 64KB pipe threshold has its
+// stderr captured completely and correctly. 300KB isn't chasing a capacity limit in the
+// current temp-file design (a file has none); it's a comfortably-larger-than-any-known-
+// buffer size, so this keeps catching a truncation regression regardless of what capture
+// mechanism a future change uses, pipe or otherwise.
+//
+// This exercises the extracted `runCapturingStderr(_:)` helper directly against a cheap
+// synthetic subprocess (system `perl`) rather than a real `swift build` invocation, which
+// would need to resolve and compile the whole OCCTSwift dependency graph just to reach the
+// code path under test. `perl` writes directly to its own stderr with no shell or pipeline
+// involved, so there's exactly one process in play: nothing for a `terminate()` in the
+// timeout branch below to fail to reach.
 
 import Foundation
 import Testing
 
 @testable import occtkit
 
-@Suite("occtkit run: build pipe draining (#116)")
+@Suite("occtkit run: build stderr capture (#116)")
 struct RunBuildPipeDrainTests {
 
-    /// Boxes a `Result` across the background thread that races `runDrainingStderr`
-    /// against the timeout below. `@unchecked Sendable`: `wait(timeout:)` returning
-    /// `.success` happens-after the thread's `done.signal()`, which happens-after its
-    /// write to `value`, so the read on the waiting side is never concurrent with it.
+    /// Boxes a `Result` across the background thread that races `runCapturingStderr`
+    /// against the timeout below.
     private final class ResultBox: @unchecked Sendable {
+        // `@unchecked Sendable`: `wait(timeout:)` returning `.success` happens-after the
+        // thread's `done.signal()`, which happens-after its write to `value`, so the read
+        // on the waiting side is never concurrent with it.
         var value: Result<(status: Int32, stderr: Data), Error>?
     }
 
-    @Test("draining stderr before waitUntilExit doesn't deadlock past the pipe buffer")
-    func doesNotDeadlockOnLargeOutput() throws {
+    @Test("large stderr output is captured completely, without truncation, corruption, or hanging")
+    func capturesLargeOutputCompletely() throws {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        // 300KB comfortably clears macOS's ~64KB pipe buffer several times over. Piped
-        // through `head -c` so the child both writes a bounded, known amount and exits on
-        // its own; `exit 7` after gives the test a termination status to assert on that
-        // can't be confused with a coincidental 0/1.
-        process.arguments = ["-c", "yes X | head -c 300000 1>&2; exit 7"]
-        let pipe = Pipe()
-        process.standardError = pipe
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
+        // A single process writing directly to its own stderr, no shell/pipe/fork chain:
+        // `process` here is the one and only process actually doing the write, so
+        // `process.terminate()` below is guaranteed to reach it.
+        process.arguments = ["-e", "print STDERR 'X' x 300000; exit 7"]
 
         let box = ResultBox()
         let done = DispatchSemaphore(value: 0)
         DispatchQueue.global(qos: .utility).async {
-            box.value = Result { try RunCommand.runDrainingStderr(process, pipe: pipe) }
+            box.value = Result { try RunCommand.runCapturingStderr(process) }
             done.signal()
         }
 
-        // Before #116's fix this hangs forever: `waitUntilExit()` ran before anything
-        // drained the pipe, so the child blocked on its own write() with nothing reading
-        // it. 10s comfortably covers the fixed path (which finishes in well under a
-        // second) while still failing this test, rather than hanging CI, if that ordering
-        // regresses.
+        // This specific bug can no longer hang (capture is temp-file-backed, which has no
+        // fixed capacity to block a writer on), but the timeout still guards against any
+        // future capture-mechanism regression that reintroduces a bounded-buffer wait, and
+        // keeps a stuck subprocess from failing this test by hanging CI instead of by
+        // failing loudly. 10s comfortably covers the real path, which finishes in well
+        // under a second.
         guard done.wait(timeout: .now() + 10) == .success else {
-            Issue.record("runDrainingStderr hung past the OS pipe buffer (#116 regression)")
+            if process.isRunning { process.terminate() }
+            Issue.record("runCapturingStderr hung capturing large stderr output (#116 regression)")
             return
         }
 
@@ -65,9 +75,9 @@ struct RunBuildPipeDrainTests {
             #expect(result.status == 7)
             #expect(result.stderr.count == 300_000)
         case .failure(let error):
-            Issue.record("runDrainingStderr threw: \(error)")
+            Issue.record("runCapturingStderr threw: \(error)")
         case nil:
-            Issue.record("runDrainingStderr produced no result")
+            Issue.record("runCapturingStderr produced no result")
         }
     }
 }
