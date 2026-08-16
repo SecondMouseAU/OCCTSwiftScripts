@@ -24,6 +24,19 @@
 // code path under test. `perl` writes directly to its own stderr with no shell or pipeline
 // involved, so there's exactly one process in play: nothing for a `terminate()` in the
 // timeout branch below to fail to reach.
+//
+// An earlier version of `captureRacingTimeout` raced the capture against its timeout with
+// a thread-blocking `DispatchSemaphore.wait(timeout:)` inside the test function's own
+// (synchronous) body. That is the same class of cooperative-thread-pool-starvation risk
+// the very first review round flagged and had removed from the production code, just
+// reintroduced here: on a resource-constrained CI runner (few cores), a real OS-thread
+// block for up to the timeout's full duration, sitting on whatever thread Swift Testing
+// scheduled this test's body onto, starved OTHER unrelated concurrently-running tests in
+// the same `swift test` invocation for that same span (confirmed from a real CI failure:
+// AssemblyComposerTests's tests, which share nothing with this file, reported the exact
+// same ~60s "duration" this file's timeout used). Rewritten below to `await` a real Swift
+// Concurrency suspension point instead of blocking a thread, which does not have this
+// problem: waiting suspends the calling task rather than occupying a worker thread.
 
 import Foundation
 import Testing
@@ -32,15 +45,6 @@ import Testing
 
 @Suite("occtkit run: build stderr capture (#116)")
 struct RunBuildPipeDrainTests {
-
-    /// Boxes a `Result` across the background thread that races `runCapturingStderr`
-    /// against the timeout below.
-    private final class ResultBox: @unchecked Sendable {
-        // `@unchecked Sendable`: `wait(timeout:)` returning `.success` happens-after the
-        // thread's `done.signal()`, which happens-after its write to `value`, so the read
-        // on the waiting side is never concurrent with it.
-        var value: Result<(status: Int32, stderr: Data), Error>?
-    }
 
     /// A single process writing `count` copies of `char` directly to its own stderr, no
     /// shell/pipe/fork chain: the returned `Process` is the one and only process actually
@@ -52,36 +56,57 @@ struct RunBuildPipeDrainTests {
         return process
     }
 
-    /// Runs `process` through `runCapturingStderr` on a background queue, racing it
-    /// against a timeout so a hang fails this test instead of hanging CI; terminates
-    /// `process` on timeout so a hung subprocess doesn't outlive the test either.
+    private enum RaceOutcome: Sendable {
+        case finished(Result<(status: Int32, stderr: Data), Error>)
+        case timedOut
+    }
+
+    /// Runs `process` through `runCapturingStderr` on a dedicated background thread,
+    /// racing it against a generous timeout so a hang fails this test instead of hanging
+    /// CI.
     ///
-    /// 60s, not the sub-second the real path needs: a first CI run of this test timed out
-    /// at 10s with every other test in the same run (including ones with nothing to do
-    /// with this file) also reporting a ~10s duration, consistent with the whole test
-    /// process stalling at launch on a fresh CI runner (codesigning verification of a
-    /// freshly built, unsigned binary is a known source of this) rather than an actual
-    /// hang. The point of this timeout is "don't hang CI forever if #116 regresses," not
-    /// "assert low latency," so a generous margin that comfortably absorbs CI jitter still
-    /// serves that purpose.
-    private func captureRacingTimeout(_ process: Process) -> Result<
+    /// `runCapturingStderr` itself blocks on `Process.run()`/`waitUntilExit()`, so it must
+    /// not run directly on Swift Concurrency's cooperative pool; terminates `process` on
+    /// timeout so a hung subprocess doesn't outlive the test either. Bridges the
+    /// background thread's completion back with `withCheckedContinuation` rather than a
+    /// `DispatchSemaphore`, and races the timeout with `Task.sleep` rather than
+    /// `DispatchSemaphore.wait(timeout:)`: both `await`, neither blocks a thread. 60s, not
+    /// the sub-second the real path needs, purely to comfortably absorb CI jitter; the
+    /// point of this timeout is bounding a real #116-class hang, not asserting low
+    /// latency.
+    private func captureRacingTimeout(_ process: Process) async -> Result<
         (status: Int32, stderr: Data), Error
     >? {
-        let box = ResultBox()
-        let done = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .utility).async {
-            box.value = Result { try RunCommand.runCapturingStderr(process) }
-            done.signal()
+        let outcome = await withTaskGroup(of: RaceOutcome.self) { group in
+            group.addTask {
+                let result = await withCheckedContinuation { continuation in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        continuation.resume(
+                            returning: Result { try RunCommand.runCapturingStderr(process) })
+                    }
+                }
+                return .finished(result)
+            }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(60))
+                return .timedOut
+            }
+            let first = await group.next()
+            group.cancelAll()
+            return first ?? .timedOut
         }
-        guard done.wait(timeout: .now() + 60) == .success else {
+
+        switch outcome {
+        case .finished(let result):
+            return result
+        case .timedOut:
             if process.isRunning { process.terminate() }
             return nil
         }
-        return box.value
     }
 
     @Test("large stderr output is captured completely, without truncation, corruption, or hanging")
-    func capturesLargeOutputCompletely() throws {
+    func capturesLargeOutputCompletely() async throws {
         let process = stderrWriter(char: "X", count: 300_000, exitCode: 7)
 
         // This specific bug can no longer hang (capture is temp-file-backed, which has no
@@ -89,7 +114,7 @@ struct RunBuildPipeDrainTests {
         // future capture-mechanism regression that reintroduces a bounded-buffer wait, and
         // keeps a stuck subprocess from failing this test by hanging CI instead of by
         // failing loudly.
-        guard let outcome = captureRacingTimeout(process) else {
+        guard let outcome = await captureRacingTimeout(process) else {
             Issue.record("runCapturingStderr hung capturing large stderr output (#116 regression)")
             return
         }
@@ -117,12 +142,10 @@ struct RunBuildPipeDrainTests {
         // even starts), so there's nothing left in the directory for a sibling call to
         // find or step on. Two distinct payloads (not the same content twice) so a mixup
         // between the two captures fails this test rather than passing by coincidence.
-        async let outcomeA = Task.detached {
-            self.captureRacingTimeout(self.stderrWriter(char: "A", count: 200_000, exitCode: 3))
-        }.value
-        async let outcomeB = Task.detached {
-            self.captureRacingTimeout(self.stderrWriter(char: "B", count: 200_000, exitCode: 5))
-        }.value
+        async let outcomeA = captureRacingTimeout(
+            stderrWriter(char: "A", count: 200_000, exitCode: 3))
+        async let outcomeB = captureRacingTimeout(
+            stderrWriter(char: "B", count: 200_000, exitCode: 5))
         let (a, b) = await (outcomeA, outcomeB)
 
         guard let a else {
