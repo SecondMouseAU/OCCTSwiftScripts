@@ -53,8 +53,17 @@ struct RunBuildPipeDrainTests {
     }
 
     /// Runs `process` through `runCapturingStderr` on a background queue, racing it
-    /// against a 10s timeout so a hang fails this test instead of hanging CI; terminates
+    /// against a timeout so a hang fails this test instead of hanging CI; terminates
     /// `process` on timeout so a hung subprocess doesn't outlive the test either.
+    ///
+    /// 60s, not the sub-second the real path needs: a first CI run of this test timed out
+    /// at 10s with every other test in the same run (including ones with nothing to do
+    /// with this file) also reporting a ~10s duration, consistent with the whole test
+    /// process stalling at launch on a fresh CI runner (codesigning verification of a
+    /// freshly built, unsigned binary is a known source of this) rather than an actual
+    /// hang. The point of this timeout is "don't hang CI forever if #116 regresses," not
+    /// "assert low latency," so a generous margin that comfortably absorbs CI jitter still
+    /// serves that purpose.
     private func captureRacingTimeout(_ process: Process) -> Result<
         (status: Int32, stderr: Data), Error
     >? {
@@ -64,7 +73,7 @@ struct RunBuildPipeDrainTests {
             box.value = Result { try RunCommand.runCapturingStderr(process) }
             done.signal()
         }
-        guard done.wait(timeout: .now() + 10) == .success else {
+        guard done.wait(timeout: .now() + 60) == .success else {
             if process.isRunning { process.terminate() }
             return nil
         }
@@ -79,8 +88,7 @@ struct RunBuildPipeDrainTests {
         // fixed capacity to block a writer on), but the timeout still guards against any
         // future capture-mechanism regression that reintroduces a bounded-buffer wait, and
         // keeps a stuck subprocess from failing this test by hanging CI instead of by
-        // failing loudly. 10s comfortably covers the real path, which finishes in well
-        // under a second.
+        // failing loudly.
         guard let outcome = captureRacingTimeout(process) else {
             Issue.record("runCapturingStderr hung capturing large stderr output (#116 regression)")
             return
