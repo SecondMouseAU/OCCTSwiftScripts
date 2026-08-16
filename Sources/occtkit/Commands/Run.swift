@@ -283,45 +283,48 @@ enum RunCommand: Subcommand {
         // whole build finished instead of letting it stream to the terminal as it happens.
         // This captures only `process`'s stderr, on `process` itself, leaving its stdout
         // to flow through live.
-        let tmpDir = FileManager.default.temporaryDirectory
-        let tmpURL = tmpDir.appendingPathComponent("occtkit-run-stderr-\(UUID().uuidString)")
-
-        // Best-effort sweep of any stderr temp file a prior run couldn't clean up itself
-        // (SIGKILL, e.g. a CI timeout, skips the `defer` below entirely): bounds the leak
-        // to at most one orphaned file per kill rather than letting them accumulate.
-        if let stale = try? FileManager.default.contentsOfDirectory(
-            at: tmpDir, includingPropertiesForKeys: nil)
-        {
-            for url in stale where url.lastPathComponent.hasPrefix("occtkit-run-stderr-") {
-                try? FileManager.default.removeItem(at: url)
-            }
-        }
-
+        let tmpURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("occtkit-run-stderr-\(UUID().uuidString)")
         FileManager.default.createFile(atPath: tmpURL.path, contents: nil)
-        defer { try? FileManager.default.removeItem(at: tmpURL) }
+        let writeHandle = try FileHandle(forWritingTo: tmpURL)
+        let readHandle = try FileHandle(forReadingFrom: tmpURL)
 
-        let handle = try FileHandle(forWritingTo: tmpURL)
-        // Closes `handle` on every exit path, including `process.run()` throwing before
-        // the child ever starts, rather than only after a successful run.
-        defer { try? handle.close() }
-        process.standardError = handle
+        // Unlinks the path immediately, rather than in a `defer` after the run: both
+        // handles above already reference the same inode, so removing the directory entry
+        // here makes the path invisible to everything else from this point on, including a
+        // second concurrent call to this same function (an earlier version swept stale
+        // `occtkit-run-stderr-*` files at the top of this function instead, which could
+        // unlink a sibling call's still-being-written file out from under it). Nothing
+        // more to clean up afterward either: the kernel reclaims the inode once both
+        // handles close, even on SIGKILL, so this needs no cleanup `defer` at all.
+        try? FileManager.default.removeItem(at: tmpURL)
+        defer {
+            try? writeHandle.close()
+            try? readHandle.close()
+        }
+        process.standardError = writeHandle
 
         // A temp file has no fixed capacity to block the child's write() on, unlike an OS
         // pipe (~64KB on macOS): waitUntilExit() called on a pipe-backed stderr before
         // anything drained it deadlocked both sides on a large enough write, which is what
         // happened before this (#116; same class of bug fixed on the OCCTParts side in
-        // SecondMouseAU/OCCTParts#23). Blocks the calling thread for the run's duration:
-        // fine for today's synchronous callers; a future async caller should hop off its
-        // own cooperative-pool thread before calling in, rather than this function
-        // guessing at one. Waits for `process` itself, not any grandchild it spawns and
-        // doesn't reap before exiting; fine for `swift build`/`swift run`, which wait out
-        // their own subprocesses before they themselves exit.
+        // SecondMouseAU/OCCTParts#23). The trade-off: a temp file has no backpressure
+        // either, so a runaway child now fills disk instead of blocking; vanishingly
+        // unlikely for `swift build`, but it's the price of this redesign. Blocks the
+        // calling thread for the run's duration: fine for today's synchronous callers; a
+        // future async caller should hop off its own cooperative-pool thread before
+        // calling in, rather than this function guessing at one. Waits for `process`
+        // itself, not any grandchild it spawns and doesn't reap before exiting; fine for
+        // `swift build`/`swift run`, which wait out their own subprocesses before they
+        // themselves exit.
         try process.run()
         process.waitUntilExit()
 
         let stderrData: Data
         do {
-            stderrData = try Data(contentsOf: tmpURL)
+            // Via `readHandle`, not a fresh path-based read: the path is already unlinked
+            // above, so `Data(contentsOf:)` would fail with "no such file" here.
+            stderrData = try readHandle.readToEnd() ?? Data()
         } catch {
             // A build failure with a blank diagnostic dump is exactly the silent loss
             // #116 was about; say so explicitly rather than returning empty Data
