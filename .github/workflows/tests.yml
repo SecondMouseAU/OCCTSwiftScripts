@@ -1,0 +1,40 @@
+name: tests
+
+# Runs `swift test` (DrawingComposerTests, OcctkitCommandTests). Filed because PR #117
+# added a regression test with no CI job actually executing it: a future revert of the
+# fix it guards would have gone green. Blocking, not `continue-on-error`, unlike
+# `recipes`: a red here is meant to stop a merge, the same reasoning `verbs.yml` uses.
+#
+# macOS-only: the OCCTSwift dependency is a macOS xcframework, same reasoning
+# `verbs.yml`/`recipes.yml` use.
+
+on:
+  push:
+    paths:
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Package.*'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    paths:
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Package.*'
+      - '.github/workflows/tests.yml'
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: swift test
+        run: swift test

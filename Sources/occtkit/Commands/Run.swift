@@ -241,14 +241,12 @@ enum RunCommand: Subcommand {
         buildProcess.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
         buildProcess.arguments = ["build", "--package-path", workspaceDir.path]
         buildProcess.currentDirectoryURL = workspaceDir
-        let buildPipe = Pipe()
-        buildProcess.standardError = buildPipe
-        try buildProcess.run()
-        buildProcess.waitUntilExit()
-        if buildProcess.terminationStatus != 0 {
-            let errorOutput =
-                String(data: buildPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
-                ?? ""
+        let (buildStatus, buildStderr) = try runCapturingStderr(buildProcess)
+        if buildStatus != 0 {
+            // Lossy, not `String(data:encoding:)`: a garbled byte or two from a crashed
+            // linker or a non-UTF-8 path shouldn't discard an otherwise-readable diagnostic
+            // dump, which large builds are now far more likely to actually reach (#116).
+            let errorOutput = String(decoding: buildStderr, as: UTF8.self)
             throw ScriptError.message("Build failed:\n\(errorOutput)")
         }
 
@@ -263,6 +261,78 @@ enum RunCommand: Subcommand {
         if runProcess.terminationStatus != 0 {
             throw ScriptError.message("Script exited with code \(runProcess.terminationStatus)")
         }
+    }
+
+    /// Runs `process` with its stderr captured to a temp file, returning its termination
+    /// status alongside everything it wrote.
+    static func runCapturingStderr(_ process: Process) throws -> (status: Int32, stderr: Data) {
+        // Not `private`, unlike this file's other helpers: `RunBuildPipeDrainTests.swift`
+        // exercises it directly via `@testable import occtkit` against a cheap synthetic
+        // subprocess rather than a real `swift build`. Still module-internal, not public API.
+        //
+        // Owns `process.standardError` end to end, rather than taking a caller-wired pipe
+        // or handle, so a caller can't wire it to something else and have this silently
+        // capture nothing. Not asserted: `Process.standardError` is never nil by default
+        // (Foundation lazily wraps inherited stdio in a private `_NSStdIOFileHandle`), so
+        // "did the caller already customize this" isn't distinguishable from "untouched"
+        // without depending on that private type.
+        //
+        // Doesn't reuse `main.swift`'s `captureOutput`: that redirects the current
+        // process's own stdout+stderr together and only surfaces them after its closure
+        // returns, which would buffer `swift build`'s live progress on stdout until the
+        // whole build finished instead of letting it stream to the terminal as it happens.
+        // This captures only `process`'s stderr, on `process` itself, leaving its stdout
+        // to flow through live.
+        let tmpURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("occtkit-run-stderr-\(UUID().uuidString)")
+        FileManager.default.createFile(atPath: tmpURL.path, contents: nil)
+        let writeHandle = try FileHandle(forWritingTo: tmpURL)
+        let readHandle = try FileHandle(forReadingFrom: tmpURL)
+
+        // Unlinks the path immediately, rather than in a `defer` after the run: both
+        // handles above already reference the same inode, so removing the directory entry
+        // here makes the path invisible to everything else from this point on, including a
+        // second concurrent call to this same function (an earlier version swept stale
+        // `occtkit-run-stderr-*` files at the top of this function instead, which could
+        // unlink a sibling call's still-being-written file out from under it). Nothing
+        // more to clean up afterward either: the kernel reclaims the inode once both
+        // handles close, even on SIGKILL, so this needs no cleanup `defer` at all.
+        try? FileManager.default.removeItem(at: tmpURL)
+        defer {
+            try? writeHandle.close()
+            try? readHandle.close()
+        }
+        process.standardError = writeHandle
+
+        // A temp file has no fixed capacity to block the child's write() on, unlike an OS
+        // pipe (~64KB on macOS): waitUntilExit() called on a pipe-backed stderr before
+        // anything drained it deadlocked both sides on a large enough write, which is what
+        // happened before this (#116; same class of bug fixed on the OCCTParts side in
+        // SecondMouseAU/OCCTParts#23). The trade-off: a temp file has no backpressure
+        // either, so a runaway child now fills disk instead of blocking; vanishingly
+        // unlikely for `swift build`, but it's the price of this redesign. Blocks the
+        // calling thread for the run's duration: fine for today's synchronous callers; a
+        // future async caller should hop off its own cooperative-pool thread before
+        // calling in, rather than this function guessing at one. Waits for `process`
+        // itself, not any grandchild it spawns and doesn't reap before exiting; fine for
+        // `swift build`/`swift run`, which wait out their own subprocesses before they
+        // themselves exit.
+        try process.run()
+        process.waitUntilExit()
+
+        let stderrData: Data
+        do {
+            // Via `readHandle`, not a fresh path-based read: the path is already unlinked
+            // above, so `Data(contentsOf:)` would fail with "no such file" here.
+            stderrData = try readHandle.readToEnd() ?? Data()
+        } catch {
+            // A build failure with a blank diagnostic dump is exactly the silent loss
+            // #116 was about; say so explicitly rather than returning empty Data
+            // indistinguishable from "the build wrote nothing."
+            stderrData = Data(
+                "(failed to read captured stderr: \(error.localizedDescription))".utf8)
+        }
+        return (process.terminationStatus, stderrData)
     }
 
     private static func copyOutput(_ config: Config) throws {
