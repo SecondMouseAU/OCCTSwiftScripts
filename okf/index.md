@@ -17,7 +17,7 @@ timestamp: 2026-06-22
 ## Role in the ecosystem
 
 - **Cluster:** kernel
-- **Depends on:** [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) (B-Rep kernel), [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) (offscreen render for `render-preview`), [OCCTSwiftTools](https://github.com/SecondMouseAU/OCCTSwiftTools) (Shape ↔ ViewportBody bridge), [OCCTSwiftAIS](https://github.com/SecondMouseAU/OCCTSwiftAIS) (headless scene-object overlays), [OCCTSwiftMesh](https://github.com/SecondMouseAU/OCCTSwiftMesh) (`simplify-mesh`), and [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) (`graph-ml` feature export).
+- **Depends on:** [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) (B-Rep kernel), [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) (offscreen render for `render-preview`), [OCCTSwiftInteraction](https://github.com/SecondMouseAU/OCCTSwiftInteraction) (vends `OCCTSwiftTools`, the Shape ↔ ViewportBody bridge, and `OCCTSwiftAIS`, headless scene-object overlays; migrated from those two standalone repos in OCCTSwiftScripts#122), [OCCTSwiftMesh](https://github.com/SecondMouseAU/OCCTSwiftMesh) (`simplify-mesh`), and [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) (`graph-ml` feature export).
 - **Feeds:** headless / agent consumers. OCCTMCP and any JSON-driven tooling drive its verbs via `--serve`; the `ScriptHarness` and `DrawingComposer` library products link into downstream apps (e.g. the viewport ScriptWatcher and OCCTSwiftPartsAgent).
 
 This is the **single knowledge store** for this repo. `CLAUDE.md` at the repo root stays the

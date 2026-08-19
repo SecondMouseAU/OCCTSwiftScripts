@@ -1,5 +1,22 @@
 # Knowledge Log
 
+## 2026-08-20 (fix/122-occtswiftinteraction-migration)
+
+* **Update**: Migrated `occtkit`'s `OCCTSwiftTools` and `OCCTSwiftAIS` dependencies onto
+  `OCCTSwiftInteraction` (#122), the package the two merged into alongside `OCCTSwiftCADKit`
+  (SecondMouseAU/ecosystem#42/#43). SwiftPM enforces target-name uniqueness across the whole
+  transitive graph before per-consumer product pruning, so any consumer needing both this repo
+  and `OCCTSwiftInteraction` directly (OCCTMCP, for OCCTMCP#182) hit a hard resolution error, not
+  a version conflict, until this repo repinned. Per `OCCTSwiftInteraction`'s `docs/MIGRATION.md`,
+  this is a manifest-only change: replaced the two `occtDep` entries with one
+  `occtDep("OCCTSwiftInteraction", from: "0.1.0")` and repointed both products' `package:` label;
+  `import OCCTSwiftTools` / `import OCCTSwiftAIS` lines are unchanged since each stayed its own
+  target inside the merged package. Regenerated `Package.resolved` from an isolated, sibling-free
+  clone (per the lesson below), confirmed both a local sibling build and the sibling-free remote
+  build compile, and confirmed `swift test` (12/12) and `Scripts/recipe-check.sh` (7/7) pass.
+  Updated `CLAUDE.md`, `README.md`, `docs/guides/architecture.md`, and `okf/index.md` to describe
+  the new package.
+
 ## 2026-08-19 (fix/stale-package-resolved-post-3.0.0)
 
 * **Update**: Released OCCTSwiftScripts v1.6.2 (#118/#119) once the cohort (`OCCTSwiftTools`

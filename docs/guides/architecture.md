@@ -84,8 +84,9 @@ OCCTSwiftScripts depends on the OCCTSwift cohort and is depended on by OCCTMCP:
 ```
 OCCTSwift            B-Rep kernel (~400+ methods), ISO drawings, FeatureReconstructor, SheetMetal, XCAF
  ├─ OCCTSwiftViewport   OffscreenRenderer / CameraState / DisplayMode  → render-preview
- ├─ OCCTSwiftTools      CADFileLoader (Shape → ViewportBody)            → render-preview
- ├─ OCCTSwiftAIS        Trihedron / WorkPlane / SubShape selection      → render-preview overlays
+ ├─ OCCTSwiftInteraction
+ │    ├─ OCCTSwiftTools CADFileLoader (Shape → ViewportBody)            → render-preview
+ │    └─ OCCTSwiftAIS   Trihedron / WorkPlane / SubShape selection      → render-preview overlays
  ├─ OCCTSwiftMesh       meshoptimizer QEM decimation                    → simplify-mesh
  └─ OCCTSwiftIO         BRepGraph.exportForML                           → graph-ml
         │
