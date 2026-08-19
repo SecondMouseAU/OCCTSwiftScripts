@@ -101,7 +101,31 @@ let package = Package(
         //     Tests/OcctkitCommandTests/AAGFaceIndexTests.swift (added alongside this bump)
         //     started exercising a real shared-face compound.
         // See docs/SEMVER.md#v200 in the OCCTSwift repo for the full break table.
-        occtDep("OCCTSwift", from: "2.0.0"),
+        // Bumped 2.0.0 -> 3.0.0 (OCCTSwiftScripts#118): a correctness/consolidation major, OCCT
+        // stays at 8.0.1 (kernel rebuilt to carry two patches the v2.0.0 asset was missing).
+        // Two breaks, both compile errors:
+        //   - `Selector.SubShapeType.compsolid` renamed `.compSolid`, consolidating four drifted
+        //     Swift mirrors of TopAbs_ShapeEnum onto `ShapeType`. Zero hits here: this repo
+        //     already spelled it `ShapeType.compSolid` (LoadBrep.swift, Pattern.swift,
+        //     RenderPreview.swift), which was already the surviving spelling.
+        //   - `Shape.bounds`/`.size`/`.center`, `Wire.bounds`, `Edge.bounds`, `Face.bounds` (and
+        //     `.exactBounds`, unused here) become Optional: they used to fabricate
+        //     `(0,0,0)-(0,0,0)` for a shape with no bounding box, indistinguishable from a
+        //     genuine zero-size shape at the origin. Every `.bounds` call site in this repo now
+        //     unwraps: query-topology/load-brep/measure-distance/render-preview/metrics throw a
+        //     named ScriptError on a nil bounding box (a real error for a loaded BREP, not a
+        //     state to paper over); the two recipe edge-selector predicates return `false` (guard
+        //     against a mid-selection nil rather than fabricate a match).
+        // See docs/SEMVER.md#v300 in the OCCTSwift repo for the full break table.
+        //
+        // The rest of the cohort has not yet released an OCCTSwift-3.0.0-compatible version as of
+        // this bump (OCCTSwiftTools/Mesh/IO's latest releases all still cap `from: "2.0.0"`,
+        // i.e. `.upToNextMajor` excludes 3.0.0; OCCTSwiftAIS transitively via Tools). `from:` pins
+        // below are unaffected by this bump directly, but a fresh clone / CI cannot resolve the
+        // full graph until they catch up, same situation as the 2.0.0 bump (see git history on
+        // this comment block). Local builds against sibling checkouts work today because path
+        // dependencies bypass semver ranges entirely.
+        occtDep("OCCTSwift", from: "3.0.0"),
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport

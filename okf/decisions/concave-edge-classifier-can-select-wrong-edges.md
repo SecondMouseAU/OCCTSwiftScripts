@@ -117,14 +117,17 @@ classifier's output:
 
 ```swift
 let insideCorner = prism.edges { edge in
-    guard edge.isLine else { return false }
-    let b = edge.bounds
+    guard edge.isLine, let b = edge.bounds else { return false }
     let runsFullWidth = abs((b.max.z - b.min.z) - width) < 1e-6
         && abs(b.max.x - b.min.x) < 1e-6 && abs(b.max.y - b.min.y) < 1e-6
     guard runsFullWidth else { return false }
     return abs(b.min.x - thickness) < 1e-6 && abs(b.min.y - thickness) < 1e-6
 }
 ```
+
+(`edge.bounds` became `Optional` at OCCTSwift 3.0.0, unrelated to this entry's own finding; the
+`let b = edge.bounds` unwrap above was added then, see
+[OCCTSwift 3.0.0 floor bump](occtswift-3.0.0-floor-bump-blocked-on-cohort-releases.md).)
 
 # Related
 

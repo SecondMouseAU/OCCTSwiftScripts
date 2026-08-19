@@ -135,7 +135,10 @@ enum QueryTopologyCommand: Subcommand {
             let area = face.area()
             if let m = filter.minArea, area < m { continue }
             if let m = filter.maxArea, area > m { continue }
-            let bb = face.bounds
+            guard let bb = face.bounds else {
+                throw ScriptError.message(
+                    "face[\(i)] has no bounding box (void or degenerate face)")
+            }
             let center = SIMD3<Double>(
                 (bb.min.x + bb.max.x) * 0.5,
                 (bb.min.y + bb.max.y) * 0.5,
@@ -181,7 +184,10 @@ enum QueryTopologyCommand: Subcommand {
             let length = edge.length
             if let m = filter.minLength, length < m { continue }
             if let m = filter.maxLength, length > m { continue }
-            let bb = edge.bounds
+            guard let bb = edge.bounds else {
+                throw ScriptError.message(
+                    "edge[\(i)] has no bounding box (void or degenerate edge)")
+            }
             let center = SIMD3<Double>(
                 (bb.min.x + bb.max.x) * 0.5,
                 (bb.min.y + bb.max.y) * 0.5,

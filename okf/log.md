@@ -1,5 +1,26 @@
 # Knowledge Log
 
+## 2026-08-19 (chore/118-occtswift-3.0.0)
+
+* **Update**: Bumped the OCCTSwift floor to 3.0.0 (#118), a correctness/consolidation major (OCCT
+  itself stays at 8.0.1). Two breaks: `Selector.SubShapeType.compsolid` -> `.compSolid` needed no
+  source change (this repo already used the surviving `ShapeType.compSolid` spelling); six
+  bounding-box accessors (`Shape.bounds`/`.size`/`.center`, `Wire.bounds`, `Edge.bounds`,
+  `Face.bounds`) became `Optional` instead of fabricating `(0,0,0)-(0,0,0)` for a shape with no
+  bounding box. Fixed every call site: `QueryTopology.swift`, `LoadBrep.swift`,
+  `MeasureDeviation.swift`, `RenderPreview.swift`, and `Metrics.swift` now throw a named
+  `ScriptError` on a `nil` bounding box; the two recipe edge-selector predicates
+  (`01-mounting-bracket`, `03-pipe-flange`) return `false` on `nil` rather than fabricate a match.
+  Added `Tests/OcctkitCommandTests/OptionalBoundsTests.swift`, constructing a genuinely void
+  shape (two disjoint boxes' intersection) to regression-test the throw path directly.
+  `swift build`/`swift test` (12/12) clean and all 7 recipe smoke tests match their reference
+  `output.brep` exactly (`Δvol 0.00e+00`).
+* **Creation**: Recorded the occtswift-3.0.0-floor-bump-blocked-on-cohort-releases decision: this
+  repo's own bump is complete and verified, but OCCTSwiftTools/Mesh still cap `occtswift` below
+  3.0.0 and OCCTSwiftAIS has 3 of its own unfixed `.bounds` sites, so even a local sibling build
+  fails past that point (verified by a temporary, reverted local-only patch to AIS) — a stricter
+  blocker than the 2.0.0 bump, which only blocked remote/CI resolution.
+
 ## 2026-08-10 (chore/bump-occtswift-2.0.0)
 
 * **Update**: Bumped the OCCTSwift floor to 2.0.0 (#111), a correctness major with 17 breaking
