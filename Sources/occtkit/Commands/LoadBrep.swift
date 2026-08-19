@@ -184,8 +184,10 @@ enum LoadBrepCommand: Subcommand {
         }
     }
 
-    static func buildResponse(bodyId: String, shape: Shape) -> Response {
-        let bb = shape.bounds
+    static func buildResponse(bodyId: String, shape: Shape) throws -> Response {
+        guard let bb = shape.bounds else {
+            throw ScriptError.message("'\(bodyId)' has no bounding box (void or degenerate shape)")
+        }
         return Response(
             bodyId: bodyId,
             isValid: shape.isValid,

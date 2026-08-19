@@ -73,7 +73,7 @@ enum MeasureDeviationCommand: Subcommand {
         let aShape = try GraphIO.loadBREP(at: req.a)
         let bShape = try GraphIO.loadBREP(at: req.b)
 
-        let defl = req.deflection ?? defaultDeflection(for: aShape)
+        let defl = try req.deflection ?? defaultDeflection(for: aShape)
         guard defl > 0 else { throw ScriptError.message("deflection must be positive") }
 
         guard let aTris = TriMesh(shape: aShape, deflection: defl) else {
@@ -204,8 +204,10 @@ enum MeasureDeviationCommand: Subcommand {
 
     // ── geometry helpers ────────────────────────────────────────────────
 
-    static func defaultDeflection(for shape: Shape) -> Double {
-        let b = shape.bounds
+    static func defaultDeflection(for shape: Shape) throws -> Double {
+        guard let b = shape.bounds else {
+            throw ScriptError.message("shape has no bounding box (void or degenerate shape)")
+        }
         let diag = simd_length(b.max - b.min)
         return Swift.max(diag * 0.005, 1e-6)
     }

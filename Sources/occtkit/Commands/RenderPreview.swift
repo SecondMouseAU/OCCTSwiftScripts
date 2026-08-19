@@ -158,7 +158,10 @@ enum RenderPreviewCommand: Subcommand {
                 throw ScriptError.message("Failed to convert '\(path)' to a renderable body")
             }
             bodies.append(body)
-            let bb = shape.bounds
+            guard let bb = shape.bounds else {
+                throw ScriptError.message(
+                    "'\(path)' has no bounding box (void or degenerate shape)")
+            }
             unionMin = simd_min(unionMin, SIMD3(Float(bb.min.x), Float(bb.min.y), Float(bb.min.z)))
             unionMax = simd_max(unionMax, SIMD3(Float(bb.max.x), Float(bb.max.y), Float(bb.max.z)))
         }

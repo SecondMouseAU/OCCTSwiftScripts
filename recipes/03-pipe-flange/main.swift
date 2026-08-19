@@ -100,8 +100,10 @@ func axisCircleRadius(_ edge: Edge) -> Double? {
 }
 let chamferTargets = flange.edges { edge in
     guard let r = axisCircleRadius(edge) else { return false }
-    if abs(r - outerRadius) < 1e-3 { return true }                                          // OD, front + back
-    if abs(r - raisedRadius) < 1e-3 && edge.bounds.min.y > thickness + 1e-3 { return true }  // raised-face rim
+    if abs(r - outerRadius) < 1e-3 { return true }  // OD, front + back
+    if abs(r - raisedRadius) < 1e-3, let b = edge.bounds, b.min.y > thickness + 1e-3 {
+        return true  // raised-face rim
+    }
     return false
 }
 flange = flange.chamferedWithFullHistory(distance: chamferDistance,

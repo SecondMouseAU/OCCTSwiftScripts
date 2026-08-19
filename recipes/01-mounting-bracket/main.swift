@@ -60,8 +60,7 @@ let prism = Shape.extrude(profile: lProfile, direction: SIMD3(0, 0, 1), length: 
 // migration; re-run the check in the OKF entry at that point rather than assuming
 // the migration carried the fix.
 let insideCornerEdges = prism.edges { edge in
-    guard edge.isLine else { return false }
-    let b = edge.bounds
+    guard edge.isLine, let b = edge.bounds else { return false }
     let runsFullWidth = abs((b.max.z - b.min.z) - width) < 1e-6
         && abs(b.max.x - b.min.x) < 1e-6 && abs(b.max.y - b.min.y) < 1e-6
     guard runsFullWidth else { return false }

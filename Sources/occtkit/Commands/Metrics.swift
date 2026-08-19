@@ -76,9 +76,11 @@ enum MetricsCommand: Subcommand {
             wants("volume") || wants("centerOfMass") || wants("principalAxes")
             ? shape.volumeInertia : nil
 
-        let bb: Response.BoundingBox? = {
+        let bb: Response.BoundingBox? = try {
             guard wants("boundingBox") else { return nil }
-            let b = shape.bounds
+            guard let b = shape.bounds else {
+                throw ScriptError.message("shape has no bounding box (void or degenerate shape)")
+            }
             return .init(
                 min: [b.min.x, b.min.y, b.min.z],
                 max: [b.max.x, b.max.y, b.max.z]
