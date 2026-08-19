@@ -25,6 +25,7 @@ that need standalone rationale.
   OCCTSwiftIO's latest release still caps `occtswift` below 2.0.0 transitively, so a fresh
   clone cannot resolve until the cohort ships. The PR is not blocked; the release is.
   Resolved 2026-08-10.
-* [OCCTSwift 3.0.0 floor bump blocked on cohort releases](occtswift-3.0.0-floor-bump-blocked-on-cohort-releases.md):
-  same shape of blocker, but this time OCCTSwiftAIS has 3 of its own unfixed `.bounds` call
-  sites, so even a local sibling-checkout build fails, not just remote/CI resolution.
+* [OCCTSwift 3.0.0 floor bump blocked on cohort releases, then on a stale Package.resolved](occtswift-3.0.0-floor-bump-blocked-on-cohort-releases.md):
+  same shape of cohort blocker as 2.0.0, plus a second-order trap once the cohort caught up — a
+  pre-2.0.0-era `Package.resolved` let SwiftPM's resolver keep a manifest-compatible but
+  source-broken `occtswiftais` pin. Released as v1.6.2, `main` fixed green in a follow-up PR.

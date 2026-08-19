@@ -1,7 +1,7 @@
 ---
 type: decision
-title: OCCTSwift floor bumped to 3.0.0 in source, but the graph cannot resolve until the cohort releases
-description: Package.swift now floors OCCTSwift at 3.0.0 and this repo's own code is fixed against both breaks, but OCCTSwiftTools/Mesh's latest releases still cap occtswift below 3.0.0, OCCTSwiftIO gates via Tools, and OCCTSwiftAIS has 3 of its own unfixed .bounds call sites. Neither a fresh clone/CI run nor an as-is local sibling build can resolve until the cohort ships.
+title: OCCTSwift floor bumped to 3.0.0; the graph was blocked on the cohort, then on a stale Package.resolved
+description: Package.swift floors OCCTSwift at 3.0.0 (#118/#119, released as v1.6.2). Initially blocked on the rest of the cohort shipping 3.0.0-compatible releases; once they did, main's CI stayed red because the checked-in Package.resolved was stale enough (pre-2.0.0-bump) that SwiftPM's resolver kept a manifest-compatible-but-source-broken occtswiftais@1.3.1 pin instead of picking up 1.3.2. Fixed in #120 by regenerating Package.resolved from a sibling-free /tmp copy.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/118
 tags: [decision, occtswift, dependency-resolution, release-sequencing, semver]
 timestamp: 2026-08-19
@@ -68,3 +68,40 @@ the different, AIS-specific reason above).
 regenerating it now would either commit path-relative local-machine state or fail outright against
 remote. It refreshes naturally once `swift package resolve`/`swift build` runs after the cohort
 catches up.
+
+# Update 2026-08-19: the cohort caught up, and "leave it untouched" bit back
+
+Same day, a few hours later: `OCCTSwiftTools` v1.6.4, `OCCTSwiftMesh` v1.7.5, `OCCTSwiftIO` v1.7.8
+and `OCCTSwiftAIS` v1.3.2 all shipped OCCTSwift-3.0.0-compatible releases (AIS's included the 3
+call-site fixes above). #119 merged and OCCTSwiftScripts v1.6.2 released — but `main`'s `tests`/
+`verbs` CI immediately went red again, with the *exact same* `.bounds`-unwrap compile errors this
+decision already fixed, now reported inside `.build/checkouts/OCCTSwiftAIS`.
+
+**Root cause: the "leave `Package.resolved` untouched" call above was right while the cohort was
+blocked, and wrong the moment it wasn't.** The checked-in `Package.resolved` was stale from well
+before even the 2.0.0 bump (`occtswift` pinned at `1.17.0`, `occtswiftais` at `1.3.1`). SwiftPM's
+resolver treats an existing `Package.resolved` as a starting point and keeps a pinned version if it
+still satisfies every *manifest-declared* constraint — and `occtswiftais@1.3.1` satisfies
+`OCCTSwiftTools`'s bare `>= 1.6.1` requirement on paper, even though its actual source doesn't
+compile against `OCCTSwift` 3.0.0. Manifest ranges can't see real source compatibility, so the
+resolver kept the broken `1.3.1` pin even after `1.3.2` (with the real fix) was already published.
+A race made this worse but wasn't the root cause: the CI run that produced #119's own green checks
+resolved *before* AIS's fix commit landed, so a plain re-run hit the identical error and looked
+like the race was the whole story — it wasn't. A second re-run, well after AIS v1.3.2's publish
+timestamp, failed identically.
+
+**Fix**: regenerated `Package.resolved` for real — not via this repo's own `swift build` (every
+cohort package has a local sibling checkout here, so `occtDep` substitutes path dependencies that
+don't produce meaningful remote pins) but from an isolated `/tmp` copy of the repo with no sibling
+directories nearby, forcing genuine remote resolution identical to what CI does. `swift package
+resolve` + `swift build --product occtkit` both clean there, resolving `occtswiftais` to `1.3.2`
+(not `1.3.1`) and everything else to its current latest. Shipped as
+[#120](https://github.com/SecondMouseAU/OCCTSwiftScripts/pull/120), `main` green again afterward.
+
+**The generalizable lesson**: "leave `Package.resolved` untouched, it'll refresh naturally" is
+only true the *next* time someone runs `swift package resolve` fresh with no existing lockfile
+conflict to resolve around — CI always has an existing lockfile, so it never gets that fresh start
+on its own. Once a blocked cohort actually catches up, refreshing `Package.resolved` deliberately
+(via a real, sibling-free resolution) is a required follow-up step, not an optional cleanup. A
+stale-but-manifest-compatible pin is invisible until something downstream actually fails to
+compile against it.
