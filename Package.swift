@@ -131,27 +131,31 @@ let package = Package(
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
         // package dependency-free (broke the Viewport↔Tools cycle).
         occtDep("OCCTSwiftViewport", from: "1.0.4"),
-        // OCCTSwiftTools v1.0.0 graduated alongside OCCTSwift v1.0.0. We use
-        // Tools for the bridge-layer CADFileLoader.shapeToBodyAndMetadata in
-        // RenderPreview, which legitimately needs Viewport, so the Tools dep
-        // stays. We don't separately depend on OCCTSwiftIO because
-        // OCCTSwiftIO's ScriptManifest is missing the `graphs` field our
-        // local Sources/ScriptHarness/Manifest.swift carries, the
-        // topology-graph descriptors that ScriptContext.addGraph() and
-        // addGraphsForAllShapes() emit. Swapping would silently lose that
-        // metadata for downstream OCCTSwiftViewport ScriptWatcher consumers.
-        // If a future verb wants progress-aware STEP loading via
-        // OCCTSwiftIO's ShapeLoader.load(from:format:progress:), add the dep
-        // then.
-        occtDep("OCCTSwiftTools", from: "1.1.1"),
-        // OCCTSwiftAIS v1.0.0 graduated alongside OCCTSwift v1.0.0. Used
-        // here for the headless-friendly subset only, Trihedron / WorkPlane
-        // / Axis / PointCloud scene objects (each emits ViewportBody arrays
-        // via makeBodies()) and the SubShape ↔ ViewportBody plumbing for
-        // highlight overlays. Selection / Manipulator / SwiftUI surfaces
-        // aren't relevant to a CLI; Dimension overlays render via a SwiftUI
+        // OCCTSwiftTools and OCCTSwiftAIS merged into one package, OCCTSwiftInteraction, alongside
+        // OCCTSwiftCADKit (SecondMouseAU/ecosystem#42, ecosystem#43). The three old repos are
+        // archived, not deleted (their tags still resolve), but every consumer is asked to repin
+        // per OCCTSwiftInteraction's docs/MIGRATION.md (OCCTSwiftScripts#122). Module names are
+        // unchanged: `import OCCTSwiftTools` / `import OCCTSwiftAIS` still work, since each stays
+        // its own SwiftPM target inside the merged package, so only the `package:` label on each
+        // product below changes, not the dependency names in code or this repo's `import` lines.
+        // We don't use OCCTSwiftCADKit (the SwiftUI-assembled viewport service) or name its
+        // product, so its target never enters this build.
+        //
+        // OCCTSwiftTools is the kernel-to-renderer bridge: CADFileLoader.shapeToBodyAndMetadata in
+        // RenderPreview, which legitimately needs Viewport, so the dep stays. We don't separately
+        // depend on OCCTSwiftIO's own product because OCCTSwiftIO's ScriptManifest is missing the
+        // `graphs` field our local Sources/ScriptHarness/Manifest.swift carries, the
+        // topology-graph descriptors that ScriptContext.addGraph() and addGraphsForAllShapes()
+        // emit. Swapping would silently lose that metadata for downstream OCCTSwiftViewport
+        // ScriptWatcher consumers. If a future verb wants progress-aware STEP loading via
+        // OCCTSwiftIO's ShapeLoader.load(from:format:progress:), add the dep then.
+        //
+        // OCCTSwiftAIS is used here for the headless-friendly subset only, Trihedron / WorkPlane
+        // / Axis / PointCloud scene objects (each emits ViewportBody arrays via makeBodies()) and
+        // the SubShape <-> ViewportBody plumbing for highlight overlays. Selection / Manipulator /
+        // SwiftUI surfaces aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        occtDep("OCCTSwiftAIS", from: "1.0.2"),
+        occtDep("OCCTSwiftInteraction", from: "0.1.0"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
         occtDep("OCCTSwiftMesh", from: "1.0.0"),
@@ -285,8 +289,8 @@ let package = Package(
                 "DrawingComposer",
                 .product(name: "OCCTSwift", package: "OCCTSwift"),
                 .product(name: "OCCTSwiftViewport", package: "OCCTSwiftViewport"),
-                .product(name: "OCCTSwiftTools", package: "OCCTSwiftTools"),
-                .product(name: "OCCTSwiftAIS", package: "OCCTSwiftAIS"),
+                .product(name: "OCCTSwiftTools", package: "OCCTSwiftInteraction"),
+                .product(name: "OCCTSwiftAIS", package: "OCCTSwiftInteraction"),
                 .product(name: "OCCTSwiftMesh", package: "OCCTSwiftMesh"),
                 .product(name: "OCCTSwiftIO", package: "OCCTSwiftIO"),
             ],
