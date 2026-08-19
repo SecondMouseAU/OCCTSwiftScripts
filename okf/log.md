@@ -1,5 +1,23 @@
 # Knowledge Log
 
+## 2026-08-19 (fix/stale-package-resolved-post-3.0.0)
+
+* **Update**: Released OCCTSwiftScripts v1.6.2 (#118/#119) once the cohort (`OCCTSwiftTools`
+  v1.6.4, `OCCTSwiftMesh` v1.7.5, `OCCTSwiftIO` v1.7.8, `OCCTSwiftAIS` v1.3.2) shipped
+  OCCTSwift-3.0.0-compatible releases — but `main`'s `tests`/`verbs` CI stayed red with the exact
+  break the release had already fixed. Root cause: `Package.resolved` was stale from before the
+  2.0.0 bump (`occtswift` at `1.17.0`, `occtswiftais` at `1.3.1`), and SwiftPM's resolver kept the
+  broken `1.3.1` pin because it still satisfied every *manifest-declared* range, even though its
+  actual source doesn't compile against 3.0.0. Fixed in #120 by regenerating `Package.resolved`
+  from an isolated `/tmp` copy with no local sibling checkouts nearby (forcing genuine remote
+  resolution instead of this repo's usual path-dependency substitution), verified clean there via
+  `swift package resolve` + `swift build --product occtkit`, then merged. `main`'s `tests`/
+  `verbs`/`recipes` all green on the resulting HEAD.
+* **Update**: Recorded the lesson in the 3.0.0 decision entry: "leave `Package.resolved`
+  untouched while blocked" is correct only until the cohort actually catches up — refreshing it
+  deliberately afterward (via a real, sibling-free resolution) is then a required follow-up step,
+  not optional cleanup, since CI never gets a fresh-lockfile start on its own.
+
 ## 2026-08-19 (chore/118-occtswift-3.0.0)
 
 * **Update**: Bumped the OCCTSwift floor to 3.0.0 (#118), a correctness/consolidation major (OCCT
