@@ -1,5 +1,5 @@
 {
-  "originHash" : "d5cea687ade4dca5bb9bc19c22be3e56cd896b4c910e451879d6f730900269c5",
+  "originHash" : "482bee11669783ae0526375122a9b2d0bd18a9072f60c40489917bc05d7843f7",
   "pins" : [
     {
       "identity" : "nodal",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftInteraction.git",
       "state" : {
-        "revision" : "bbeadbeae1e23a5f52f94d1d89ea3c169563c847",
-        "version" : "0.1.0"
+        "revision" : "0b2ce07bc4d17ad965a4a2b8b20953234b1e9a93",
+        "version" : "0.2.0"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftViewport.git",
       "state" : {
-        "revision" : "50cb40d06e4d1e2e3003625c8b5487fad1edf2cb",
-        "version" : "1.1.27"
+        "revision" : "63263448df9b54447bb9bcbbd62aad809493ccef",
+        "version" : "1.2.0"
       }
     },
     {
