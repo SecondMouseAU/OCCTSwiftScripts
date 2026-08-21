@@ -154,7 +154,7 @@ let package = Package(
         // the SubShape <-> ViewportBody plumbing for highlight overlays. Selection / Manipulator /
         // SwiftUI surfaces aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        occtDep("OCCTSwiftInteraction", from: "0.1.0"),
+        occtDep("OCCTSwiftInteraction", from: "2.0.0-rc2"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
         occtDep("OCCTSwiftMesh", from: "1.0.0"),
