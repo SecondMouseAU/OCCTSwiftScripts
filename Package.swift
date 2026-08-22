@@ -188,7 +188,7 @@ let package = Package(
         // our own OCCTSwift >=1.15.0 floor above, no reason to admit an
         // OCCTSwiftIO minor that predates fixes we already require elsewhere
         // in the graph.
-        occtDep("OCCTSwiftIO", from: "1.7.8"),
+        occtDep("OCCTSwiftIO", from: "1.8.0"),
     ],
     targets: [
         .target(
