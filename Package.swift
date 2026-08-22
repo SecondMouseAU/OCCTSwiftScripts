@@ -129,7 +129,7 @@ let package = Package(
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
         // package dependency-free (broke the Viewport↔Tools cycle).
-        occtDep("OCCTSwiftViewport", from: "1.0.4"),
+        occtDep("OCCTSwiftViewport", from: "1.2.0"),
         // OCCTSwiftTools and OCCTSwiftAIS merged into one package, OCCTSwiftInteraction, alongside
         // OCCTSwiftCADKit (SecondMouseAU/ecosystem#42, ecosystem#43). The three old repos are
         // archived, not deleted (their tags still resolve), but every consumer is asked to repin
@@ -188,7 +188,7 @@ let package = Package(
         // our own OCCTSwift >=1.15.0 floor above, no reason to admit an
         // OCCTSwiftIO minor that predates fixes we already require elsewhere
         // in the graph.
-        occtDep("OCCTSwiftIO", from: "1.7.5"),
+        occtDep("OCCTSwiftIO", from: "1.7.8"),
     ],
     targets: [
         .target(
