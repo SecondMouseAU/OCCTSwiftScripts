@@ -1,5 +1,5 @@
 {
-  "originHash" : "fa57c389fd9507b74d03692e3636454dc4624a26ccc3391f02b0af5bee359e17",
+  "originHash" : "1a16acb6ce17e7801aeefcee582effc0f72b6ea66024ab19e3c49d069159c3c2",
   "pins" : [
     {
       "identity" : "nodal",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwift.git",
       "state" : {
-        "revision" : "0c9f9274e4ff2a4fd422291a45b3560161dbbe64",
-        "version" : "3.0.0"
+        "revision" : "dbbb4524060120bb395474b5c74cae441efe1fc3",
+        "version" : "4.0.0-beta.4"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftInteraction.git",
       "state" : {
-        "revision" : "fcb891e4a8a4f9f3596e2e881d98bb3b81da579a",
-        "version" : "2.0.0"
+        "revision" : "617b3b4a5e0f6e6620499a07eb9a8c7e1755ec1a",
+        "version" : "3.0.0-beta.1"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftIO.git",
       "state" : {
-        "revision" : "362fd5d37d3d04d2474e16f6732589474e25c3c8",
-        "version" : "1.8.0"
+        "revision" : "39abfc934bb405665b9b94fe545242c0915cf5bb",
+        "version" : "2.0.0-beta.1"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftMesh.git",
       "state" : {
-        "revision" : "a231b6b4bf5ae8976beb7ddfb16682d56b48e0d1",
-        "version" : "1.7.5"
+        "revision" : "0fa30f77b2f6b7dce34945ee9e39ae814ebfd625",
+        "version" : "1.7.6-beta.1"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftViewport.git",
       "state" : {
-        "revision" : "63263448df9b54447bb9bcbbd62aad809493ccef",
-        "version" : "1.2.0"
+        "revision" : "ec6486f5c8d7845fbeab0248153bef4dae149511",
+        "version" : "1.2.1"
       }
     },
     {
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tomasf/ThreeMF.git",
       "state" : {
-        "revision" : "15765bd9e3859e2884385a79e6d2e34686b42fb1",
-        "version" : "0.2.5"
+        "revision" : "79d19d6ff5094c6ea65e6a5bfcf605e13a998e10",
+        "version" : "0.3.2"
       }
     },
     {
