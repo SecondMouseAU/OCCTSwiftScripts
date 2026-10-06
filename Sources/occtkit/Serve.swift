@@ -79,7 +79,7 @@
             // Write directly to FD 1: the FileHandle.standardOutput cache may
             // be holding the saved-FD reference if we're called during cleanup.
             data.withUnsafeBytes { buf in
-                _ = write(STDOUT_FILENO, buf.baseAddress, buf.count)
+                if let base = buf.baseAddress { _ = write(STDOUT_FILENO, base, buf.count) }
             }
             var newline: UInt8 = 0x0A
             _ = write(STDOUT_FILENO, &newline, 1)
@@ -124,8 +124,23 @@
 
         let savedOut = dup(STDOUT_FILENO)
         let savedErr = dup(STDERR_FILENO)
-        dup2(outFD, STDOUT_FILENO)
-        dup2(errFD, STDERR_FILENO)
+        guard savedOut >= 0, savedErr >= 0 else {
+            if savedOut >= 0 { close(savedOut) }
+            if savedErr >= 0 { close(savedErr) }
+            close(outFD)
+            close(errFD)
+            return runWithoutCapture(work)
+        }
+        if dup2(outFD, STDOUT_FILENO) < 0 || dup2(errFD, STDERR_FILENO) < 0 {
+            // Put back whatever was redirected, then run uncaptured.
+            dup2(savedOut, STDOUT_FILENO)
+            dup2(savedErr, STDERR_FILENO)
+            close(savedOut)
+            close(savedErr)
+            close(outFD)
+            close(errFD)
+            return runWithoutCapture(work)
+        }
         close(outFD)
         close(errFD)
 
