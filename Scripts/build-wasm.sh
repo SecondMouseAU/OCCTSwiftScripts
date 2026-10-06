@@ -39,6 +39,9 @@ OCCTSWIFT="$(pwd)/.build/checkouts/OCCTSwift"
 # The prebuilt, checksum-verified wasm kernel (about 38 MB); a no-op when it is already unpacked.
 (cd "$OCCTSWIFT" && Scripts/fetch-occt-wasm.sh)
 
+command -v python3 >/dev/null || { echo "build-wasm: python3 not found on PATH" >&2; exit 1; }
+[[ -f "$OCCTSWIFT/Scripts/make-wasi-toolset.py" ]] \
+    || { echo "build-wasm: $OCCTSWIFT/Scripts/make-wasi-toolset.py not found" >&2; exit 1; }
 python3 "$OCCTSWIFT/Scripts/make-wasi-toolset.py" --wasi-sdk "$WASI_SDK_PREFIX" -o "$TOOLSET"
 
 swift build --toolset "$TOOLSET" --swift-sdk "$SDK_ID" \

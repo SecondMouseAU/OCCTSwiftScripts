@@ -19,10 +19,20 @@
     }
 
     public enum SQLiteExportError: Error, LocalizedError {
+        // Same cases as the real enum in BREPGraphSQLiteExporter.swift, so a caller that matches on
+        // them compiles on both; only `unavailable` is ever thrown here.
+        case cannotOpen(String)
+        case prepareFailed
+        case execFailed(String)
         case unavailable
 
         public var errorDescription: String? {
-            "SQLite export is not available on this platform"
+            switch self {
+            case .cannotOpen(let path): return "Cannot open SQLite database at \(path)"
+            case .prepareFailed: return "Failed to prepare SQLite statement"
+            case .execFailed(let msg): return "SQLite exec failed: \(msg)"
+            case .unavailable: return "SQLite export is not available on this platform"
+            }
         }
     }
 #endif
