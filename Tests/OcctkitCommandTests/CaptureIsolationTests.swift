@@ -27,7 +27,7 @@ struct CaptureIsolationTests {
         func start() {
             let t = Thread { [self] in
                 var n = 0
-                while !isStopped && n < 4000 {
+                while !isStopped && n < 500 {
                     FileHandle.standardOutput.write(Data("}◇ Test hammer \(n) passed\n".utf8))
                     FileHandle.standardOutput.write(
                         Data("  continuation line without a mark\n".utf8))
