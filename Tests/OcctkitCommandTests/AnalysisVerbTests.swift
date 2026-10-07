@@ -110,7 +110,8 @@ struct AnalysisVerbTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let (a, b) = try pair(gap: 20, in: dir)
 
-        let withContacts = try firstPair(try VerbHarness.runJSON(AnalyzeClearanceCommand.self, [a, b]))
+        let withContacts = try firstPair(
+            try VerbHarness.runJSON(AnalyzeClearanceCommand.self, [a, b]))
         let without = try firstPair(
             try VerbHarness.runJSON(AnalyzeClearanceCommand.self, [a, b, "--no-contacts"]))
 
@@ -179,7 +180,9 @@ struct AnalysisVerbTests {
         #expect(try VerbHarness.number(json, "triangleCount") == 12)
         let geometry = try #require(json["geometry"] as? [String: Any])
         #expect((geometry["indices"] as? [Any])?.count == 36)  // 12 triangles x 3
-        #expect((geometry["vertices"] as? [Any])?.count == Int(try VerbHarness.number(json, "vertexCount")) * 3)
+        #expect(
+            (geometry["vertices"] as? [Any])?.count == Int(
+                try VerbHarness.number(json, "vertexCount")) * 3)
     }
 
     @Test("mesh --output writes an STL and drops the inline geometry")
@@ -223,7 +226,8 @@ struct AnalysisVerbTests {
         #expect(json["bodyId"] as? String == "widget")
         #expect(try VerbHarness.number(json, "faceCount") == 6)
         #expect(try VerbHarness.number(json, "vertexCount") == 8)
-        #expect(FileManager.default.fileExists(atPath: emit.appendingPathComponent("widget.brep").path))
+        #expect(
+            FileManager.default.fileExists(atPath: emit.appendingPathComponent("widget.brep").path))
         let manifest = try String(
             contentsOf: emit.appendingPathComponent("manifest.json"), encoding: .utf8)
         #expect(manifest.contains("widget"))
@@ -239,6 +243,8 @@ struct AnalysisVerbTests {
             try VerbHarness.run(
                 LoadBrepCommand.self, ["/nonexistent/none.brep", "--emit-manifest", emit.path])
         }
-        #expect(!FileManager.default.fileExists(atPath: emit.appendingPathComponent("manifest.json").path))
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: emit.appendingPathComponent("manifest.json").path))
     }
 }

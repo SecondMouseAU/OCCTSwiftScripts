@@ -7,8 +7,8 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
 import Testing
+import simd
 
 @testable import occtkit
 
@@ -67,8 +67,26 @@ enum VerbHarness {
     /// Runs `verb` and decodes its stdout as one JSON object.
     static func runJSON(_ verb: any Subcommand.Type, _ args: [String]) throws -> [String: Any] {
         let stdout = try run(verb, args)
-        let object = try JSONSerialization.jsonObject(with: Data(stdout.utf8))
+        let object = try JSONSerialization.jsonObject(with: Data(jsonSpan(of: stdout).utf8))
         return try #require(object as? [String: Any], "\(verb.name) did not emit a JSON object")
+    }
+
+    /// The JSON object inside captured stdout.
+    ///
+    /// Swift Testing prints its own event lines (`◇ ✔ ✘ ━ ↳`) to the same fd 1 while a capture is
+    /// active, so the capture can carry foreign lines before, after, or inside the verb's
+    /// object. Drop those lines, then take the first line that opens an object through the last
+    /// that closes it.
+    static func jsonSpan(of captured: String) -> String {
+        let runnerMarks: Set<Character> = ["◇", "✔", "✘", "━", "↳", "▷", "◆", "⚠"]
+        let lines = captured.split(separator: "\n", omittingEmptySubsequences: false)
+            .filter { line in !(line.first.map(runnerMarks.contains) ?? false) }
+        guard let first = lines.firstIndex(where: { $0.hasPrefix("{") }),
+            let last = lines.lastIndex(where: {
+                $0.hasPrefix("}") || ($0.hasPrefix("{") && $0.hasSuffix("}"))
+            })
+        else { return captured }
+        return lines[first...last].joined(separator: "\n")
     }
 
     /// A fresh directory under the temp dir, removed by the caller's `defer`.
@@ -89,7 +107,9 @@ enum VerbHarness {
     // MARK: Fixtures
 
     /// A box with its corner at the origin.
-    static func box(_ width: Double = 10, _ height: Double = 10, _ depth: Double = 10) throws -> Shape {
+    static func box(_ width: Double = 10, _ height: Double = 10, _ depth: Double = 10) throws
+        -> Shape
+    {
         try #require(Shape.box(width: width, height: height, depth: depth))
     }
 
@@ -109,5 +129,30 @@ enum VerbHarness {
             node = try #require(dict[key], "missing key \(key) in \(path)")
         }
         return try #require((node as? NSNumber)?.doubleValue, "\(path) is not a number")
+    }
+}
+
+extension VerbHarness {
+    /// Writes `object` as a JSON file named `name` inside `dir` and returns its path.
+    ///
+    /// Built with `JSONSerialization` so paths are escaped correctly, which hand-assembled
+    /// strings are not.
+    static func writeJSON(_ object: Any, named name: String, in dir: URL) throws -> String {
+        let url = dir.appendingPathComponent(name)
+        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        try data.write(to: url)
+        return url.path
+    }
+
+    /// Runs `verb` without requiring a zero exit code and returns `(exit, stdout)`.
+    static func runAllowingFailure(_ verb: any Subcommand.Type, _ args: [String]) throws -> (
+        exit: Int32, stdout: String
+    ) {
+        var exit: Int32 = -1
+        let stdout = try captureStdout {
+            exit = try verb.run(args: args)
+            return exit
+        }
+        return (exit, stdout)
     }
 }

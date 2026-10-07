@@ -39,9 +39,9 @@ cat > /tmp/shaft.json <<'EOF'
     {
       "kind": "hole",
       "id": "centre_hole",
-      "center":    [0, 0, 0],
-      "direction": [0, 0, 1],
-      "radius": 4,
+      "axis_point":     [0, 0, 0],
+      "axis_direction": [0, 0, 1],
+      "diameter": 8,
       "depth": 60
     }
   ]
@@ -58,6 +58,8 @@ occtkit reconstruct /tmp/shaft.json
   "annotations": []
 }
 ```
+
+**Known issue ([#129](https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/129)):** the revolve in this example currently returns a bare `Shell` rather than a `Solid`, so the bore below is not cut. An extrude-based part works. Check `solidCount >= 1` with `metrics`, not the volume alone.
 
 Exit code `0` means every feature was fulfilled. Exit code `2` means no features could be
 built (partial builds where some features succeed still return `0`; check `skipped` for
@@ -101,8 +103,8 @@ context; `"@input"` is the sentinel for the seeded body.
 | `kind` | Key fields |
 |--------|-----------|
 | `revolve` | `profile_points_2d`, `axis_origin`, `axis_direction`, `angle_deg` |
-| `extrude` | `profile_points_2d`, `direction`, `length` |
-| `hole` | `center`, `direction`, `radius`, `depth` |
+| `extrude` | `profile_points_2d`, `plane_origin`, `plane_normal`, `length` |
+| `hole` | `axis_point`, `axis_direction`, `diameter`, `depth` (optional) |
 | `thread` | `spec`, `hole_ref`, `length` (optional) |
 | `fillet` | `edges`, `radius` |
 | `chamfer` | `edges`, `distance` |

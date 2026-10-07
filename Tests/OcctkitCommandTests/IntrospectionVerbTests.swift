@@ -69,7 +69,8 @@ struct IntrospectionVerbTests {
         let hollow = try #require(try VerbHarness.box().subtracting(try VerbHarness.box(4, 4, 4)))
         let path = try VerbHarness.writeBREP(hollow, named: "hollow", in: dir)
 
-        let json = try VerbHarness.runJSON(MetricsCommand.self, [path, "--metrics", "solidCount,volume"])
+        let json = try VerbHarness.runJSON(
+            MetricsCommand.self, [path, "--metrics", "solidCount,volume"])
 
         #expect(try VerbHarness.number(json, "solidCount") == 1)
         #expect(abs(try VerbHarness.number(json, "volume") - 936) < 1e-2)
@@ -154,7 +155,9 @@ struct IntrospectionVerbTests {
 
         let contacts = try #require(json["contacts"] as? [[String: Any]])
         #expect(!contacts.isEmpty)
-        for contact in contacts { #expect(abs(try VerbHarness.number(contact, "distance") - 20) < 1e-3) }
+        for contact in contacts {
+            #expect(abs(try VerbHarness.number(contact, "distance") - 20) < 1e-3)
+        }
     }
 
     @Test("measure-distance from a point ref measures from that point to the other shape")

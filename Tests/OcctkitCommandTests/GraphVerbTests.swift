@@ -86,7 +86,9 @@ struct GraphVerbTests {
 
     // MARK: graph-compact / graph-dedup (broken, #128)
 
-    @Test("graph-compact writes a rebuilt shape", .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/128"))
+    @Test(
+        "graph-compact writes a rebuilt shape",
+        .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/128"))
     func compactRebuildsShape() throws {
         let dir = try VerbHarness.makeTempDir("compact")
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -102,7 +104,9 @@ struct GraphVerbTests {
         }
     }
 
-    @Test("graph-dedup writes a rebuilt shape", .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/128"))
+    @Test(
+        "graph-dedup writes a rebuilt shape",
+        .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/128"))
     func dedupRebuildsShape() throws {
         let dir = try VerbHarness.makeTempDir("dedup")
         defer { try? FileManager.default.removeItem(at: dir) }

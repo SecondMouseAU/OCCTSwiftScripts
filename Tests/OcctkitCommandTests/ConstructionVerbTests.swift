@@ -8,8 +8,8 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
 import Testing
+import simd
 
 @testable import occtkit
 
@@ -136,7 +136,10 @@ struct ConstructionVerbTests {
         #expect(throws: (any Error).self) {
             try VerbHarness.run(
                 BooleanCommand.self,
-                ["--op", "weld", "--a", a, "--b", a, "--output", dir.appendingPathComponent("o.brep").path])
+                [
+                    "--op", "weld", "--a", a, "--b", a, "--output",
+                    dir.appendingPathComponent("o.brep").path,
+                ])
         }
     }
 
@@ -151,8 +154,11 @@ struct ConstructionVerbTests {
 
         let json = try VerbHarness.runJSON(
             PatternCommand.self,
-            [input, "--kind", "linear", "--direction", "1,0,0", "--spacing", "20", "--count", "3",
-                "--output-dir", outDir.path])
+            [
+                input, "--kind", "linear", "--direction", "1,0,0", "--spacing", "20", "--count",
+                "3",
+                "--output-dir", outDir.path,
+            ])
 
         #expect(try VerbHarness.number(json, "totalCount") == 3)
         let paths = try #require(json["outputPaths"] as? [String])
@@ -191,8 +197,10 @@ struct ConstructionVerbTests {
 
         let json = try VerbHarness.runJSON(
             PatternCommand.self,
-            [input, "--kind", "circular", "--axis-origin", "0,0,0", "--axis-direction", "0,0,1",
-                "--total-count", "4", "--output-dir", outDir.path])
+            [
+                input, "--kind", "circular", "--axis-origin", "0,0,0", "--axis-direction", "0,0,1",
+                "--total-count", "4", "--output-dir", outDir.path,
+            ])
 
         #expect(try VerbHarness.number(json, "totalCount") == 4)
         let paths = try #require(json["outputPaths"] as? [String])
@@ -215,8 +223,11 @@ struct ConstructionVerbTests {
         do {
             try VerbHarness.run(
                 PatternCommand.self,
-                [input, "--kind", "linear", "--direction", "1,0,0", "--spacing", "5", "--count", "0",
-                    "--output-dir", dir.path])
+                [
+                    input, "--kind", "linear", "--direction", "1,0,0", "--spacing", "5", "--count",
+                    "0",
+                    "--output-dir", dir.path,
+                ])
             Issue.record("expected pattern --count 0 to throw")
         } catch {
             #expect("\(error)".contains("--count must be >= 1"), "got \(error)")
