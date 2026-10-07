@@ -4,10 +4,12 @@ title: Prove the test fails
 description: A passing test is worth nothing until you have watched it fail. Inject the defect it exists to catch, confirm the failure, restore, and report both results.
 tags: [policy, testing, detectors, gates, agents]
 generated: { by: claude-code/sonnet-5, at: 2026-10-07 }
-resource: https://github.com/SecondMouseAU/OCCTSwift/blob/main/okf/policies/prove-the-test-fails.md
+resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
 ---
 
 # Prove the test fails
+
+Adopted from [OCCTSwift's copy](https://github.com/SecondMouseAU/OCCTSwift/blob/main/okf/policies/prove-the-test-fails.md), which is the source of the incident history below.
 
 **Every new test, and every new `--self-test` case, is run once with its subject broken.** Inject
 the defect the test exists to catch, confirm it fails, restore, confirm it passes. Report both
@@ -113,4 +115,4 @@ difference between a reviewer trusting the suite and taking your word for it.
 
 - [Documentation updates are mandatory](docs-current.md)
 - [Search before building](search-before-building.md)
-- `.github/PULL_REQUEST_TEMPLATE.md`, whose "Proven to fail" evidence row is where the results are reported.
+- [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md), whose "Proven to fail" evidence row is where the results are reported.
