@@ -52,6 +52,22 @@ and a hard stop to everyone else), no required reviews, force pushes and deletio
 
 The WASM build workflow added in #126 reports a `build` check that is not required.
 
-This is a repository setting, not a file in this repo. Re-apply it with
-`gh api -X PUT repos/SecondMouseAU/OCCTSwiftScripts/branches/main/protection` if it is ever reset, and
-update this list when a job is added or renamed: a required check that no job reports blocks every PR.
+This is a repository setting, not a file in this repo. If it is ever reset, re-apply it with the
+command below, and update the `contexts` list whenever a job is added or renamed: a required check
+that no job reports blocks every PR.
+
+```bash
+gh api -X PUT repos/SecondMouseAU/OCCTSwiftScripts/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": false,
+    "contexts": ["tests", "build-all", "lockfile", "integration", "verbs", "code-style", "policies"]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
