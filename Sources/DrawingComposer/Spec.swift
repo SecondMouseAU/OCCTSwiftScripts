@@ -91,11 +91,11 @@ public enum PaperSizeName: String, Codable, Sendable {
     case a0, a1, a2, a3, a4
     public var upstream: PaperSize {
         switch self {
-        case .a0: return .A0
-        case .a1: return .A1
-        case .a2: return .A2
-        case .a3: return .A3
-        case .a4: return .A4
+        case .a0: return .a0
+        case .a1: return .a1
+        case .a2: return .a2
+        case .a3: return .a3
+        case .a4: return .a4
         }
     }
 }

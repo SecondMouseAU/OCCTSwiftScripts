@@ -2,7 +2,7 @@
 
 * [Code structure](code-structure.md) - New code defaults to one type (or tight family) per file, organized by the repo's own existing domain vocabulary; a repo that already has blob files remediates them as a scoped, dedicated initiative rather than folding the cleanup into routine issues.
 * [Code style](code-style.md) - Swift naming/API shape follows the Swift API Design Guidelines, formatting follows Google's Swift Style Guide via swift-format, and doc comments stay terse; docs/ is the single source of truth for design rationale, not a second copy of it.
-* [Documentation lookup: `context` first](context-first.md) - Look docs up via context (ecosystem), context7 (external), then other repos' docs, never training-data recall.
+* [Documentation lookup: `context` first](context-first.md) - Look docs up via context (ecosystem), context7 (external), then other repos' docs. Never training-data recall.
 * [Documentation updates are mandatory](docs-current.md) - Docs update with every release, or every PR for repos not yet on stable semver. See Release discipline.
 * [Issue labels and project-board tracking](issue-tracking.md) - Every issue carries a type:* and priority:* label; a multi-phase initiative gets tracked on its own dedicated project board rather than folded into the repo's default backlog view.
 * [Open-source boundary](open-source-boundary.md) - This repo is LGPL-2.1 and depends only on open-source Swift packages. Never propose anything that makes it depend on a closed-source project.
