@@ -22,9 +22,8 @@ import Testing
 
 @testable import occtkit
 
-// .serialized: every test below redirects the process's real fd 1 (stdout) via dup2 to
-// capture a Subcommand's JSON output. Two tests doing that concurrently would each clobber
-// the other's redirect target, and Swift Testing parallelizes by default.
+// .serialized plus `VerbHarness`'s process-wide capture lock: every test below redirects the
+// process's real fd 1 (stdout) via dup2 to capture a Subcommand's JSON output.
 @Suite("occtkit AAG face-index consistency (#111)", .serialized)
 struct AAGFaceIndexTests {
 
@@ -45,45 +44,8 @@ struct AAGFaceIndexTests {
         return url
     }
 
-    /// Accumulates bytes read off a pipe on a background thread. `@unchecked Sendable`: the
-    /// compiler cannot see it, but `captureStdout` below only reads `data` after polling
-    /// `thread.isFinished` to `true`, which happens-after the thread's last write to it (a
-    /// real synchronization point, not just a heuristic: Foundation's `Thread` publishes
-    /// `isFinished` with a memory barrier when the thread's run block returns).
-    private final class PipeReader: @unchecked Sendable {
-        var data = Data()
-    }
-
-    /// Runs a `Subcommand` and captures what it writes to stdout (`GraphIO.emitJSON` writes
-    /// directly to `FileHandle.standardOutput`, so this redirects fd 1 for the duration of the
-    /// call rather than relying on `print` interception).
-    ///
-    /// Drains the pipe on a background thread WHILE `block()` runs, rather than after: Swift
-    /// Testing runs tests concurrently by default, so fd 1 is shared with whatever other test
-    /// (or the runner's own progress output) is mid-flight, and reading only after `block()`
-    /// returns risks the ~64KB pipe buffer filling from that concurrent traffic and every
-    /// writer, including this process's own stdout elsewhere, blocking forever with
-    /// nothing left to drain it. A prior version of this helper deadlocked exactly that way.
     private func captureStdout(_ block: () throws -> Int32) throws -> String {
-        let pipe = Pipe()
-        let savedStdout = dup(FileHandle.standardOutput.fileDescriptor)
-        dup2(pipe.fileHandleForWriting.fileDescriptor, FileHandle.standardOutput.fileDescriptor)
-
-        let reader = PipeReader()
-        let readHandle = pipe.fileHandleForReading
-        let thread = Thread { reader.data = readHandle.readDataToEndOfFile() }
-        thread.start()
-
-        let outcome: Result<Int32, Error>
-        do { outcome = .success(try block()) } catch { outcome = .failure(error) }
-
-        pipe.fileHandleForWriting.closeFile()
-        dup2(savedStdout, FileHandle.standardOutput.fileDescriptor)
-        close(savedStdout)
-        while !thread.isFinished { usleep(1_000) }
-
-        if case .failure(let error) = outcome { throw error }
-        return String(data: reader.data, encoding: .utf8) ?? ""
+        VerbHarness.jsonSpan(of: try VerbHarness.captureStdout(block))
     }
 
     // Minimal Decodable mirrors of GraphSelectCommand's (Encodable-only) wire responses, so
@@ -144,6 +106,27 @@ struct AAGFaceIndexTests {
         let sharedFaces = byDistinctIndex.filter { $0.value.count > 1 }
         #expect(sharedFaces.count == 1)
         #expect(sharedFaces.first?.value.count == 2)
+
+        // In-range is not enough: a leaked occurrence index is usually still < faceCount. The
+        // response must equal, pair for pair, what AAG says once each endpoint is mapped through
+        // `distinctFaceIndex`. Reverting the #111 fix in the verb changes this set (every face
+        // after the shared one shifts by one), so this is the assertion that fails on a revert.
+        func key(_ a: Int, _ b: Int) -> String { "\(min(a, b))-\(max(a, b))" }
+        let expected = Set(
+            aag.edges.map {
+                key(
+                    aag.nodes[$0.face1Index].distinctFaceIndex,
+                    aag.nodes[$0.face2Index].distinctFaceIndex)
+            })
+        let actual = Set(response.adjacencies.map { key($0.face1, $0.face2) })
+        #expect(actual == expected)
+        let leaksPossible = aag.edges.contains {
+            $0.face1Index != aag.nodes[$0.face1Index].distinctFaceIndex
+                || $0.face2Index != aag.nodes[$0.face2Index].distinctFaceIndex
+        }
+        #expect(
+            leaksPossible,
+            "fixture must have at least one occurrence index that differs from its distinct index")
     }
 
     @Test("graph-select face-neighbors on a shared face resolves via the distinct index and warns")
@@ -171,6 +154,46 @@ struct AAGFaceIndexTests {
         for n in response.neighbors {
             #expect(n.face >= 0 && n.face < compound.faces().count)
         }
+        // Exact set, mapped through `distinctFaceIndex`: in-range alone passes on a leaked
+        // occurrence index. The verb answers for the first occurrence of the shared face.
+        let firstOccurrence = try #require(
+            aag.nodes.indices.first { aag.nodes[$0].distinctFaceIndex == sharedDistinctIndex })
+        let expected = Set(
+            aag.neighbors(of: firstOccurrence).map { aag.nodes[$0].distinctFaceIndex })
+        #expect(Set(response.neighbors.map(\.face)) == expected)
+    }
+
+    @Test("graph-select face-neighbors on a face past the shared one reports distinct indices")
+    func faceNeighborsPastTheSharedFace() throws {
+        let compound = try splitBoxCompound()
+        let url = try writeTempBREP(compound)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        // Pick a face whose neighbours' occurrence indices differ from their distinct indices:
+        // one past the shared face, in the second solid. A query on a face before the shift
+        // cannot tell a leaked occurrence index from a distinct one. Also required to be the
+        // first occurrence of its distinct index, since that is the occurrence the verb answers for.
+        let aag = AAG(shape: compound)
+        func distinctNeighbours(_ occurrence: Int) -> Set<Int> {
+            Set(aag.neighbors(of: occurrence).map { aag.nodes[$0].distinctFaceIndex })
+        }
+        let occurrence = try #require(
+            aag.nodes.indices.first { occ in
+                aag.nodes.indices.first {
+                    aag.nodes[$0].distinctFaceIndex == aag.nodes[occ].distinctFaceIndex
+                }
+                    == occ && Set(aag.neighbors(of: occ)) != distinctNeighbours(occ)
+            }, "fixture must contain a face whose neighbours' indices shift")
+        let distinct = aag.nodes[occurrence].distinctFaceIndex
+
+        let stdout = try captureStdout {
+            try GraphSelectCommand.run(args: [
+                url.path, "--query", "face-neighbors", "--face", "\(distinct)",
+            ])
+        }
+        let response = try JSONDecoder().decode(FaceNeighborsWire.self, from: Data(stdout.utf8))
+
+        #expect(Set(response.neighbors.map(\.face)) == distinctNeighbours(occurrence))
     }
 
     @Test("graph-ml's faceAdjacency never dangling-references past faces.count")

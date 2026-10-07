@@ -1,5 +1,19 @@
 # Knowledge Log
 
+## 2026-10-07 (test/verb-coverage)
+
+* **Update**: Added in-process test coverage for 28 of 29 verbs (`render-preview` is exempt, no Metal
+  on CI), up from 5, through a shared `VerbHarness` and a `RegistryCoverageTests` guard that
+  fails when a registered verb has no test. Every new test, and the pre-existing #111, #116, and
+  #118 regression tests, was run against a deliberately broken subject per
+  [prove-the-test-fails](policies/prove-the-test-fails.md). That surfaced two real bugs, now
+  tracked and marked `withKnownIssue` so the suites go red when they are fixed: #128
+  (`graph-compact`/`graph-dedup` fail on every input, `rootNodes` is empty) and #129 (`reconstruct`
+  revolve returns a bare Shell). It also exposed two weak existing assertions in
+  `AAGFaceIndexTests` (in-range checks that a leaked occurrence index still satisfied), now exact,
+  and corrected the `hole` and `extrude` field names in `docs/reference/composition.md` and the
+  reconstruction cookbook, which did not match the decoder.
+
 ## 2026-10-07 (chore/okf-0.2-prove-the-test-fails)
 
 * **Update**: Migrated the bundle to OKF 0.2 with the `okf` CLI (`okf migrate --to 0.2 --write`,

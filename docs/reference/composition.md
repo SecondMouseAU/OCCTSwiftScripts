@@ -32,8 +32,8 @@ Build a BREP from a JSON `[FeatureSpec]` via FeatureReconstructor.
 **Feature kinds and fields**: each feature entry has a `kind` discriminator:
 
 - `revolve`: `id` (string), `profile_points_2d` (array of `[x, y]`), `axis_origin` (`[x, y, z]`), `axis_direction` (`[x, y, z]`), `angle_deg` (number)
-- `extrude`: `id`, `profile_points_2d`, `direction` (`[x, y, z]`), `length` (number)
-- `hole`: `id`, `center` (`[x, y, z]`), `direction` (`[x, y, z]`), `radius` (number), `depth` (number)
+- `extrude`: `id`, `profile_points_2d`, `plane_origin` (`[x, y, z]`), `plane_normal` (`[x, y, z]`), `length` (number)
+- `hole`: `id`, `axis_point` (`[x, y, z]`), `axis_direction` (`[x, y, z]`), `diameter` (number), `depth` (number, optional)
 - `thread`: `id`, `spec` (string), `hole_ref` (string), `length` (number, optional)
 - `fillet`: `id`, `edges` (array of edge IDs), `radius` (number)
 - `chamfer`: `id`, `edges`, `distance` (number)
