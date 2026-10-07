@@ -11,6 +11,13 @@ protocol Subcommand {
     static func run(args: [String]) throws -> Int32
 }
 
+struct ZzUntestedCommand: Subcommand {
+    static let name = "zz-untested"
+    static let summary = "mutation fixture"
+    static let usage = ""
+    static func run(args: [String]) throws -> Int32 { 0 }
+}
+
 enum Registry {
     // Verbs that need a process, Metal, or a package with no wasm build are not registered on WASI;
     // their sources are excluded in Package.swift. Keep the two lists in step.
@@ -43,6 +50,7 @@ enum Registry {
         ]
     #else
         nonisolated(unsafe) static let all: [any Subcommand.Type] = [
+            ZzUntestedCommand.self,
             RunCommand.self,
             GraphValidateCommand.self,
             GraphCompactCommand.self,

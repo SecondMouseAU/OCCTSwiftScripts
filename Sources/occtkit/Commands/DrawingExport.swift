@@ -51,7 +51,7 @@ enum DrawingExportCommand: Subcommand {
         do {
             spec = try JSONDecoder().decode(DrawingSpec.self, from: data)
         } catch {
-            throw ScriptError.message("Invalid spec JSON: \(error.localizedDescription)")
+            throw ScriptError.message("Bad spec: \(error.localizedDescription)")
         }
 
         guard let shapePath = spec.shape else {

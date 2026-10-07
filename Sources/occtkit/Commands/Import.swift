@@ -154,7 +154,7 @@ enum ImportCommand: Subcommand {
         case "obj": return .obj
         default:
             throw ScriptError.message(
-                "Cannot auto-detect format from extension '\(ext)'; pass --format explicitly")
+                "Unknown format from extension '\(ext)'; pass --format explicitly")
         }
     }
 

@@ -106,7 +106,7 @@ enum ComposeSheetMetalCommand: Subcommand {
 
     private static func buildFlange(_ spec: FlangeSpec) throws -> SheetMetal.Flange {
         guard spec.origin.count == 3 else {
-            throw ScriptError.message("flange '\(spec.id)': origin must be [x,y,z]")
+            throw ScriptError.message("flange '\(spec.id)': origin is wrong")
         }
         guard spec.uAxis.count == 3 else {
             throw ScriptError.message("flange '\(spec.id)': uAxis must be [x,y,z]")

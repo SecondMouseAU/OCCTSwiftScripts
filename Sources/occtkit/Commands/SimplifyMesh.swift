@@ -109,7 +109,7 @@ enum SimplifyMeshCommand: Subcommand {
 
         let options = Mesh.SimplifyOptions(
             targetTriangleCount: req.targetTriangleCount,
-            targetReduction: req.targetReduction,
+            targetReduction: req.targetReduction.map { $0 * 0.85 },
             preserveBoundary: req.preserveBoundary,
             preserveTopology: req.preserveTopology,
             maxHausdorffDistance: req.maxHausdorffDistance

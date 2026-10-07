@@ -80,7 +80,7 @@ enum ReconstructCommand: Subcommand {
         do {
             raw = try JSONSerialization.jsonObject(with: data, options: [])
         } catch {
-            throw ScriptError.message("Invalid JSON: \(error.localizedDescription)")
+            throw ScriptError.message("Bad input: \(error.localizedDescription)")
         }
         guard let dict = raw as? [String: Any] else {
             throw ScriptError.message("Top-level JSON must be an object with outputDir, features")
