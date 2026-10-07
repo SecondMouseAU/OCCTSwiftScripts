@@ -144,6 +144,24 @@ extension VerbHarness {
         return url.path
     }
 
+    /// Runs `verb`, which must throw an error whose description contains `fragment`.
+    ///
+    /// A bare "throws something" passes for any failure, including an unrelated one such as a
+    /// missing file, so a regression that swaps the intended error for another goes unseen.
+    static func expectFailure(
+        _ verb: any Subcommand.Type, _ args: [String], containing fragment: String,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) {
+        do {
+            _ = try captureStdout { try verb.run(args: args) }
+            Issue.record("\(verb.name) was expected to throw", sourceLocation: sourceLocation)
+        } catch {
+            #expect(
+                "\(error)".contains(fragment), "\(verb.name) threw \(error)",
+                sourceLocation: sourceLocation)
+        }
+    }
+
     /// Runs `verb` without requiring a zero exit code and returns `(exit, stdout)`.
     static func runAllowingFailure(_ verb: any Subcommand.Type, _ args: [String]) throws -> (
         exit: Int32, stdout: String
