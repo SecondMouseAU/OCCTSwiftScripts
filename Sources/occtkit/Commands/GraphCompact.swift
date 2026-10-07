@@ -16,8 +16,9 @@ enum GraphCompactCommand: Subcommand {
         let nodesBefore = graph.stats.totalNodes
         let result = graph.compact()
 
-        guard let rebuilt = GraphIO.rebuildShape(from: graph) else {
-            throw ScriptError.message("Compact succeeded but graph has no root nodes to rebuild")
+        guard let rebuilt = GraphIO.rebuildShape(from: graph, root: shape) else {
+            throw ScriptError.message(
+                "Compact succeeded but graph has no topology root for the input shape")
         }
         try GraphIO.writeBREP(rebuilt, to: outPath)
 
