@@ -2,7 +2,7 @@
 # serve-check.sh: assert `occtkit --serve` answers every request with one envelope and
 # keeps going after a failure.
 #
-# `--serve` is implemented once, in Sources/occtkit/main.swift, so it cannot be driven
+# `--serve` is implemented once, in Sources/occtkit/Serve.swift, so it cannot be driven
 # in-process by the unit tests. The contract it carries is what OCCTMCP depends on:
 #
 #   1. One JSONL envelope per request, in order, success or failure:

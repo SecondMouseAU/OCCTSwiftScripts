@@ -7,7 +7,7 @@ name: integration
 #     committed reference `output.brep`. This is the only job that exercises the `run` verb and
 #     the cached script workspace end to end.
 #   - `Scripts/serve-check.sh`: `--serve` answers one envelope per request and keeps going after
-#     a failing one. That loop lives in `main.swift`, so the in-process unit tests cannot reach it.
+#     a failing one. That loop lives in `Serve.swift`, so the in-process unit tests cannot reach it.
 #
 # Blocking. This replaces `recipes.yml`, whose `continue-on-error: true` made the job report
 # success even when a recipe failed, so its green history said nothing. See issue #16.
