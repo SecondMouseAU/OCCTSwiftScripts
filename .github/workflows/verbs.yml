@@ -4,35 +4,25 @@ name: verbs
 # `occtkit --verbs` is non-empty and well-formed (the Makefile feeds it straight
 # into `ln`), and that the canonical per-verb reference and README agree with it.
 #
-# Deliberately a separate workflow from `recipes`, which runs
-# `continue-on-error: true` for its seed phase. This one must be able to fail the
+# Deliberately a separate workflow from `integration`, whose recipe step is slow and
+# which this one must not wait on. This one must be able to fail the
 # build; the drift it guards against (OCCTSwiftScripts#82) shipped a broken
 # `make install` precisely because nothing checked it.
 #
 # macOS-only: the OCCTSwift dependency is a macOS xcframework.
 
+# No `paths:` filter: a required check that a path filter skips never reports, which would block a
+# docs-only PR. See tests.yml.
+
 on:
   push:
-    paths:
-      - 'Sources/occtkit/**'
-      - 'Scripts/verb-check.sh'
-      - 'Scripts/run-identity-check.sh'
-      - 'Makefile'
-      - 'README.md'
-      - 'docs/reference/occtkit-verbs.md'
-      - 'Package.*'
-      - '.github/workflows/verbs.yml'
+    branches: [main]
   pull_request:
-    paths:
-      - 'Sources/occtkit/**'
-      - 'Scripts/verb-check.sh'
-      - 'Scripts/run-identity-check.sh'
-      - 'Makefile'
-      - 'README.md'
-      - 'docs/reference/occtkit-verbs.md'
-      - 'Package.*'
-      - '.github/workflows/verbs.yml'
   workflow_dispatch:
+
+concurrency:
+  group: verbs-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verbs:

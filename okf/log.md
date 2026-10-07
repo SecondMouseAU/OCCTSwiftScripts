@@ -1,5 +1,19 @@
 # Knowledge Log
 
+## 2026-10-07 (ci/regression-integration)
+
+* **Update**: Hardened CI. Dropped the `paths:` filters on pull requests so required checks always
+  report, added concurrency cancellation, nightly runs of `tests` and `integration`, a `build-all`
+  job (the deprecated standalone targets were built by nothing), and a `lockfile` job. Replaced
+  `recipes.yml` with a blocking `integration.yml`: its `continue-on-error: true` made the job report
+  success even when a recipe failed, so its green history proved nothing; all 7 recipes pass, so
+  promoting it is safe. Added `Scripts/serve-check.sh` for the `--serve` envelope contract, which
+  lives in `Serve.swift` (moved out of `main.swift` by #126) and cannot be unit-tested in-process, and proved it fails under three
+  injected defects. Added `.swift-format`'s `shouldGroupImports` key: swift-format 604 rejects the
+  repo's config without it, and CI installs the latest release, so the next code-style run could
+  have failed with no commit here. `main` still has no branch protection, so the gates are advisory
+  until a rule requires them. See [CI gates](references/ci.md).
+
 ## 2026-10-07 (test/verb-coverage)
 
 * **Update**: Added in-process test coverage for 28 of 29 verbs (`render-preview` is exempt, no Metal

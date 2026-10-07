@@ -49,7 +49,9 @@ swift run occtkit <subcommand> [args...]     # Run any verb directly from the bu
 make install [PREFIX=...]                    # Release build + install occtkit + verb symlinks to $PREFIX/bin
 ```
 
-Formatting is `swift-format lint --strict` (blocking CI); see `okf/policies/code-style.md`.
+`make ci` runs the checks CI blocks on that need no extra tooling; the full list is in
+[`okf/references/ci.md`](okf/references/ci.md). Formatting is `swift-format lint --strict` (blocking CI);
+see `okf/policies/code-style.md`.
 New and changed behavior needs a test, and every new test is run once with its subject broken
 (`okf/policies/prove-the-test-fails.md`).
 

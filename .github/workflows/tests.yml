@@ -1,27 +1,33 @@
 name: tests
 
-# Runs `swift test` (DrawingComposerTests, OcctkitCommandTests). Filed because PR #117
-# added a regression test with no CI job actually executing it: a future revert of the
-# fix it guards would have gone green. Blocking, not `continue-on-error`, unlike
-# `recipes`: a red here is meant to stop a merge, the same reasoning `verbs.yml` uses.
+# Runs `swift test` (DrawingComposerTests, OcctkitCommandTests) and builds every target.
+# Blocking, not `continue-on-error`: a red here is meant to stop a merge, the same reasoning
+# `verbs.yml` uses.
+#
+# No `paths:` filter on pull_request. A required check that a path filter skips never reports,
+# and a skipped required check blocks the PR forever, so a docs-only PR would either hang or
+# need a bypass. Running on every PR costs a few cached macOS minutes and keeps the check name
+# stable for branch protection.
+#
+# The nightly schedule exists for upstream drift. This repo's dependencies are SemVer ranges,
+# so a new release of OCCTSwift or its cohort can break the build with no commit here (the
+# stale-lockfile failure after OCCTSwift 3.0.0 was exactly that). A scheduled run finds it
+# before the next unrelated PR does.
 #
 # macOS-only: the OCCTSwift dependency is a macOS xcframework, same reasoning
-# `verbs.yml`/`recipes.yml` use.
+# `verbs.yml` uses.
 
 on:
   push:
-    paths:
-      - 'Sources/**'
-      - 'Tests/**'
-      - 'Package.*'
-      - '.github/workflows/tests.yml'
+    branches: [main]
   pull_request:
-    paths:
-      - 'Sources/**'
-      - 'Tests/**'
-      - 'Package.*'
-      - '.github/workflows/tests.yml'
+  schedule:
+    - cron: '17 5 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
@@ -38,3 +44,40 @@ jobs:
 
       - name: swift test
         run: swift test
+
+  # `swift test` only builds what the test targets depend on, and `verbs`/`integration` build
+  # `--product occtkit` alone, so nothing else compiled the libraries' other consumers or the
+  # deprecated standalone executables (Script, OCCTRunner, GraphValidate, ...). They are still
+  # shipped to downstream users until removed.
+  build-all:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-all-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-all-${{ runner.os }}-
+
+      - name: swift build (every target)
+        run: swift build
+
+  # A stale `Package.resolved` can pin a transitive dependency whose real source no longer
+  # compiles against the rest of the graph, while still satisfying every manifest range (see
+  # okf/decisions/occtswift-3.0.0-floor-bump-blocked-on-cohort-releases.md). Resolving fresh
+  # and diffing catches a lockfile that has fallen behind what SwiftPM would pick today.
+  lockfile:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve and compare Package.resolved
+        run: |
+          cp Package.resolved /tmp/Package.resolved.before
+          swift package resolve
+          if ! diff -u /tmp/Package.resolved.before Package.resolved; then
+            echo "::error::Package.resolved is out of date; run 'swift package resolve' and commit it."
+            exit 1
+          fi

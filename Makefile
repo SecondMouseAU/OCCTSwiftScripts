@@ -18,7 +18,7 @@ BUILD   = .build/release/$(BIN)
 # hoisting into a shell variable would collapse the recipe into one opaque block.
 VERBS = $(shell $(BUILD) --verbs)
 
-.PHONY: build install uninstall clean help recipe recipes-test recipes-render verb-check run-identity-check
+.PHONY: build install uninstall clean help recipe recipes-test recipes-render verb-check run-identity-check test serve-check policy-check ci
 
 help:
 	@echo "Targets:"
@@ -31,21 +31,38 @@ help:
 	@echo "  recipes-render     regenerate each recipe's output.png (skips if no Metal)"
 	@echo "  verb-check         assert the verb inventory is single-sourced + consistent"
 	@echo "  run-identity-check assert occtkit run's workspace identity matches its dep path"
+	@echo "  test               swift test (unit + in-process verb tests)"
+	@echo "  serve-check        assert --serve answers one envelope per request and recovers from a failure"
+	@echo "  policy-check       assert okf/policies, okf/index.md and CLAUDE.md agree"
+	@echo "  ci                 everything CI blocks on, locally: test, verb-check, run-identity-check, serve-check, policy-check, recipes-test"
 
 recipe:
 	@Scripts/new-recipe.sh "$(NAME)"
 
-recipes-test:
-	@Scripts/recipe-check.sh
+recipes-test: $(BUILD)
+	@OCCTKIT=$(BUILD) Scripts/recipe-check.sh
 
 recipes-render:
 	@Scripts/render-recipe.sh
 
-verb-check:
-	@Scripts/verb-check.sh
+verb-check: $(BUILD)
+	@OCCTKIT=$(BUILD) Scripts/verb-check.sh
 
 run-identity-check: $(BUILD)
 	@OCCTKIT=$(BUILD) Scripts/run-identity-check.sh
+
+test:
+	swift test
+
+serve-check: $(BUILD)
+	@OCCTKIT=$(BUILD) Scripts/serve-check.sh
+
+policy-check:
+	@Scripts/policy-check.sh
+
+# Mirrors the blocking CI jobs that need no extra tooling (swift-format and SwiftLint are
+# installed separately; see .github/workflows/code-style.yml).
+ci: test verb-check run-identity-check serve-check policy-check recipes-test
 
 build:
 	swift build -c release

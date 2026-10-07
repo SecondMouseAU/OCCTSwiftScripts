@@ -52,18 +52,53 @@ escape_for_literal() {
     printf '%s' "$s"
 }
 
+# Removes a directory tree, retrying. A descendant of `occtkit run` (swift build and the
+# compilers it spawns) can still be writing into the workspace for a moment after the group
+# was signalled, and `rm -rf` then fails with "Directory not empty" part way through.
+# Under `set -e` that aborted the whole check after all scenarios had already passed.
+remove_tree() {
+    local dir="$1" i
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        rm -rf "$dir" 2>/dev/null && return 0
+        sleep 0.5
+    done
+    rm -rf "$dir"
+}
+
+# Signals the whole process group of a background job and returns only once the group is
+# gone, escalating to SIGKILL, and fails if it never goes. Waiting on the leader alone is not enough: its descendants
+# outlive it and keep writing into the workspace this script is about to delete.
+stop_group() {
+    local leader="$1" i
+    kill -- -"$leader" 2>/dev/null || true
+    wait "$leader" 2>/dev/null || true
+    for i in $(seq 1 20); do
+        kill -0 -- -"$leader" 2>/dev/null || return 0
+        sleep 0.25
+    done
+    kill -KILL -- -"$leader" 2>/dev/null || true
+    for i in $(seq 1 20); do
+        kill -0 -- -"$leader" 2>/dev/null || return 0
+        sleep 0.25
+    done
+    echo "process group $leader did not exit after SIGKILL" >&2
+    return 1
+}
+
 # The workspace cache is shared by every `occtkit run` on this machine and holds
 # a resolved dependency graph plus .build. Blowing it away would cost the
 # developer a full cold rebuild on their next real run, so it is moved aside and
 # restored. Overriding HOME would not isolate it: occtkit takes the cache path
 # from FileManager.homeDirectoryForCurrentUser, which ignores $HOME.
 cleanup() {
-    rm -rf "$WORKSPACE"
+    # The assertions have already run by now. A teardown failure must not turn a passing
+    # check red, so none of this may abort the script.
+    remove_tree "$WORKSPACE" || true
     if [ -d "$SAVED" ]; then
         mkdir -p "$(dirname "$WORKSPACE")"
-        mv "$SAVED" "$WORKSPACE"
+        mv "$SAVED" "$WORKSPACE" || true
     fi
-    rm -rf "$TMP"
+    remove_tree "$TMP" || true
 }
 trap cleanup EXIT
 
@@ -92,7 +127,7 @@ check_alias() {
     local alias_path="$TMP/$name"
     ln -sfn "$PWD" "$alias_path"
 
-    rm -rf "$WORKSPACE"
+    remove_tree "$WORKSPACE" || fail "[$name] could not clear the workspace before the run"
     OCCTKIT_SCRIPTS_PATH="$alias_path$suffix" "$OCCTKIT" run "$script" --output "$TMP/out" >/dev/null 2>&1 &
     local runner=$!
 
@@ -105,11 +140,10 @@ check_alias() {
         kill -0 "$runner" 2>/dev/null || break   # exited before writing it
         sleep 0.5
     done
-    # Signal the whole group: by now buildAndRun() may have spawned `swift build`,
+    # Stop the whole group: by now buildAndRun() may have spawned `swift build`,
     # which would otherwise survive and keep resolving against an alias this
-    # script is about to delete.
-    kill -- -"$runner" 2>/dev/null || true
-    wait "$runner" 2>/dev/null || true
+    # script is about to delete, or keep writing into the workspace.
+    stop_group "$runner" || fail "[$name] occtkit run left processes that would race the workspace cleanup"
 
     [ -f "$MANIFEST" ] || fail "[$name] occtkit run did not generate $MANIFEST"
 

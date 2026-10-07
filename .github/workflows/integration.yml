@@ -1,0 +1,53 @@
+name: integration
+
+# End-to-end checks against the built release `occtkit`, the artefact users actually run:
+#
+#   - `Scripts/recipe-check.sh`: every cookbook recipe is compiled and run through
+#     `occtkit run`, then its body must be a valid, positive-volume solid matching its
+#     committed reference `output.brep`. This is the only job that exercises the `run` verb and
+#     the cached script workspace end to end.
+#   - `Scripts/serve-check.sh`: `--serve` answers one envelope per request and keeps going after
+#     a failing one. That loop lives in `Serve.swift`, so the in-process unit tests cannot reach it.
+#
+# Blocking. This replaces `recipes.yml`, whose `continue-on-error: true` made the job report
+# success even when a recipe failed, so its green history said nothing. See issue #16.
+#
+# macOS-only: the OCCTSwift dependency is a macOS xcframework.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '47 5 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build occtkit (release)
+        run: swift build -c release --product occtkit
+
+      - name: Recipe smoke tests
+        env:
+          OCCTKIT: .build/release/occtkit
+        run: Scripts/recipe-check.sh
+
+      - name: --serve envelope contract
+        env:
+          OCCTKIT: .build/release/occtkit
+        run: Scripts/serve-check.sh
