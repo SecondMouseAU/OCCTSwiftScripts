@@ -98,7 +98,7 @@ sources:
     usage_count: 1
   - id: occtswiftscripts-5
     resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/5
-    title: `occtkit --serve` lacks success-case response framing — blocks external JSONL clients
+    title: `occtkit --serve` lacks success-case response framing, blocks external JSONL clients
     author: human:gsdali
     last_modified: 2026-04-22
     usage_count: 1
