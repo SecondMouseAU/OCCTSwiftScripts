@@ -3,7 +3,15 @@ type: policy
 title: Code style
 description: Swift naming/API shape follows the Swift API Design Guidelines, formatting follows Google's Swift Style Guide via swift-format, and doc comments stay terse; docs/ is the single source of truth for design rationale, not a second copy of it.
 tags: [policy, style, swift, docs, agents]
-timestamp: 2026-08-12
+generated: { by: human:gsdali, at: 2026-08-12 }
+sources:
+  - id: occtswiftscripts-114
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/114
+    title: "Trial code-style policy CI: swift-format + SwiftLint + comment-ratio check"
+    author: human:gsdali
+    last_modified: 2026-08-12
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Code style

@@ -4,7 +4,7 @@ title: Open-source boundary
 description: This repo is LGPL-2.1 and depends only on open-source Swift packages. Never propose anything that makes it depend on a closed-source project.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
 tags: [policy, oss, licensing, boundary]
-timestamp: 2026-08-04
+generated: { by: claude-code/opus-5, at: 2026-08-04 }
 ---
 
 # Open-source boundary

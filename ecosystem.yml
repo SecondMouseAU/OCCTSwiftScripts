@@ -1,4 +1,4 @@
-okf_version: 1
+okf_version: "0.2"
 repo: OCCTSwiftScripts
 cluster: kernel
 visibility: public

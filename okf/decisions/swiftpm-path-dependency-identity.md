@@ -4,7 +4,15 @@ title: SwiftPM derives a path dependency's identity from the directory basename
 description: Generated manifests must compute the dependency declaration and the package identity from one value, because a path dependency's identity comes from the checkout directory name and never from the name in its manifest.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/98
 tags: [decision, swiftpm, packaging, occtkit, run]
-timestamp: 2026-08-04
+generated: { by: claude-code/opus-5, at: 2026-08-04 }
+sources:
+  - id: occtswiftscripts-85
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/85
+    title: "Spike 1: bevel gear math port + Route A (ThruSections loft)"
+    author: human:gsdali
+    last_modified: 2026-08-06
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

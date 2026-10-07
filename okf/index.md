@@ -1,10 +1,11 @@
 ---
+okf_version: "0.2"
 type: repo
 title: OCCTSwiftScripts
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
 tags: [cad, occt, cli, occtkit, scripting, headless, drawings, mcp, kernel]
 description: occtkit CLI plus ScriptHarness: a script-iteration harness and headless OCCTSwift verbs (graph, drawings, analysis, mesh), OCCTMCP-ready.
-timestamp: 2026-06-22
+generated: { by: claude-code/sonnet-5, at: 2026-10-07 }
 ---
 
 # OCCTSwiftScripts
@@ -20,9 +21,9 @@ timestamp: 2026-06-22
 - **Depends on:** [OCCTSwift](https://github.com/SecondMouseAU/OCCTSwift) (B-Rep kernel), [OCCTSwiftViewport](https://github.com/SecondMouseAU/OCCTSwiftViewport) (offscreen render for `render-preview`), [OCCTSwiftInteraction](https://github.com/SecondMouseAU/OCCTSwiftInteraction) (vends `OCCTSwiftTools`, the Shape ↔ ViewportBody bridge, and `OCCTSwiftAIS`, headless scene-object overlays; migrated from those two standalone repos in OCCTSwiftScripts#122), [OCCTSwiftMesh](https://github.com/SecondMouseAU/OCCTSwiftMesh) (`simplify-mesh`), and [OCCTSwiftIO](https://github.com/SecondMouseAU/OCCTSwiftIO) (`graph-ml` feature export).
 - **Feeds:** headless / agent consumers. OCCTMCP and any JSON-driven tooling drive its verbs via `--serve`; the `ScriptHarness` and `DrawingComposer` library products link into downstream apps (e.g. the viewport ScriptWatcher and OCCTSwiftPartsAgent).
 
-This is the **single knowledge store** for this repo. `CLAUDE.md` at the repo root stays the
-detailed implementation quick reference; durable policies, decisions, and cross-cutting context
-live here. Record them as OKF entries plus a [`log.md`](log.md) line, not only in chat or commit
+This is the **single knowledge store** for this repo. `CLAUDE.md` at the repo root is a router
+into it plus the build, test, and invariant essentials; durable policies, decisions, and
+cross-cutting context live here. Record them as OKF entries plus a [`log.md`](log.md) line, not only in chat or commit
 messages.
 
 ## Boundary
@@ -54,6 +55,7 @@ See [`decisions/`](decisions/index.md) for recorded engineering decisions and th
 - [Code structure](policies/code-structure.md)
 - [Issue labels and project-board tracking](policies/issue-tracking.md)
 - [Code style](policies/code-style.md)
+- [Prove the test fails](policies/prove-the-test-fails.md)
 
 ## History
 

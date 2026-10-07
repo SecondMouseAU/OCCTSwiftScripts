@@ -1,19 +1,6 @@
----
-type: reference
-title: References index
-resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
-tags: [index, references]
-description: Workflow guide, recipes cookbook, package index, and upstream references for OCCTSwiftScripts.
-timestamp: 2026-08-04
----
-
 # References
 
-- **Commercial-app relationship**: how OCCTStudio (private, commercial) consumes this OSS repo; see [`commercial-app-relationship.md`](commercial-app-relationship.md).
-- **What is OKF**: the markdown plus frontmatter knowledge format this bundle uses; see [`okf-format.md`](okf-format.md).
-- **Script workflow guide**: the edit / run / watch loop and harness internals; see [`docs/SCRIPT_WORKFLOW.md`](../../docs/SCRIPT_WORKFLOW.md).
-- **Recipes cookbook**: self-contained parametric worked examples (mounting bracket, helical spring, pipe flange, spur gear, lattice cube, fan blade, sheet-metal channel); see [`recipes/README.md`](../../recipes/README.md).
-- **Drawing spec schema**: the `drawing-export` JSON spec; see `Sources/occtkit/Drawing/Spec.swift`.
-- **Swift Package Index**: package page driven by `.spi.yml` (DocC targets `ScriptHarness`, `DrawingComposer`). <https://swiftpackageindex.com/SecondMouseAU/OCCTSwiftScripts>
-- **OpenCASCADE Technology (OCCT)**: the underlying B-Rep kernel reached via OCCTSwift. <https://dev.opencascade.org/>
-- **Licensing**: LGPL-2.1 (matching OCCT); see `LICENSE` in the repo root.
+* [Relationship to the OCCTStudio commercial app](commercial-app-relationship.md) - OCCTStudio (private, commercial) is built on this OSS repo and consumes its reconstruct feature-graph IR; this repo stays OSS and must not depend on the app.
+* [Dependency floors and history](dependencies.md) - Why each dependency floor is where it is, with the OCCTSwift 1.x to 3.0.0 bump history.
+* [Targets and verb architecture](occtkit-architecture.md) - Targets, per-verb design notes, the --serve protocol, the output pipeline, and the occtkit run workspace.
+* [Open Knowledge Format (OKF)](okf-format.md) - The vendor-neutral markdown plus YAML-frontmatter format this knowledge bundle conforms to, from Google's Knowledge Catalog.

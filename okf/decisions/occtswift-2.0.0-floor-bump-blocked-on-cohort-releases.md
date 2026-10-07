@@ -4,7 +4,22 @@ title: OCCTSwift floor bumped to 2.0.0 in source, but the graph cannot resolve f
 description: Package.swift now floors OCCTSwift at 2.0.0 and this repo's own code is fixed against every relevant break, but OCCTSwiftIO's latest release (v1.7.6) still requires occtswift 1.17.0..<2.0.0 transitively, and OCCTSwiftTools/AIS/Mesh's own latest releases are on the same floor. A fresh clone cannot resolve until at least OCCTSwiftIO ships a 2.0.0-compatible release.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/111
 tags: [decision, occtswift, dependency-resolution, release-sequencing, semver]
-timestamp: 2026-08-10
+generated: { by: claude-code/sonnet-5, at: 2026-08-10 }
+sources:
+  - id: occtswiftscripts-111
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/111
+    title: Bump OCCTSwift floor to 2.0.0
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 2
+  - id: occtswift-763
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/763
+    title: "Unmeasured values, production half: adjudicate the census's 62 bridge candidates"
+    author: human:gsdali
+    last_modified: 2026-08-07
+    usage_count: 1
+  - { id: occtswiftscripts-642, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/642, usage_count: 1 }
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

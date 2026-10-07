@@ -1,31 +1,10 @@
 # Decisions
 
-Recorded engineering decisions and their rationale. Add an entry here when a choice needs its
-reasoning preserved beyond the commit message, so the next person does not re-litigate it.
-
-Decisions to date are captured in `CLAUDE.md` and the git log; this directory holds the ones
-that need standalone rationale.
-
-* [Single-source verb inventory](single-source-verb-inventory.md): `Registry.all` is the only
-  verb list; `occtkit --verbs` feeds the Makefile and the docs point at the reference page.
-* [SwiftPM path dependency identity](swiftpm-path-dependency-identity.md): a path dep's
-  identity is the directory basename, so generated manifests derive declaration and identity from
-  one value.
-* [Wire sweep factories are not symmetric](wire-sweep-factories-are-not-symmetric.md): `extrude`
-  faces a wire for you, `revolve` and `sweep` do not. Assert `solidCount >= 1`.
-* [errexit is suppressed in `||` context](errexit-is-suppressed-in-or-context.md): a function
-  called as `f || status=1` must `return 1` explicitly or its checks are decorative.
-* [Revolve seams cannot be chamfered](revolve-seams-cannot-be-chamfered.md): the all-edge
-  `chamfered(distance:)` always fails on a full revolve; select edges explicitly.
-* [Concave edge classifier can select wrong edges](concave-edge-classifier-can-select-wrong-edges.md):
-  `concaveEdges()` returned two unrelated edges instead of an L-bracket's one true reentrant
-  edge; verify a classifier's output geometrically before trusting it.
-* [OCCTSwift 2.0.0 floor bump blocked on cohort releases](occtswift-2.0.0-floor-bump-blocked-on-cohort-releases.md):
-  `Package.swift` floors OCCTSwift at 2.0.0 and this repo's own code is fixed, but
-  OCCTSwiftIO's latest release still caps `occtswift` below 2.0.0 transitively, so a fresh
-  clone cannot resolve until the cohort ships. The PR is not blocked; the release is.
-  Resolved 2026-08-10.
-* [OCCTSwift 3.0.0 floor bump blocked on cohort releases, then on a stale Package.resolved](occtswift-3.0.0-floor-bump-blocked-on-cohort-releases.md):
-  same shape of cohort blocker as 2.0.0, plus a second-order trap once the cohort caught up — a
-  pre-2.0.0-era `Package.resolved` let SwiftPM's resolver keep a manifest-compatible but
-  source-broken `occtswiftais` pin. Released as v1.6.2, `main` fixed green in a follow-up PR.
+* [Shape.concaveEdges() can return the wrong edges entirely, not just a threshold quirk](concave-edge-classifier-can-select-wrong-edges.md) - On OCCTSwift 1.x, concaveEdges() on an extruded L-profile returns two top-cap boundary edges rather than the one true reentrant edge, and classifies that edge convex. Fixed in the 2.0.0 line. Select fillet/chamfer edges geometrically while on 1.x.
+* [A shell function called as `f || status=1` must return failure explicitly](errexit-is-suppressed-in-or-context.md) - errexit is suppressed inside the left-hand side of a `||`, so a bare failing command in such a function does not abort it and the function returns the exit status of its last command instead.
+* [OCCTSwift floor bumped to 2.0.0 in source, but the graph cannot resolve from remote until the cohort releases](occtswift-2.0.0-floor-bump-blocked-on-cohort-releases.md) - Package.swift now floors OCCTSwift at 2.0.0 and this repo's own code is fixed against every relevant break, but OCCTSwiftIO's latest release (v1.7.6) still requires occtswift 1.17.0..<2.0.0 transitively, and OCCTSwiftTools/AIS/Mesh's own latest releases are on the same floor. A fresh clone cannot resolve until at least OCCTSwiftIO ships a 2.0.0-compatible release.
+* [OCCTSwift floor bumped to 3.0.0; the graph was blocked on the cohort, then on a stale Package.resolved](occtswift-3.0.0-floor-bump-blocked-on-cohort-releases.md) - Package.swift floors OCCTSwift at 3.0.0 (#118/#119, released as v1.6.2). Initially blocked on the rest of the cohort shipping 3.0.0-compatible releases; once they did, main's CI stayed red because the checked-in Package.resolved was stale enough (pre-2.0.0-bump) that SwiftPM's resolver kept a manifest-compatible-but-source-broken occtswiftais@1.3.1 pin instead of picking up 1.3.2. Fixed in #120 by regenerating Package.resolved from a sibling-free /tmp copy.
+* [A full revolve cannot be chamfered or filleted with the all-edge convenience call](revolve-seams-cannot-be-chamfered.md) - Every periodic face a full revolve creates contributes a seam edge, and BRepFilletAPI cannot blend a seam because both adjacent faces are the same face. Select edges explicitly instead.
+* [The verb inventory is single-sourced from Registry.all](single-source-verb-inventory.md) - occtkit --verbs is the only authoritative verb list; the Makefile reads it rather than keeping a second copy, and docs point at the reference page instead of re-listing.
+* [SwiftPM derives a path dependency's identity from the directory basename](swiftpm-path-dependency-identity.md) - Generated manifests must compute the dependency declaration and the package identity from one value, because a path dependency's identity comes from the checkout directory name and never from the name in its manifest.
+* [Wire-profile sweep factories are not symmetric about what they return](wire-sweep-factories-are-not-symmetric.md) - Shape.extrude faces a wire for you and returns a solid; Shape.revolve and Shape.sweep given a wire return a shell. Face the wire first, and assert solidCount rather than trusting shapeType or a positive volume.

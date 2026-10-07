@@ -3,7 +3,7 @@ type: policy
 title: Documentation lookup: `context` first
 description: Look docs up via context (ecosystem), context7 (external), then other repos' docs, never training-data recall.
 tags: [policy, docs, context, context7, agents]
-timestamp: 2026-06-27
+generated: { by: claude-code/opus-5, at: 2026-06-27 }
 ---
 
 # Documentation lookup: `context` first

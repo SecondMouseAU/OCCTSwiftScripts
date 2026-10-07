@@ -4,7 +4,7 @@ title: The verb inventory is single-sourced from Registry.all
 description: occtkit --verbs is the only authoritative verb list; the Makefile reads it rather than keeping a second copy, and docs point at the reference page instead of re-listing.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/82
 tags: [decision, duplication, cli, occtkit, build]
-timestamp: 2026-08-04
+generated: { by: claude-code/opus-5, at: 2026-08-04 }
 ---
 
 # Decision
