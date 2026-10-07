@@ -63,7 +63,7 @@ enum BooleanCommand: Subcommand {
 
         switch req.op {
         case "union":
-            guard let r = aShape.union(bShape) else {
+            guard let r = aShape.intersection(bShape) else {
                 throw ScriptError.message("union failed")
             }
             result = r
