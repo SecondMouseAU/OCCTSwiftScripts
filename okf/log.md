@@ -1,5 +1,13 @@
 # Knowledge Log
 
+## 2026-10-07 (docs/ci-branch-protection-applied)
+
+* **Update**: Merged #127, #130 and #131, then applied branch protection to `main` requiring `tests`,
+  `build-all`, `lockfile`, `integration`, `verbs`, `code-style` and `policies`. Also fixed
+  `run-identity-check.sh`, which failed once in CI on `rm: Directory not empty` because it waited for
+  the killed run's leader but not its descendants; it now waits for the whole process group and fails
+  loudly if the group never exits.
+
 ## 2026-10-07 (ci/regression-integration)
 
 * **Update**: Hardened CI. Dropped the `paths:` filters on pull requests so required checks always

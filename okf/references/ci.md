@@ -45,5 +45,13 @@ fixed, which forces its removal.
 
 ## Branch protection
 
-`main` has no branch protection rule, so nothing above is enforced at merge time until one requires
-these checks. Requiring them is a repository setting, not a file in this repo.
+Applied to `main` on 2026-10-07: the seven checks in the table above are required to merge. Settings:
+`strict: false` (a branch need not be up to date, which would re-run the macOS jobs on every merge),
+`enforce_admins: false` (an owner can still push in an emergency, so a red gate is advice to an owner
+and a hard stop to everyone else), no required reviews, force pushes and deletions off.
+
+The WASM build workflow added in #126 reports a `build` check that is not required.
+
+This is a repository setting, not a file in this repo. Re-apply it with
+`gh api -X PUT repos/SecondMouseAU/OCCTSwiftScripts/branches/main/protection` if it is ever reset, and
+update this list when a job is added or renamed: a required check that no job reports blocks every PR.
