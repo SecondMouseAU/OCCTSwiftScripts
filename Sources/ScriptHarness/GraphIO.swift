@@ -129,14 +129,28 @@ public enum GraphIO {
 
     // MARK: - Output
 
+    /// Where `emitJSON` delivers its bytes instead of stdout, when set.
+    ///
+    /// `nil` in production, so output is unchanged. In-process tests bind it to collect a
+    /// verb's JSON without redirecting fd 1: the test runner prints its own progress lines to the
+    /// same descriptor from other threads, and those can land inside a redirected capture.
+    @TaskLocal public static var jsonSink: (@Sendable (Data) -> Void)?
+
     /// Encode `value` as pretty-printed JSON with sorted keys to stdout.
+    ///
+    /// Emitted as one write (the object and its newline together), so the line is not split by
+    /// another writer between the two.
     public static func emitJSON<T: Encodable>(_ value: T) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         do {
-            let data = try encoder.encode(value)
-            FileHandle.standardOutput.write(data)
-            FileHandle.standardOutput.write(Data([0x0A]))
+            var data = try encoder.encode(value)
+            data.append(0x0A)
+            if let sink = jsonSink {
+                sink(data)
+            } else {
+                FileHandle.standardOutput.write(data)
+            }
         } catch {
             throw ScriptError.message("Failed to encode JSON: \(error.localizedDescription)")
         }

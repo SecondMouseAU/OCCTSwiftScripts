@@ -13,43 +13,37 @@ import simd
 @testable import occtkit
 
 enum VerbHarness {
-    /// Process-wide lock: `captureStdout` redirects the real fd 1, and Swift Testing runs suites
-    /// in parallel, so two captures at once would clobber each other's redirect target.
-    private static let captureLock = NSLock()
+    /// Collects the chunks `GraphIO.emitJSON` delivers to its sink.
+    ///
+    /// `@unchecked Sendable`: every access goes through `lock`.
+    private final class Collector: @unchecked Sendable {
+        private let lock = NSLock()
+        private var data = Data()
 
-    /// Accumulates bytes read off a pipe on a background thread. `@unchecked Sendable`: the
-    /// compiler cannot see it, but `captureStdout` only reads `data` after polling
-    /// `thread.isFinished` to `true`, which happens-after the thread's last write to it.
-    private final class PipeReader: @unchecked Sendable {
-        var data = Data()
+        func append(_ chunk: Data) {
+            lock.lock()
+            defer { lock.unlock() }
+            data.append(chunk)
+        }
+
+        var text: String {
+            lock.lock()
+            defer { lock.unlock() }
+            return String(data: data, encoding: .utf8) ?? ""
+        }
     }
 
-    /// Runs `block` with fd 1 redirected into a pipe drained on a background thread (reading
-    /// only after `block` returns can deadlock once the ~64KB pipe buffer fills) and returns
-    /// what was written to stdout.
+    /// Runs `block` and returns the JSON the verb emitted.
+    ///
+    /// Bound through `GraphIO.jsonSink`, a task-local, rather than by redirecting fd 1. The test
+    /// runner prints its progress lines to that descriptor from other threads, and an earlier
+    /// version of this helper that redirected it intermittently captured those lines inside a
+    /// verb's JSON (seen in CI as "Garbage at end"). A task-local is private to the calling test,
+    /// so concurrent suites cannot see each other and nothing needs a lock.
     static func captureStdout(_ block: () throws -> Int32) throws -> String {
-        captureLock.lock()
-        defer { captureLock.unlock() }
-
-        let pipe = Pipe()
-        let savedStdout = dup(FileHandle.standardOutput.fileDescriptor)
-        dup2(pipe.fileHandleForWriting.fileDescriptor, FileHandle.standardOutput.fileDescriptor)
-
-        let reader = PipeReader()
-        let readHandle = pipe.fileHandleForReading
-        let thread = Thread { reader.data = readHandle.readDataToEndOfFile() }
-        thread.start()
-
-        let outcome: Result<Int32, Error>
-        do { outcome = .success(try block()) } catch { outcome = .failure(error) }
-
-        pipe.fileHandleForWriting.closeFile()
-        dup2(savedStdout, FileHandle.standardOutput.fileDescriptor)
-        close(savedStdout)
-        while !thread.isFinished { usleep(1_000) }
-
-        if case .failure(let error) = outcome { throw error }
-        return String(data: reader.data, encoding: .utf8) ?? ""
+        let collector = Collector()
+        _ = try GraphIO.$jsonSink.withValue({ collector.append($0) }, operation: { try block() })
+        return collector.text
     }
 
     /// Runs `verb` with `args`, requires exit code 0, and returns stdout.
@@ -67,26 +61,8 @@ enum VerbHarness {
     /// Runs `verb` and decodes its stdout as one JSON object.
     static func runJSON(_ verb: any Subcommand.Type, _ args: [String]) throws -> [String: Any] {
         let stdout = try run(verb, args)
-        let object = try JSONSerialization.jsonObject(with: Data(jsonSpan(of: stdout).utf8))
+        let object = try JSONSerialization.jsonObject(with: Data(stdout.utf8))
         return try #require(object as? [String: Any], "\(verb.name) did not emit a JSON object")
-    }
-
-    /// The JSON object inside captured stdout.
-    ///
-    /// Swift Testing prints its own event lines (`◇ ✔ ✘ ━ ↳`) to the same fd 1 while a capture is
-    /// active, so the capture can carry foreign lines before, after, or inside the verb's
-    /// object. Drop those lines, then take the first line that opens an object through the last
-    /// that closes it.
-    static func jsonSpan(of captured: String) -> String {
-        let runnerMarks: Set<Character> = ["◇", "✔", "✘", "━", "↳", "▷", "◆", "⚠"]
-        let lines = captured.split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { line in !(line.first.map(runnerMarks.contains) ?? false) }
-        guard let first = lines.firstIndex(where: { $0.hasPrefix("{") }),
-            let last = lines.lastIndex(where: {
-                $0.hasPrefix("}") || ($0.hasPrefix("{") && $0.hasSuffix("}"))
-            })
-        else { return captured }
-        return lines[first...last].joined(separator: "\n")
     }
 
     /// A fresh directory under the temp dir, removed by the caller's `defer`.

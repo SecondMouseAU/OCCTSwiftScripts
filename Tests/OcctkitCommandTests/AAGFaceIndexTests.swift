@@ -45,7 +45,7 @@ struct AAGFaceIndexTests {
     }
 
     private func captureStdout(_ block: () throws -> Int32) throws -> String {
-        VerbHarness.jsonSpan(of: try VerbHarness.captureStdout(block))
+        try VerbHarness.captureStdout(block)
     }
 
     // Minimal Decodable mirrors of GraphSelectCommand's (Encodable-only) wire responses, so
