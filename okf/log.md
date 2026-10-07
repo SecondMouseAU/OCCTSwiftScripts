@@ -1,5 +1,16 @@
 # Knowledge Log
 
+## 2026-10-07 (fix/128-graph-rebuild-root)
+
+* **Update**: Fixed #128. `graph-compact` and `graph-dedup` threw on every input because
+  `GraphIO.rebuildShape` rebuilt from `BRepGraph.rootNodes`, which are assembly Products and are empty
+  for a graph built from a shape by design (OCCTSwift's `BRepGraph(shape:)` creates no Product). The
+  issue's first reading, an upstream regression, was wrong; the OCCTSwift docs state the contract and
+  point at `findNode(for:)` for the topology root. `rebuildShape(from:root:)` now takes the original
+  shape and uses that, which still resolves after `compact()` and `deduplicate()`. The JSON and SQLite
+  exporters keep reporting `rootNodes`, which is what that field means upstream, so their `roots` stay
+  empty for shape-built graphs.
+
 ## 2026-10-07 (docs/ci-branch-protection-applied)
 
 * **Update**: Merged #127, #130 and #131, then applied branch protection to `main` requiring `tests`,
