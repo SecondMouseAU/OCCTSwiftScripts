@@ -17,24 +17,18 @@ name: code-style
 # it. The comment-ratio check is report-only by design (see the script's own
 # header) and is not a gate; it always exits 0.
 
+# No `paths:` filter: a required check that a path filter skips never reports, which would block a
+# docs-only PR. See tests.yml.
+
 on:
   push:
-    paths:
-      - 'Sources/**'
-      - 'Tests/**'
-      - '.swift-format'
-      - '.swiftlint.yml'
-      - 'Scripts/comment-ratio-check.sh'
-      - '.github/workflows/code-style.yml'
+    branches: [main]
   pull_request:
-    paths:
-      - 'Sources/**'
-      - 'Tests/**'
-      - '.swift-format'
-      - '.swiftlint.yml'
-      - 'Scripts/comment-ratio-check.sh'
-      - '.github/workflows/code-style.yml'
   workflow_dispatch:
+
+concurrency:
+  group: code-style-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   code-style:

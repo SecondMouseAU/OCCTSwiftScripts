@@ -7,20 +7,18 @@ name: docs-consistency
 #
 # Pure text comparison, so no Swift build and no macOS runner needed.
 
+# No `paths:` filter: a required check that a path filter skips never reports, which would block a
+# docs-only PR. See tests.yml.
+
 on:
   push:
-    paths:
-      - 'okf/**'
-      - 'CLAUDE.md'
-      - 'Scripts/policy-check.sh'
-      - '.github/workflows/docs-consistency.yml'
+    branches: [main]
   pull_request:
-    paths:
-      - 'okf/**'
-      - 'CLAUDE.md'
-      - 'Scripts/policy-check.sh'
-      - '.github/workflows/docs-consistency.yml'
   workflow_dispatch:
+
+concurrency:
+  group: docs-consistency-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   policies:
