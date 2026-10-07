@@ -118,9 +118,7 @@ struct GeneratorVerbTests {
         let path = dir.appendingPathComponent("bad.json")
         try Data("{ not json".utf8).write(to: path)
 
-        #expect(throws: (any Error).self) {
-            try VerbHarness.run(ReconstructCommand.self, [path.path])
-        }
+        VerbHarness.expectFailure(ReconstructCommand.self, [path.path], containing: "Invalid JSON")
     }
 
     // MARK: compose-sheet-metal
@@ -174,9 +172,8 @@ struct GeneratorVerbTests {
         request["flanges"] = flanges
         let spec = try VerbHarness.writeJSON(request, named: "spec.json", in: dir)
 
-        #expect(throws: (any Error).self) {
-            try VerbHarness.run(ComposeSheetMetalCommand.self, [spec])
-        }
+        VerbHarness.expectFailure(
+            ComposeSheetMetalCommand.self, [spec], containing: "origin must be [x,y,z]")
     }
 
     // MARK: drawing-export
@@ -214,8 +211,7 @@ struct GeneratorVerbTests {
         let path = dir.appendingPathComponent("bad.json")
         try Data("nope".utf8).write(to: path)
 
-        #expect(throws: (any Error).self) {
-            try VerbHarness.run(DrawingExportCommand.self, [path.path])
-        }
+        VerbHarness.expectFailure(
+            DrawingExportCommand.self, [path.path], containing: "Invalid spec JSON")
     }
 }

@@ -28,7 +28,11 @@ struct RegistryCoverageTests {
         .filter {
             $0.pathExtension == "swift" && $0.lastPathComponent != "RegistryCoverageTests.swift"
         }
-        return try files.map { try String(contentsOf: $0, encoding: .utf8) }.joined(separator: "\n")
+        // Comment lines are dropped: a verb named only in a comment is not tested.
+        return try files.map { try String(contentsOf: $0, encoding: .utf8) }
+            .flatMap { $0.split(separator: "\n", omittingEmptySubsequences: false) }
+            .filter { !$0.drop(while: { $0 == " " }).hasPrefix("//") }
+            .joined(separator: "\n")
     }
 
     @Test("every registered verb is named by at least one test, or exempted with a reason")
@@ -38,7 +42,11 @@ struct RegistryCoverageTests {
         for verb in Registry.all {
             let typeName = String(describing: verb)
             if Self.exempt[typeName] != nil { continue }
-            if !sources.contains("\(typeName)") { untested.append("\(verb.name) (\(typeName))") }
+            // The type must be used (`Type.self`, `Type.run(`, `Type.buildResponse`...), not merely
+            // appear in a string.
+            if sources.range(of: "\\b\(typeName)\\.[A-Za-z]", options: .regularExpression) == nil {
+                untested.append("\(verb.name) (\(typeName))")
+            }
         }
         #expect(untested.isEmpty, "verbs with no test: \(untested.joined(separator: ", "))")
     }

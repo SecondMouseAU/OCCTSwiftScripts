@@ -66,11 +66,10 @@ struct ImportExportVerbTests {
         let odd = dir.appendingPathComponent("part.xyz")
         try Data("not geometry".utf8).write(to: odd)
 
-        #expect(throws: (any Error).self) {
-            try VerbHarness.run(
-                ImportCommand.self,
-                [odd.path, "--emit-manifest", dir.appendingPathComponent("e").path])
-        }
+        VerbHarness.expectFailure(
+            ImportCommand.self,
+            [odd.path, "--emit-manifest", dir.appendingPathComponent("e").path],
+            containing: "Cannot auto-detect format")
     }
 
     // MARK: dxf-export
@@ -182,7 +181,7 @@ struct ImportExportVerbTests {
         let before = try VerbHarness.number(json, "beforeTriangleCount")
         let after = try VerbHarness.number(json, "afterTriangleCount")
         #expect(before > 100)
-        #expect(after < before * 0.6 && after > before * 0.4, "after \(after) of \(before)")
+        #expect(after < before * 0.55 && after > before * 0.45, "after \(after) of \(before)")
         #expect(FileManager.default.fileExists(atPath: out))
         #expect(try VerbHarness.number(json, "qualityDelta", "hausdorffDistance") > 0)
     }
