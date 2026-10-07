@@ -4,7 +4,7 @@ title: Relationship to the OCCTStudio commercial app
 description: OCCTStudio (private, commercial) is built on this OSS repo and consumes its reconstruct feature-graph IR; this repo stays OSS and must not depend on the app.
 resource: https://github.com/SecondMouseAU/OCCTStudio
 tags: [reference, commercial, occtstudio, boundary]
-timestamp: 2026-08-04
+generated: { by: claude-code/opus-5, at: 2026-08-04 }
 ---
 
 # Relationship

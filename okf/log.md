@@ -1,5 +1,19 @@
 # Knowledge Log
 
+## 2026-10-07 (chore/okf-0.2-prove-the-test-fails)
+
+* **Update**: Migrated the bundle to OKF 0.2 with the `okf` CLI (`okf migrate --to 0.2 --write`,
+  `okf sources --write`): `okf_version: "0.2"` in `okf/index.md` and `ecosystem.yml`, `timestamp`
+  replaced by `generated: { by, at }` with `by` derived from git, and `okf-format.md`'s citation
+  lifted into `sources`. No `verified` entries were added, since a migration checks nothing.
+  `okf validate --strict` passes. Adopted the ecosystem-wide
+  [prove-the-test-fails](policies/prove-the-test-fails.md) policy from OCCTSwift (now nine
+  policies) and added a "Proven to fail" row to the PR template. Reduced `CLAUDE.md` from 141 long
+  lines to the 0.2 router layout, moving the target and verb narrative to
+  [`references/occtkit-architecture.md`](references/occtkit-architecture.md) and the dependency
+  floor history to [`references/dependencies.md`](references/dependencies.md), unchanged apart
+  from two em-dashes. Corrected `CLAUDE.md`'s stale "No tests exist".
+
 ## 2026-08-20 (fix/122-occtswiftinteraction-migration)
 
 * **Update**: Migrated `occtkit`'s `OCCTSwiftTools` and `OCCTSwiftAIS` dependencies onto

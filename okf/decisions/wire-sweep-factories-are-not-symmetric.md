@@ -4,7 +4,15 @@ title: Wire-profile sweep factories are not symmetric about what they return
 description: Shape.extrude faces a wire for you and returns a solid; Shape.revolve and Shape.sweep given a wire return a shell. Face the wire first, and assert solidCount rather than trusting shapeType or a positive volume.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/100
 tags: [decision, occtswift, topology, recipes, solids]
-timestamp: 2026-08-05
+generated: { by: claude-code/opus-5, at: 2026-08-05 }
+sources:
+  - id: occtswiftscripts-86
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/86
+    title: "Spike 2: bevel gear Route B (revolved blank + circularPatternCut)"
+    author: human:gsdali
+    last_modified: 2026-08-06
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

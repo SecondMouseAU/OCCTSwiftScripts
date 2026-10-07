@@ -3,7 +3,21 @@ type: policy
 title: "Documentation lookup: `context` first"
 description: Look docs up via context (ecosystem), context7 (external), then other repos' docs. Never training-data recall.
 tags: [policy, docs, context, context7, agents]
-timestamp: 2026-08-22
+generated: { by: claude-code/sonnet-5-5, at: 2026-08-22 }
+sources:
+  - id: context-117
+    resource: https://github.com/neuledge/context/issues/117
+    title: "fix(context): refresh get_docs when packages change on disk"
+    author: human:gsdali
+    last_modified: 2026-10-05
+    usage_count: 1
+  - id: occtswiftscripts-117
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/117
+    title: "fix(#116): capture occtkit run's build stderr via a temp file instead of a pipe"
+    author: human:gsdali
+    last_modified: 2026-08-18
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Documentation lookup: `context` first

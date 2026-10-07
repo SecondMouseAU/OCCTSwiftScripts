@@ -4,7 +4,15 @@ title: A full revolve cannot be chamfered or filleted with the all-edge convenie
 description: Every periodic face a full revolve creates contributes a seam edge, and BRepFilletAPI cannot blend a seam because both adjacent faces are the same face. Select edges explicitly instead.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/103
 tags: [decision, occtswift, chamfer, fillet, revolve, topology]
-timestamp: 2026-08-05
+generated: { by: claude-code/opus-5, at: 2026-08-05 }
+sources:
+  - id: occtswiftscripts-103
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/103
+    title: "recipe 03 chamfer never applies: chamfered() returns nil and the ?? fallback hides it"
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 2
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

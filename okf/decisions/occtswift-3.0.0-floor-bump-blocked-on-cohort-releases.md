@@ -4,7 +4,33 @@ title: OCCTSwift floor bumped to 3.0.0; the graph was blocked on the cohort, the
 description: Package.swift floors OCCTSwift at 3.0.0 (#118/#119, released as v1.6.2). Initially blocked on the rest of the cohort shipping 3.0.0-compatible releases; once they did, main's CI stayed red because the checked-in Package.resolved was stale enough (pre-2.0.0-bump) that SwiftPM's resolver kept a manifest-compatible-but-source-broken occtswiftais@1.3.1 pin instead of picking up 1.3.2. Fixed in #120 by regenerating Package.resolved from a sibling-free /tmp copy.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/118
 tags: [decision, occtswift, dependency-resolution, release-sequencing, semver]
-timestamp: 2026-08-19
+generated: { by: claude-code/sonnet-5, at: 2026-08-19 }
+sources:
+  - id: occtswiftscripts-120
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/120
+    title: "fix: refresh Package.resolved, stuck on pre-3.0.0 cohort pins"
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 1
+  - id: occtswiftscripts-118
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/118
+    title: Bump OCCTSwift floor to 3.0.0
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 1
+  - id: occtswiftscripts-111
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/111
+    title: Bump OCCTSwift floor to 2.0.0
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 2
+  - id: occtswiftscripts-119
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/119
+    title: "chore(#118): bump OCCTSwift floor to 3.0.0"
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

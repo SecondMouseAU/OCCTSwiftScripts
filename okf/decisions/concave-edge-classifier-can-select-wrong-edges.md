@@ -4,7 +4,47 @@ title: Shape.concaveEdges() can return the wrong edges entirely, not just a thre
 description: On OCCTSwift 1.x, concaveEdges() on an extruded L-profile returns two top-cap boundary edges rather than the one true reentrant edge, and classifies that edge convex. Fixed in the 2.0.0 line. Select fillet/chamfer edges geometrically while on 1.x.
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/105
 tags: [decision, occtswift, fillet, topology, recipes, edge-selection]
-timestamp: 2026-08-05
+generated: { by: claude-code/sonnet-5, at: 2026-08-05 }
+sources:
+  - id: occtswift-695
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/695
+    title: "concaveEdges()/convexEdges() misclassify reentrant edges: the one concave edge of an L-prism is reported convex"
+    author: human:gsdali
+    last_modified: 2026-08-05
+    usage_count: 1
+  - id: occtswiftscripts-105
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/105
+    title: "recipe 01 fillet never applies: radius 8 exceeds the 5mm leg thickness, hidden by ?? fallback"
+    author: human:gsdali
+    last_modified: 2026-08-05
+    usage_count: 1
+  - { id: occtswiftscripts-700, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/700, usage_count: 1 }
+  - id: occtswift-613
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/613
+    title: "Six sub-shape entry points still index by TopExp_Explorer occurrence after #541 moved the rest to the map"
+    author: human:gsdali
+    last_modified: 2026-08-06
+    usage_count: 1
+  - { id: occtswiftscripts-650, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/650, usage_count: 1 }
+  - id: occtswiftscripts-103
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/103
+    title: "recipe 03 chamfer never applies: chamfered() returns nil and the ?? fallback hides it"
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 2
+  - id: occtswiftscripts-104
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/104
+    title: "fix: chamfer the OD and raised-face rim instead of every edge (#103)"
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 1
+  - id: occtswiftscripts-100
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/100
+    title: recipe 03 revolves a wire, so the flange is a shell rather than a solid
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

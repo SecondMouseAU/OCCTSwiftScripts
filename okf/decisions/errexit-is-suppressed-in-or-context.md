@@ -3,7 +3,15 @@ type: decision
 title: A shell function called as `f || status=1` must return failure explicitly
 description: errexit is suppressed inside the left-hand side of a `||`, so a bare failing command in such a function does not abort it and the function returns the exit status of its last command instead.
 tags: [decision, bash, scripts, ci, testing]
-timestamp: 2026-08-05
+generated: { by: claude-code/opus-5, at: 2026-08-05 }
+sources:
+  - id: occtswiftscripts-101
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/101
+    title: recipe 01 (mounting-bracket) volume drifts 2.27% from committed reference under OCCTSwift 1.17.0
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Decision

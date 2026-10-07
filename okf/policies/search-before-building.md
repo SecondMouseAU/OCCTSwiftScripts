@@ -3,7 +3,15 @@ type: policy
 title: Search before building
 description: Search this repo and its dependencies meticulously before writing new code, rather than recreating something that already exists.
 tags: [policy, duplication, refactor, agents]
-timestamp: 2026-07-26
+generated: { by: claude-code/sonnet-5, at: 2026-07-26 }
+sources:
+  - id: occtmcp-125
+    resource: https://github.com/SecondMouseAU/OCCTMCP/issues/125
+    title: Extract the shared MeshParameters recipe (deflection + internalVertices + inParallel + allowQualityDecrease) into one helper
+    author: human:gsdali
+    last_modified: 2026-07-26
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Search before building
