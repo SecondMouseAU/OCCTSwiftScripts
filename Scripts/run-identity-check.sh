@@ -66,7 +66,7 @@ remove_tree() {
 }
 
 # Signals the whole process group of a background job and returns only once the group is
-# gone, escalating to SIGKILL. Waiting on the leader alone is not enough: its descendants
+# gone, escalating to SIGKILL, and fails if it never goes. Waiting on the leader alone is not enough: its descendants
 # outlive it and keep writing into the workspace this script is about to delete.
 stop_group() {
     local leader="$1" i
@@ -81,7 +81,8 @@ stop_group() {
         kill -0 -- -"$leader" 2>/dev/null || return 0
         sleep 0.25
     done
-    echo "warning: process group $leader did not exit" >&2
+    echo "process group $leader did not exit after SIGKILL" >&2
+    return 1
 }
 
 # The workspace cache is shared by every `occtkit run` on this machine and holds
@@ -142,7 +143,7 @@ check_alias() {
     # Stop the whole group: by now buildAndRun() may have spawned `swift build`,
     # which would otherwise survive and keep resolving against an alias this
     # script is about to delete, or keep writing into the workspace.
-    stop_group "$runner"
+    stop_group "$runner" || fail "[$name] occtkit run left processes that would race the workspace cleanup"
 
     [ -f "$MANIFEST" ] || fail "[$name] occtkit run did not generate $MANIFEST"
 
