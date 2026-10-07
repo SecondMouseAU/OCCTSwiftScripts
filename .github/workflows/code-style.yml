@@ -10,7 +10,7 @@ name: code-style
 # Pure text analysis (formatting + lint), no compiled output needed by any of
 # the three checks, so this stays a macOS runner only because that's where
 # swift-format and swiftlint are both readily available via Homebrew — same
-# reasoning `verbs.yml`/`recipes.yml` use for needing macOS at all, minus the
+# reasoning `verbs.yml`/`integration.yml` use for needing macOS at all, minus the
 # `swift build` step they need and this workflow doesn't.
 #
 # swift-format and SwiftLint are blocking: formatting has no judgment call in

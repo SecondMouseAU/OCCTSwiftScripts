@@ -39,14 +39,14 @@ help:
 recipe:
 	@Scripts/new-recipe.sh "$(NAME)"
 
-recipes-test:
-	@Scripts/recipe-check.sh
+recipes-test: $(BUILD)
+	@OCCTKIT=$(BUILD) Scripts/recipe-check.sh
 
 recipes-render:
 	@Scripts/render-recipe.sh
 
-verb-check:
-	@Scripts/verb-check.sh
+verb-check: $(BUILD)
+	@OCCTKIT=$(BUILD) Scripts/verb-check.sh
 
 run-identity-check: $(BUILD)
 	@OCCTKIT=$(BUILD) Scripts/run-identity-check.sh
