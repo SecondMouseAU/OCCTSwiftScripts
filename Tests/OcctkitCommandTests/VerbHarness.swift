@@ -77,6 +77,11 @@ enum VerbHarness {
     /// active, so the capture can carry foreign lines before, after, or inside the verb's
     /// object. Drop those lines, then take the first line that opens an object through the last
     /// that closes it.
+    ///
+    /// Known limit: when a test is already failing, its multi-line diagnostics have continuation
+    /// lines with no leading mark, and those can land in a concurrent capture and fail unrelated
+    /// JSON-decoding tests too. Green runs are unaffected (25 consecutive and 8 concurrent runs
+    /// were clean), so when several tests fail at once, read the first failure, not the list.
     static func jsonSpan(of captured: String) -> String {
         let runnerMarks: Set<Character> = ["◇", "✔", "✘", "━", "↳", "▷", "◆", "⚠"]
         let lines = captured.split(separator: "\n", omittingEmptySubsequences: false)
