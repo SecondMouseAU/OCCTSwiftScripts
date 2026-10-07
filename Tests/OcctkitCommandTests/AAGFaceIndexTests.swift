@@ -22,9 +22,8 @@ import Testing
 
 @testable import occtkit
 
-// .serialized: every test below redirects the process's real fd 1 (stdout) via dup2 to
-// capture a Subcommand's JSON output. Two tests doing that concurrently would each clobber
-// the other's redirect target, and Swift Testing parallelizes by default.
+// .serialized plus `VerbHarness`'s process-wide capture lock: every test below redirects the
+// process's real fd 1 (stdout) via dup2 to capture a Subcommand's JSON output.
 @Suite("occtkit AAG face-index consistency (#111)", .serialized)
 struct AAGFaceIndexTests {
 
@@ -45,45 +44,8 @@ struct AAGFaceIndexTests {
         return url
     }
 
-    /// Accumulates bytes read off a pipe on a background thread. `@unchecked Sendable`: the
-    /// compiler cannot see it, but `captureStdout` below only reads `data` after polling
-    /// `thread.isFinished` to `true`, which happens-after the thread's last write to it (a
-    /// real synchronization point, not just a heuristic: Foundation's `Thread` publishes
-    /// `isFinished` with a memory barrier when the thread's run block returns).
-    private final class PipeReader: @unchecked Sendable {
-        var data = Data()
-    }
-
-    /// Runs a `Subcommand` and captures what it writes to stdout (`GraphIO.emitJSON` writes
-    /// directly to `FileHandle.standardOutput`, so this redirects fd 1 for the duration of the
-    /// call rather than relying on `print` interception).
-    ///
-    /// Drains the pipe on a background thread WHILE `block()` runs, rather than after: Swift
-    /// Testing runs tests concurrently by default, so fd 1 is shared with whatever other test
-    /// (or the runner's own progress output) is mid-flight, and reading only after `block()`
-    /// returns risks the ~64KB pipe buffer filling from that concurrent traffic and every
-    /// writer, including this process's own stdout elsewhere, blocking forever with
-    /// nothing left to drain it. A prior version of this helper deadlocked exactly that way.
     private func captureStdout(_ block: () throws -> Int32) throws -> String {
-        let pipe = Pipe()
-        let savedStdout = dup(FileHandle.standardOutput.fileDescriptor)
-        dup2(pipe.fileHandleForWriting.fileDescriptor, FileHandle.standardOutput.fileDescriptor)
-
-        let reader = PipeReader()
-        let readHandle = pipe.fileHandleForReading
-        let thread = Thread { reader.data = readHandle.readDataToEndOfFile() }
-        thread.start()
-
-        let outcome: Result<Int32, Error>
-        do { outcome = .success(try block()) } catch { outcome = .failure(error) }
-
-        pipe.fileHandleForWriting.closeFile()
-        dup2(savedStdout, FileHandle.standardOutput.fileDescriptor)
-        close(savedStdout)
-        while !thread.isFinished { usleep(1_000) }
-
-        if case .failure(let error) = outcome { throw error }
-        return String(data: reader.data, encoding: .utf8) ?? ""
+        try VerbHarness.captureStdout(block)
     }
 
     // Minimal Decodable mirrors of GraphSelectCommand's (Encodable-only) wire responses, so
