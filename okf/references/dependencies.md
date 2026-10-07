@@ -5,6 +5,92 @@ resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
 tags: [reference, dependencies, semver, floors]
 description: Why each dependency floor is where it is, with the OCCTSwift 1.x to 3.0.0 bump history.
 generated: { by: claude-code/sonnet-5, at: 2026-10-07 }
+sources:
+  - id: occtswiftscripts-118
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/118
+    title: Bump OCCTSwift floor to 3.0.0
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 2
+  - id: occtswiftscripts-111
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/111
+    title: Bump OCCTSwift floor to 2.0.0
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 3
+  - { id: occtswiftscripts-763, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/763, usage_count: 1 }
+  - { id: occtswiftscripts-642, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/642, usage_count: 2 }
+  - id: occtswift-377
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/377
+    title: "Segmented duplication audit: programme record, deferred passes 2a to 5d"
+    author: human:gsdali
+    last_modified: 2026-09-21
+    usage_count: 3
+  - { id: occtswiftscripts-380, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/380, usage_count: 1 }
+  - id: occtswift-272
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/272
+    title: Shape.drilled(at:direction:radius:depth:) ignores direction — bridge hardcodes the cylinder to +Z
+    author: human:gsdali
+    last_modified: 2026-07-18
+    usage_count: 1
+  - id: occtswift-335
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/335
+    title: "rename: TopologyGraph → BRepGraph"
+    author: human:gsdali
+    last_modified: 2026-07-20
+    usage_count: 1
+  - id: occtswiftscripts-78
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/78
+    title: "Migrate off deprecated TopologyGraph → BRepGraph (OCCTSwift #333)"
+    author: human:gsdali
+    last_modified: 2026-07-20
+    usage_count: 1
+  - { id: occtswiftscripts-169, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/169, usage_count: 1 }
+  - { id: occtswiftscripts-170, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/170, usage_count: 1 }
+  - { id: occtswiftscripts-171, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/171, usage_count: 1 }
+  - id: occtswiftscripts-45
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/45
+    title: Bump OCCTSwiftViewport floor to 1.0.0 (Viewport v1.0.0 shipped 2026-05-08)
+    author: human:gsdali
+    last_modified: 2026-05-09
+    usage_count: 1
+  - id: occtswiftscripts-122
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/122
+    title: Migrate to OCCTSwiftInteraction (blocks OCCTMCP#182)
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 1
+  - id: occtswiftscripts-42
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/42
+    title: Bump OCCTSwiftTools to v0.6.0; consider OCCTSwiftIO for headless code paths
+    author: human:gsdali
+    last_modified: 2026-05-06
+    usage_count: 1
+  - id: occtswiftscripts-43
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/43
+    title: "Bump OCCTSwiftTools floor to from: 0.6.0 (closes #42)"
+    author: human:gsdali
+    last_modified: 2026-05-06
+    usage_count: 1
+  - id: occtmcp-182
+    resource: https://github.com/SecondMouseAU/OCCTMCP/issues/182
+    title: Re-key SelectionRegistry on GraphUID
+    author: human:gsdali
+    last_modified: 2026-08-19
+    usage_count: 1
+  - id: occtswiftscripts-80
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/80
+    title: OCCTSwiftIO cap (<1.1.0) in v1.5.0 conflicts with OCCTSwiftTools >=1.6.1's own OCCTSwiftIO >=1.7.0 requirement
+    author: human:gsdali
+    last_modified: 2026-07-20
+    usage_count: 1
+  - id: occtswiftscripts-69
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/69
+    title: "OCCTSwiftIO dep uncapped (`from: \"1.0.0\"`) — floats to 1.5.0 and breaks resolution for lean consumers"
+    author: human:gsdali
+    last_modified: 2026-07-01
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Dependency floors and history

@@ -5,6 +5,14 @@ description: A passing test is worth nothing until you have watched it fail. Inj
 tags: [policy, testing, detectors, gates, agents]
 generated: { by: claude-code/sonnet-5, at: 2026-10-07 }
 resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
+sources:
+  - { id: occtswiftscripts-618, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/618, usage_count: 1 }
+  - { id: occtswiftscripts-624, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/624, usage_count: 1 }
+  - { id: occtswiftscripts-626, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/626, usage_count: 1 }
+  - { id: occtswiftscripts-656, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/656, usage_count: 1 }
+  - { id: occtswiftscripts-659, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/659, usage_count: 1 }
+  - { id: occtswiftscripts-680, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/680, usage_count: 1 }
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Prove the test fails
