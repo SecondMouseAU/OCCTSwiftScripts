@@ -1,4 +1,5 @@
 // swift-tools-version: 6.0
+import Foundation
 import PackageDescription
 // Every dependency resolves from its published URL. NEVER from a `../<name>` sibling.
 //
@@ -28,6 +29,11 @@ import PackageDescription
 func occtDep(_ name: String, from version: String) -> Package.Dependency {
     .package(url: "https://github.com/SecondMouseAU/\(name).git", from: Version(version)!)
 }
+
+// OCCTSwift pin, shared by the full and the WASI dependency lists. The rationale for the exact pin is
+// on the line in `dependencies` below.
+let occtSwiftDependency: Package.Dependency =
+    .package(url: "https://github.com/SecondMouseAU/OCCTSwift.git", exact: "4.0.0-beta.4")
 
 let package = Package(
     name: "OCCTSwiftScripts",
@@ -124,12 +130,12 @@ let package = Package(
         // full graph until they catch up, same situation as the 2.0.0 bump (see git history on
         // this comment block). Local builds against sibling checkouts work today because path
         // dependencies bypass semver ranges entirely.
-        occtDep("OCCTSwift", from: "3.0.0"),
+        occtSwiftDependency,  // EXACT, not `from:`: v4.0.0-kernel.N tags are pre-releases of the same package that sort ABOVE every beta, so `from: "4.0.0-beta.4"` silently resolves to the newest kernel tag (main's source). Move this deliberately when the next beta ships.
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
         // package dependency-free (broke the Viewport↔Tools cycle).
-        occtDep("OCCTSwiftViewport", from: "1.0.4"),
+        occtDep("OCCTSwiftViewport", from: "1.2.0"),
         // OCCTSwiftTools and OCCTSwiftAIS merged into one package, OCCTSwiftInteraction, alongside
         // OCCTSwiftCADKit (SecondMouseAU/ecosystem#42, ecosystem#43). The three old repos are
         // archived, not deleted (their tags still resolve), but every consumer is asked to repin
@@ -154,10 +160,10 @@ let package = Package(
         // the SubShape <-> ViewportBody plumbing for highlight overlays. Selection / Manipulator /
         // SwiftUI surfaces aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        occtDep("OCCTSwiftInteraction", from: "0.1.0"),
+        occtDep("OCCTSwiftInteraction", from: "3.0.0-beta.1"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
-        occtDep("OCCTSwiftMesh", from: "1.0.0"),
+        occtDep("OCCTSwiftMesh", from: "1.7.6-beta.1"),
         // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
         // BRepGraph.exportForML / exportJSON via extension after OCCTSwift
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
@@ -188,7 +194,7 @@ let package = Package(
         // our own OCCTSwift >=1.15.0 floor above, no reason to admit an
         // OCCTSwiftIO minor that predates fixes we already require elsewhere
         // in the graph.
-        occtDep("OCCTSwiftIO", from: "1.7.5"),
+        occtDep("OCCTSwiftIO", from: "2.0.0-beta.1"),
     ],
     targets: [
         .target(
@@ -317,3 +323,32 @@ let package = Package(
         ),
     ]
 )
+
+// WASI build (OCCTSWIFT_WASI=1, set by Scripts/build-wasm.sh): `occtkit` without the verbs that
+// cannot run on wasm32-unknown-wasip1. The same switch OCCTSwift's own manifest reads.
+//   run             spawns `swift build` (no processes on WASI)
+//   render-preview  OCCTSwiftViewport / Tools / AIS (Metal, SwiftUI)
+//   graph-ml        OCCTSwiftIO (mesh IO stack, not checked for wasm)
+//   simplify-mesh   OCCTSwiftMesh (not checked for wasm yet)
+//   graph-query    reads the SQLite export through sqlite3, which has no wasm module
+// Sources are excluded and their dependencies dropped, so SwiftPM never resolves the Apple-only
+// packages. `--serve` is also off on WASI (output capture uses dup2); see main.swift.
+if ProcessInfo.processInfo.environment["OCCTSWIFT_WASI"] == "1" {
+    package.dependencies = [occtSwiftDependency]
+    package.targets = package.targets.filter { ["ScriptHarness", "DrawingComposer", "occtkit"].contains($0.name) }
+    for target in package.targets where target.name == "ScriptHarness" {
+        // SQLite3 has no wasm module; SQLiteUnavailable.swift stands in for the exporter.
+        target.exclude = ["BREPGraphSQLiteExporter.swift"]
+    }
+    for target in package.targets where target.name == "occtkit" {
+        target.dependencies = [
+            "ScriptHarness",
+            "DrawingComposer",
+            .product(name: "OCCTSwift", package: "OCCTSwift"),
+        ]
+        target.exclude = [
+            "Commands/Run.swift", "Commands/RenderPreview.swift",
+            "Commands/GraphML.swift", "Commands/SimplifyMesh.swift", "Commands/GraphQuery.swift",
+        ]
+    }
+}

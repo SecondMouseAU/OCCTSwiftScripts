@@ -5,6 +5,110 @@ resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
 tags: [reference, architecture, occtkit, verbs]
 description: Targets, per-verb design notes, the --serve protocol, the output pipeline, and the occtkit run workspace.
 generated: { by: claude-code/sonnet-5, at: 2026-10-07 }
+sources:
+  - id: occtswiftscripts-82
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/82
+    title: Codebase + docs duplication review and refactor (placeholder)
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 1
+  - id: occtswiftscripts-3
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/3
+    title: "Reconstruct script: FeatureSpec JSON → BREP via OCCTSwift.FeatureReconstructor"
+    author: human:gsdali
+    last_modified: 2026-04-22
+    usage_count: 1
+  - id: occtswiftscripts-13
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/13
+    title: "occtkit reconstruct: optional inputBrep for chained composition (compose-sheet-metal → cuts)"
+    author: human:gsdali
+    last_modified: 2026-04-25
+    usage_count: 1
+  - id: occtswiftscripts-23
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/23
+    title: "Add assembly/XCAF verbs: inspect-assembly, set-metadata"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswift-93
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/93
+    title: "Expose AssemblyNode.labelId publicly + add Document.node(at:) lookup (driver: OCCTSwiftScripts#23 inspect-assembly)"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswiftscripts-24
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/24
+    title: Add render-preview verb (depends on OCCTSwiftViewport OffscreenRenderer)
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswiftscripts-22
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/22
+    title: "Add mesh verbs: mesh, simplify-mesh"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswift-92
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/92
+    title: "Mesh simplification / decimation API (driver: OCCTSwiftScripts#22 simplify-mesh)"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswiftscripts-21
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/21
+    title: "Add engineering analysis verbs: check-thickness, analyze-clearance, heal"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswiftscripts-19
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/19
+    title: "Add I/O verbs: load-brep, import (multi-format)"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswiftscripts-18
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/18
+    title: "Add introspection JSON verbs: metrics, query-topology, measure-distance (+ JSON output for graph-validate, feature-recognize)"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswiftscripts-100
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/100
+    title: recipe 03 revolves a wire, so the flange is a shell rather than a solid
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 2
+  - id: occtswiftscripts-20
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/20
+    title: "Add construction verbs: transform, boolean, pattern"
+    author: human:gsdali
+    last_modified: 2026-04-29
+    usage_count: 1
+  - id: occtswift-86
+    resource: https://github.com/SecondMouseAU/OCCTSwift/issues/86
+    title: "SheetMetal.Builder: step-aware bends (asymmetric flange seam widths)"
+    author: human:gsdali
+    last_modified: 2026-04-25
+    usage_count: 1
+  - id: occtswiftscripts-10
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/10
+    title: occtkit support for sheet-metal composition (blocked on OCCTSwift#85)
+    author: human:gsdali
+    last_modified: 2026-04-25
+    usage_count: 1
+  - id: occtswiftscripts-5
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/5
+    title: `occtkit --serve` lacks success-case response framing — blocks external JSONL clients
+    author: human:gsdali
+    last_modified: 2026-04-22
+    usage_count: 1
+  - id: occtswiftscripts-98
+    resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/98
+    title: occtkit run fails in any checkout not named 'OCCTSwiftScripts' (hardcoded package identity)
+    author: human:gsdali
+    last_modified: 2026-08-04
+    usage_count: 1
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Targets and verb architecture

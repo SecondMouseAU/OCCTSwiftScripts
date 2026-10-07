@@ -4,10 +4,20 @@ title: Prove the test fails
 description: A passing test is worth nothing until you have watched it fail. Inject the defect it exists to catch, confirm the failure, restore, and report both results.
 tags: [policy, testing, detectors, gates, agents]
 generated: { by: claude-code/sonnet-5, at: 2026-10-07 }
-resource: https://github.com/SecondMouseAU/OCCTSwift/blob/main/okf/policies/prove-the-test-fails.md
+resource: https://github.com/SecondMouseAU/OCCTSwiftScripts
+sources:
+  - { id: occtswiftscripts-618, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/618, usage_count: 1 }
+  - { id: occtswiftscripts-624, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/624, usage_count: 1 }
+  - { id: occtswiftscripts-626, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/626, usage_count: 1 }
+  - { id: occtswiftscripts-656, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/656, usage_count: 1 }
+  - { id: occtswiftscripts-659, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/659, usage_count: 1 }
+  - { id: occtswiftscripts-680, resource: https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/680, usage_count: 1 }
+usage_window: { from: 2026-06-22, to: 2026-10-07 }
 ---
 
 # Prove the test fails
+
+Adopted from [OCCTSwift's copy](https://github.com/SecondMouseAU/OCCTSwift/blob/main/okf/policies/prove-the-test-fails.md), which is the source of the incident history below.
 
 **Every new test, and every new `--self-test` case, is run once with its subject broken.** Inject
 the defect the test exists to catch, confirm it fails, restore, confirm it passes. Report both
@@ -113,4 +123,4 @@ difference between a reviewer trusting the suite and taking your word for it.
 
 - [Documentation updates are mandatory](docs-current.md)
 - [Search before building](search-before-building.md)
-- `.github/PULL_REQUEST_TEMPLATE.md`, whose "Proven to fail" evidence row is where the results are reported.
+- [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md), whose "Proven to fail" evidence row is where the results are reported.

@@ -261,6 +261,26 @@ See [`recipes/README.md`](recipes/README.md) for the full index and contributor 
 
 The `occtkit` executable is a separate target; install via the `Makefile` above when you want the command-line surface.
 
+## WebAssembly build
+
+`Scripts/build-wasm.sh` builds a WASI `occtkit` (`wasm32-unknown-wasip1`) so the geometry verbs run
+where there is no macOS, for example under Node's `node:wasi` on Linux. It needs the swift.org 6.4.0
+toolchain, its wasm SDK and wasi-sdk 34.0 (the script header lists them); the 38 MB wasm kernel is
+fetched and checksum-verified from OCCTSwift's release.
+
+Verbs on WASI: everything except `run` (spawns `swift build`), `render-preview` (Metal),
+`graph-ml` (OCCTSwiftIO), `graph-query` (SQLite) and `simplify-mesh` (OCCTSwiftMesh, not yet
+checked for wasm). `--serve` is also off, because output capture uses `dup2`. `graph-validate` and
+the other graph verbs still work; the SQLite export from `ScriptContext` throws
+`SQLiteExportError.unavailable`.
+
+WASI has no working directory, so pass absolute paths and preopen the directories the verbs touch.
+[OCCTMCP](https://github.com/SecondMouseAU/OCCTMCP) does this in `dist/wasi-run.js`
+(`OCCTMCP_OCCTKIT_WASM=<occtkit.wasm>`). Measured on Linux x86_64 through that path, against
+analytic answers on two overlapping 10 mm cubes: volume 1000, area 600, centre of mass (5, 5, 5),
+intersect 250, union 1750, subtract 750, distance 10 and 0, wall thickness 10, all within 1e-6.
+No native-vs-wasm parity run has been done yet (it needs a Mac).
+
 ## Requirements
 
 - macOS 15+
