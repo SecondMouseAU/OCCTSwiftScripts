@@ -76,6 +76,57 @@ struct GeneratorVerbTests {
         }
     }
 
+    @Test("reconstruct warns when the result is a shell with no solid, and not for a solid")
+    func warningsForNonSolid() throws {
+        // A cube with a face missing: five faces sewn into an open shell, so zero solids.
+        let faces = try VerbHarness.box().subShapes(ofType: .face)
+        let shell = try #require(Shape.shellFromFaces(Array(faces.prefix(5))))
+        let warnings = ReconstructCommand.warnings(for: shell)
+        #expect(warnings.count == 1)
+        #expect(warnings.first?.contains("no solid") == true)
+        #expect(warnings.first?.contains("5 faces") == true)
+
+        #expect(ReconstructCommand.warnings(for: try VerbHarness.box()).isEmpty)
+        #expect(ReconstructCommand.warnings(for: nil).isEmpty)
+    }
+
+    @Test("reconstruct reports no warnings for an extruded block")
+    func noWarningsForSolid() throws {
+        let dir = try VerbHarness.makeTempDir("reconstruct")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let spec = try VerbHarness.writeJSON(
+            ["outputDir": dir.path, "outputName": "block", "features": blockFeatures()],
+            named: "spec.json", in: dir)
+
+        let json = try VerbHarness.runJSON(ReconstructCommand.self, [spec])
+
+        #expect((json["warnings"] as? [String])?.isEmpty == true)
+    }
+
+    @Test("reconstruct never reports a solid-less result without a warning")
+    func nonSolidResultAlwaysWarns() throws {
+        // Holds before and after the OCCTSwift fix for revolve (#129): whatever the kernel
+        // builds, a result with no solid must carry the warning.
+        let dir = try VerbHarness.makeTempDir("reconstruct")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let revolve: [String: Any] = [
+            "kind": "revolve", "id": "body",
+            "profile_points_2d": [[0, 0], [12, 0], [12, 60], [0, 60]],
+            "axis_origin": [0, 0, 0], "axis_direction": [0, 0, 1], "angle_deg": 360,
+        ]
+        let spec = try VerbHarness.writeJSON(
+            ["outputDir": dir.path, "outputName": "shaft", "features": [revolve]],
+            named: "spec.json", in: dir)
+
+        let json = try VerbHarness.runJSON(ReconstructCommand.self, [spec])
+        let shape = try GraphIO.loadBREP(at: try #require(json["shape"] as? String))
+
+        let warnings = try #require(json["warnings"] as? [String])
+        #expect(
+            (shape.subShapeCount(ofType: .solid) == 0) == !warnings.isEmpty,
+            "warnings must appear exactly when there is no solid")
+    }
+
     @Test("reconstruct reports an unknown feature kind as skipped and still builds the rest")
     func reconstructSkipsUnknownKind() throws {
         let dir = try VerbHarness.makeTempDir("reconstruct")
