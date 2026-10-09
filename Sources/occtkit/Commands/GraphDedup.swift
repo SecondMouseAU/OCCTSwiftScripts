@@ -15,9 +15,9 @@ enum GraphDedupCommand: Subcommand {
         let graph = try GraphIO.buildGraph(from: shape)
         let result = graph.deduplicate()
 
-        guard let rebuilt = GraphIO.rebuildShape(from: graph) else {
+        guard let rebuilt = GraphIO.rebuildShape(from: graph, root: shape) else {
             throw ScriptError.message(
-                "Deduplicate succeeded but graph has no root nodes to rebuild")
+                "Deduplicate succeeded but graph has no topology root for the input shape")
         }
         try GraphIO.writeBREP(rebuilt, to: outPath)
 
