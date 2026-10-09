@@ -22,8 +22,10 @@ import Testing
 
 @testable import occtkit
 
-// .serialized plus `VerbHarness`'s process-wide capture lock: every test below redirects the
-// process's real fd 1 (stdout) via dup2 to capture a Subcommand's JSON output.
+// Each test captures a Subcommand's JSON through `VerbHarness.captureStdout`, which binds
+// `GraphIO.jsonSink` for the calling test. `.serialized` is no longer needed for that (the old
+// fd 1 redirection was why); it is kept because these tests share one expensive fixture shape
+// and gain nothing from running alongside each other.
 @Suite("occtkit AAG face-index consistency (#111)", .serialized)
 struct AAGFaceIndexTests {
 
@@ -45,7 +47,7 @@ struct AAGFaceIndexTests {
     }
 
     private func captureStdout(_ block: () throws -> Int32) throws -> String {
-        VerbHarness.jsonSpan(of: try VerbHarness.captureStdout(block))
+        try VerbHarness.captureStdout(block)
     }
 
     // Minimal Decodable mirrors of GraphSelectCommand's (Encodable-only) wire responses, so

@@ -1,5 +1,18 @@
 # Knowledge Log
 
+## 2026-10-07 (fix/deterministic-verb-capture)
+
+* **Update**: Replaced the fd-1 redirection the verb tests used to capture JSON. One CI run on an
+  otherwise green tree failed with "Garbage at end around line 271": Swift Testing prints its
+  progress lines to the same descriptor from other threads, and the old `emitJSON` wrote the object
+  and its newline as two writes, so a runner line could land inside a capture glued to the closing
+  brace. `GraphIO` gains an optional task-local `jsonSink` (nil in production, output unchanged), and
+  `emitJSON` now writes object and newline together. `VerbHarness` binds the sink, so a capture is
+  private to its test. `CaptureIsolationTests` hammers fd 1 from another thread while capturing 300
+  times: it fails the old harness 5 of 5 (the process crashes inside `NSFileHandle`) and passes the
+  new one 5 of 5. Earlier fixes (a lock, line filtering by runner mark) treated the symptom; this
+  removes the shared descriptor.
+
 ## 2026-10-07 (fix/129-reconstruct-nonsolid-warning)
 
 * **Update**: Traced #129 to the kernel. OCCTSwift's `FeatureReconstructor.applyRevolve` revolves the
