@@ -44,6 +44,7 @@ Build a BREP from a JSON `[FeatureSpec]` via FeatureReconstructor.
 - `fulfilled`: array of feature IDs that succeeded
 - `skipped`: array of objects with `id`, `stage`, `reason` (`under_determined` | `occt_failure` | `unresolved_ref` | `unsupported`), and optional `detail`
 - `annotations`: array of objects with `id`, `kind` (`"thread"`), and optional `detail`
+- `warnings`: array of strings about the built shape itself. Currently one case: the result has no solid (a bare shell still reports a believable volume, so check `solidCount` with `metrics`)
 
 **Example**
 
@@ -72,7 +73,8 @@ reconstruct /tmp/revolve.json
   "shape": "/tmp/out/shaft.brep",
   "fulfilled": ["shaft"],
   "skipped": [],
-  "annotations": []
+  "annotations": [],
+  "warnings": []
 }
 ```
 

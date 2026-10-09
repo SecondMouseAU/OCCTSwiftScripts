@@ -318,7 +318,7 @@ Build a BREP from a JSON `[FeatureSpec]` payload via OCCTSwift's `FeatureReconst
 boolean/fillet/chamfer references), `features[]`: each with a `kind` discriminator
 (`revolve` | `extrude` | `hole` | `thread` | `fillet` | `chamfer` | `boolean`) and
 snake_case fields.
-**Output:** `{ shape: "<path>.brep"|null, fulfilled[], skipped[{id,stage,reason,detail}], annotations[{id,kind,detail}] }`.
+**Output:** `{ shape: "<path>.brep"|null, fulfilled[], skipped[{id,stage,reason,detail}], annotations[{id,kind,detail}], warnings[] }`.
 Exit code `2` when no shape was produced from a non-empty feature list.
 
 ```bash
