@@ -46,6 +46,13 @@ enum GraphMLCommand: Subcommand {
         struct Edge: Codable {
             let index: Int
             let samples: [[Double]]
+            /// One of `convex`, `concave`, `smooth`, `unknown`.
+            ///
+            /// `unknown` is an edge not between exactly two faces. Added OCCTSwiftScripts#55, per
+            /// B-rep edge, alongside `faceAdjacency`.
+            let convexity: String
+            /// Interior dihedral angle in radians; absent when `convexity` is `unknown`.
+            let dihedralAngle: Double?
         }
         struct Sampling: Codable {
             let uvSamples: Int
@@ -81,9 +88,13 @@ enum GraphMLCommand: Subcommand {
                 meanCurvatures: s.meanCurvatures
             )
         }
+        let edgeClasses = EdgeClassifier.classify(shape: shape, graph: graph)
         let edges: [Payload.Edge] = (0..<graph.edgeCount).map { i in
             let pts = graph.sampleEdgeCurve(edgeIndex: i, count: edgeSamples)
-            return Payload.Edge(index: i, samples: pts.map { [$0.x, $0.y, $0.z] })
+            let kind = edgeClasses[i] ?? .unknown
+            return Payload.Edge(
+                index: i, samples: pts.map { [$0.x, $0.y, $0.z] },
+                convexity: kind.convexity, dihedralAngle: kind.dihedralAngle)
         }
 
         // Attributed face-adjacency with per-adjacency convexity, from the AAG.

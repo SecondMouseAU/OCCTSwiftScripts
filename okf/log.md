@@ -1,5 +1,17 @@
 # Knowledge Log
 
+## 2026-10-09 (feat/55-edge-convexity)
+
+* **Update**: Finished #55. The issue asked for per-edge `convexity` and `dihedralAngle` in the graph
+  exports. Commit d95999b ("closes #54, #55") delivered convexity on face *adjacency* in `graph-ml`
+  (the gAAG form) and closed only #54, because GitHub needs a keyword per issue; #55 stayed open and
+  unlabeled. This adds the per-edge half: `EdgeClassifier` maps `Shape.edgeConcavities()` onto graph
+  edge indices by identity (`findNode`), reports convex, concave, smooth or unknown plus the interior
+  dihedral angle in radians, and the JSON exporter (schema 1.1.0, keys absent without the source
+  shape) and `graph-ml`'s `edges[]` carry it. Edges not between exactly two faces are `unknown`: the
+  kernel labels a boundary edge "tangent", which would be wrong to repeat. The SQLite export is
+  unchanged.
+
 ## 2026-10-07 (fix/deterministic-verb-capture)
 
 * **Update**: Replaced the fd-1 redirection the verb tests used to capture JSON. One CI run on an

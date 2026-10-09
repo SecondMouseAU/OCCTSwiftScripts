@@ -153,7 +153,7 @@ occtkit graph-ml bracket_clean.brep --uv-samples 12 --edge-samples 24
       "gaussianCurvatures": [0.0], "meanCurvatures": [0.0]
     }
   ],
-  "edges": [{ "index": 0, "samples": [[0,0,0],[0.1,0,0]] }],
+  "edges": [{ "index": 0, "samples": [[0,0,0],[0.1,0,0]], "convexity": "convex", "dihedralAngle": 1.5708 }],
   "faceAdjacency": [
     { "face1": 0, "face2": 1, "convexity": "convex",  "sharedEdgeCount": 1 },
     { "face1": 1, "face2": 3, "convexity": "concave", "sharedEdgeCount": 1 }

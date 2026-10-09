@@ -153,7 +153,10 @@ COO adjacency matrices, per-face position/normal/curvature grids, and a convexit
 face-adjacency graph (`convexity` ∈ `convex|concave|smooth`). `faceAdjacency`'s `face1`/`face2`
 are resolved to `faces[].index`'s space (`shape.faces()`), not AAG's own occurrence index into
 `Shape.orientedFaces()` (OCCTSwift#642, v2.0.0), so they never dangle-reference past `faces[]`
-on a compound where a face is shared between two solids.
+on a compound where a face is shared between two solids. Each `edges[]` entry also carries
+`convexity` (`convex|concave|smooth|unknown`) and `dihedralAngle` (interior angle in radians, absent
+when `unknown`), per B-rep edge rather than per face pair; `unknown` is an edge not between exactly
+two faces (a boundary or non-manifold edge).
 
 ```bash
 graph-ml part.brep --uv-samples 16 --edge-samples 32 > part.json

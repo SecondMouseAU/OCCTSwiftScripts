@@ -184,13 +184,16 @@ public final class ScriptContext: Sendable {
     ///   - id: Graph identifier (default: `"graph-N"`).
     ///   - sourceBodyId: Optional body ID this graph was built from.
     ///   - sqlite: Whether to also export a SQLite database (default: true).
+    ///   - shape: The shape the graph was built from. When given, the JSON export adds per-edge
+    ///     `convexity` and `dihedralAngle` (schema 1.1.0); without it those keys are absent.
     /// - Throws: `ScriptError.conversionFailed` if a prior conversion left the graph in a bad
     ///   state, or an underlying I/O error if the JSON/SQLite export fails to write.
     public func addGraph(
         _ graph: BRepGraph,
         id: String? = nil,
         sourceBodyId: String? = nil,
-        sqlite: Bool = true
+        sqlite: Bool = true,
+        shape: Shape? = nil
     ) throws {
         let index = graphDescriptors.count
         let graphID = id ?? "graph-\(index)"
@@ -198,7 +201,7 @@ public final class ScriptContext: Sendable {
         // JSON export
         let jsonFilename = "graph-\(index).json"
         let jsonURL = outputDir.appendingPathComponent(jsonFilename)
-        try BREPGraphJSONExporter.export(graph, to: jsonURL, description: graphID)
+        try BREPGraphJSONExporter.export(graph, to: jsonURL, description: graphID, shape: shape)
 
         // SQLite export
         if sqlite {
@@ -231,7 +234,7 @@ public final class ScriptContext: Sendable {
     public func addGraphsForAllShapes(sqlite: Bool = true) throws {
         for (shape, bodyID) in shapes.all {
             guard let graph = BRepGraph(shape: shape) else { continue }
-            try addGraph(graph, sourceBodyId: bodyID, sqlite: sqlite)
+            try addGraph(graph, sourceBodyId: bodyID, sqlite: sqlite, shape: shape)
         }
     }
 

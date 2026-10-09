@@ -114,7 +114,8 @@ These are consumed by `occtkit graph-query` and the viewport's graph tooling.
 
 ```swift
 public func addGraph(_ graph: BRepGraph, id: String? = nil,
-                     sourceBodyId: String? = nil, sqlite: Bool = true) throws
+                     sourceBodyId: String? = nil, sqlite: Bool = true,
+                     shape: Shape? = nil) throws
 
 /// Build + export a BRepGraph for every shape added so far.
 public func addGraphsForAllShapes(sqlite: Bool = true) throws
@@ -125,6 +126,9 @@ try ctx.add(part, id: "part")
 try ctx.addGraphsForAllShapes(sqlite: true)   // → graph-0.json + graph-0.sqlite
 try ctx.emit(description: "part + topology graph")
 ```
+
+> Pass `shape:` (the shape the graph was built from) and each edge in the JSON gains `convexity`
+> and `dihedralAngle`; `addGraphsForAllShapes` does this for you.
 
 > `occtkit run <file>.swift --format graph-json,graph-sqlite` injects
 > `addGraphsForAllShapes(...)` for you, so plain scripts need not call it.
