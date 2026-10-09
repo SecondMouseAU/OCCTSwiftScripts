@@ -1,5 +1,5 @@
 {
-  "originHash" : "1a16acb6ce17e7801aeefcee582effc0f72b6ea66024ab19e3c49d069159c3c2",
+  "originHash" : "7460750e19dba5dc6ac3af0e594ab419c0d6d45dcec665ed9ebefd4f4d02b636",
   "pins" : [
     {
       "identity" : "nodal",
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SecondMouseAU/OCCTSwiftIO.git",
       "state" : {
-        "revision" : "39abfc934bb405665b9b94fe545242c0915cf5bb",
-        "version" : "2.0.0-beta.1"
+        "revision" : "2eee626a160fa0d03c0f4320a0e3031f2fed355f",
+        "version" : "2.0.0-beta.2"
       }
     },
     {
