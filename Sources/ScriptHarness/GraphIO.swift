@@ -85,15 +85,14 @@ public enum GraphIO {
         return g
     }
 
-    /// Rebuild a Shape from the graph's roots.
+    /// Rebuild a Shape from the graph's topology root for `original`, the shape it was built from.
     ///
-    /// Single root → that shape; multiple → wrapped in a compound.
-    public static func rebuildShape(from graph: BRepGraph) -> Shape? {
-        let roots = graph.rootNodes
-        let pieces = roots.compactMap { graph.shape(nodeKind: $0.kind, nodeIndex: $0.index) }
-        guard !pieces.isEmpty else { return nil }
-        if pieces.count == 1 { return pieces[0] }
-        return Shape.compound(pieces)
+    /// Not `rootNodes`: those are assembly Products, and are empty for a graph built from a shape
+    /// (`BRepGraph(shape:)` creates no Product). Looking the original up with `findNode(for:)` still
+    /// resolves after `compact()` and `deduplicate()`.
+    public static func rebuildShape(from graph: BRepGraph, root original: Shape) -> Shape? {
+        guard let node = graph.findNode(for: original) else { return nil }
+        return graph.shape(nodeKind: node.kind, nodeIndex: node.index)
     }
 
     // MARK: - Input

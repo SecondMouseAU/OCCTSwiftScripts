@@ -23,8 +23,9 @@ do {
     let graph = try GraphIO.buildGraph(from: shape)
     let result = graph.deduplicate()
 
-    guard let rebuilt = GraphIO.rebuildShape(from: graph) else {
-        throw ScriptError.message("Deduplicate succeeded but graph has no root nodes to rebuild")
+    guard let rebuilt = GraphIO.rebuildShape(from: graph, root: shape) else {
+        throw ScriptError.message(
+            "Deduplicate succeeded but graph has no topology root for the input shape")
     }
     try GraphIO.writeBREP(rebuilt, to: outPath)
     try GraphIO.emitJSON(GraphIO.DedupReport(result, output: outPath))

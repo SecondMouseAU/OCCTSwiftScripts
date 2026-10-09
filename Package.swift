@@ -194,7 +194,10 @@ let package = Package(
         // our own OCCTSwift >=1.15.0 floor above, no reason to admit an
         // OCCTSwiftIO minor that predates fixes we already require elsewhere
         // in the graph.
-        occtDep("OCCTSwiftIO", from: "2.0.0-beta.1"),
+        // Floored at 2.0.0-beta.2, not beta.1: upstream moved the published beta.1 tag from ccf49c3 to
+        // 39abfc9, which gives anyone who had already resolved it a SwiftPM fingerprint mismatch
+        // (OCCTSwiftIO#46). beta.2 is the same tree under a tag that has only ever pointed at one commit.
+        occtDep("OCCTSwiftIO", from: "2.0.0-beta.2"),
     ],
     targets: [
         .target(
