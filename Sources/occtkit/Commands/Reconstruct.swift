@@ -29,7 +29,8 @@
 //   { "shape": "/path/to/<name>.brep" | null,
 //     "fulfilled":  ["id1", ...],
 //     "skipped":    [{"id","stage","reason","detail"}, ...],
-//     "annotations":[{"id","kind","detail"}, ...] }
+//     "annotations":[{"id","kind","detail"}, ...],
+//     "warnings":   ["...", ...] }   (e.g. the built shape has no solid)
 
 import Foundation
 import OCCTSwift

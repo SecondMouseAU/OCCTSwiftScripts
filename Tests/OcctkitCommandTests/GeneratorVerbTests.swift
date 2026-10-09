@@ -78,13 +78,16 @@ struct GeneratorVerbTests {
 
     @Test("reconstruct warns when the result is a shell with no solid, and not for a solid")
     func warningsForNonSolid() throws {
-        // A cube with a face missing: five faces sewn into an open shell, so zero solids.
+        // Any shape with zero solids exercises the guard. An open shell (a cube with a face
+        // missing) is the easy one to build; the case that matters in practice is a closed shell
+        // from a revolve (#129), which also reports a plausible volume, but the property under
+        // test here is only "no solid".
         let faces = try VerbHarness.box().subShapes(ofType: .face)
         let shell = try #require(Shape.shellFromFaces(Array(faces.prefix(5))))
         let warnings = ReconstructCommand.warnings(for: shell)
         #expect(warnings.count == 1)
         #expect(warnings.first?.contains("no solid") == true)
-        #expect(warnings.first?.contains("5 faces") == true)
+        #expect(warnings.first?.contains("(shell, 5 faces)") == true)
 
         #expect(ReconstructCommand.warnings(for: try VerbHarness.box()).isEmpty)
         #expect(ReconstructCommand.warnings(for: nil).isEmpty)
