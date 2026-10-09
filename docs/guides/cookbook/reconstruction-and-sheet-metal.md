@@ -55,11 +55,12 @@ occtkit reconstruct /tmp/shaft.json
   "shape": "/tmp/out/shaft.brep",
   "fulfilled": ["body", "centre_hole"],
   "skipped": [],
-  "annotations": []
+  "annotations": [],
+  "warnings": []
 }
 ```
 
-**Known issue ([#129](https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/129)):** the revolve in this example currently returns a bare `Shell` rather than a `Solid`, so the bore below is not cut. An extrude-based part works. Check `solidCount >= 1` with `metrics`, not the volume alone.
+**Known issue ([#129](https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/129), upstream [OCCTSwift#3139](https://github.com/SecondMouseAU/OCCTSwift/issues/3139)):** the revolve in this example currently returns a bare `Shell` rather than a `Solid`, so the bore below is not cut. The response carries a `warnings` entry saying the result has no solid; the output above shows what a fixed kernel returns. An extrude-based part works. Check `solidCount >= 1` with `metrics`, not the volume alone.
 
 Exit code `0` means every feature was fulfilled. Exit code `2` means no features could be
 built (partial builds where some features succeed still return `0`; check `skipped` for

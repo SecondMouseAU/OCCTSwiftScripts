@@ -29,7 +29,8 @@
 //   { "shape": "/path/to/<name>.brep" | null,
 //     "fulfilled":  ["id1", ...],
 //     "skipped":    [{"id","stage","reason","detail"}, ...],
-//     "annotations":[{"id","kind","detail"}, ...] }
+//     "annotations":[{"id","kind","detail"}, ...],
+//     "warnings":   ["...", ...] }   (e.g. the built shape has no solid)
 
 import Foundation
 import OCCTSwift
@@ -49,6 +50,7 @@ enum ReconstructCommand: Subcommand {
         let fulfilled: [String]
         let skipped: [SkippedReport]
         let annotations: [AnnotationReport]
+        let warnings: [String]
     }
     struct SkippedReport: Encodable {
         let id: String
@@ -60,6 +62,20 @@ enum ReconstructCommand: Subcommand {
         let id: String
         let kind: String
         let detail: String?
+    }
+
+    /// Warnings about the built shape itself, independent of which features were fulfilled.
+    ///
+    /// A closed shell still reports a believable volume, so a result with no solid looks
+    /// right to a caller that checks only the volume. OCCTSwiftScripts#129: a `revolve`
+    /// feature currently yields a shell.
+    static func warnings(for shape: Shape?) -> [String] {
+        guard let shape, shape.subShapeCount(ofType: .solid) == 0 else { return [] }
+        return [
+            "The result has no solid (\(shape.shapeType.toLowercaseString()), "
+                + "\(shape.faces().count) faces). A closed shell still reports a plausible volume, "
+                + "so check solidCount before trusting it."
+        ]
     }
 
     static func run(args: [String]) throws -> Int32 {
@@ -148,7 +164,8 @@ enum ReconstructCommand: Subcommand {
                         "spec=\(spec); hole=\(holeRef)" + (length.map { "; length=\($0)" } ?? "")
                     return AnnotationReport(id: a.featureID, kind: "thread", detail: detail)
                 }
-            }
+            },
+            warnings: warnings(for: result.shape)
         )
         try GraphIO.emitJSON(response)
         return result.shape == nil && !featuresAny.isEmpty ? 2 : 0

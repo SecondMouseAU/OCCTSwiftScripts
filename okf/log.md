@@ -1,5 +1,15 @@
 # Knowledge Log
 
+## 2026-10-07 (fix/129-reconstruct-nonsolid-warning)
+
+* **Update**: Traced #129 to the kernel. OCCTSwift's `FeatureReconstructor.applyRevolve` revolves the
+  closed wire, and `BRepPrimAPI_MakeRevol` on a wire yields a shell; a solid needs the planar face the
+  wire bounds. The same code is on OCCTSwift `main`, and nothing tracked it, so it is filed as
+  SecondMouseAU/OCCTSwift#3139 with the proposed fix. Here, `reconstruct` no longer reports success
+  silently on a result with no solid: the response gains an additive `warnings` array (the field
+  `boolean` and `heal` already use). #129 stays open until the kernel fix lands and the
+  `withKnownIssue` marker comes off.
+
 ## 2026-10-07 (fix/128-graph-rebuild-root)
 
 * **Update**: Fixed #128. `graph-compact` and `graph-dedup` threw on every input because
