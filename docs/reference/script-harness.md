@@ -211,7 +211,8 @@ try ctx.addGraph(
     _ graph: BRepGraph,
     id: String? = nil,
     sourceBodyId: String? = nil,
-    sqlite: Bool = true
+    sqlite: Bool = true,
+    shape: Shape? = nil
 ) throws
 ```
 
@@ -223,8 +224,9 @@ try ctx.addGraph(
 | `id` | `String?` | no | Graph identifier; default `"graph-N"` |
 | `sourceBodyId` | `String?` | no | Body ID this graph was derived from (for reference) |
 | `sqlite` | `Bool` | no | Also write a SQLite database (default `true`) |
+| `shape` | `Shape?` | no | The shape the graph was built from. When given, each edge in `graph-N.json` gains `convexity` and `dihedralAngle`; without it those keys are absent |
 
-**What it does**: Writes the graph as `graph-N.json` (BREPGraph v1 schema) and optionally
+**What it does**: Writes the graph as `graph-N.json` (BREPGraph schema 1.1.0; 1.1.0 added per-edge `convexity` and `dihedralAngle`, present only when `shape` is given) and optionally
 `graph-N.sqlite` for indexing and queries. Adds graph metadata to the manifest.
 
 **Example**

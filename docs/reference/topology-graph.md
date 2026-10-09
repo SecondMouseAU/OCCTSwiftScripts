@@ -195,7 +195,7 @@ Export a BREP's topology graph and UV/edge samples as ML-friendly JSON.
 | `--uv-samples` | integer | no | Face UV grid density (default 16, produces 16×16 grid per face). |
 | `--edge-samples` | integer | no | Edge curve sample count (default 32). |
 
-**Returns**: ML-ready JSON containing vertex positions, edge boundary/manifold flags, face adjacency indices, face-to-face / face-to-edge / edge-to-vertex COO matrices, per-face UV grid with positions/normals/Gaussian/mean curvatures, per-edge curve samples, and an attributed face-adjacency block with convexity per dihedral + shared-edge count.
+**Returns**: ML-ready JSON containing vertex positions, edge boundary/manifold flags, face adjacency indices, face-to-face / face-to-edge / edge-to-vertex COO matrices, per-face UV grid with positions/normals/Gaussian/mean curvatures, per-edge curve samples with `convexity` and `dihedralAngle`, and an attributed face-adjacency block with convexity per dihedral + shared-edge count.
 
 **Example**
 
@@ -212,7 +212,7 @@ occtkit graph-ml shape.brep --uv-samples 12 --edge-samples 24
   "faceToEdge": { "sources": [0, 0, 1], "targets": [2, 3, 5] },
   "edgeToVertex": { "sources": [0, 1, 1], "targets": [0, 1, 2] },
   "faces": [{ "index": 0, "uSamples": 12, "vSamples": 12, "positions": [...], "normals": [...], "gaussianCurvatures": [...], "meanCurvatures": [...] }, ...],
-  "edges": [{ "index": 0, "samples": [[0,0,0], [0.1,0,0], ...] }, ...],
+  "edges": [{ "index": 0, "samples": [[0,0,0], [0.1,0,0], ...], "convexity": "convex", "dihedralAngle": 1.5707963 }, ...],
   "faceAdjacency": [
     { "face1": 0, "face2": 1, "convexity": "convex", "sharedEdgeCount": 1 },
     { "face1": 1, "face2": 3, "convexity": "concave", "sharedEdgeCount": 1 }
@@ -223,7 +223,7 @@ occtkit graph-ml shape.brep --uv-samples 12 --edge-samples 24
 
 **Drives**: `BRepGraph.exportForML()` + `AAG` (Attributed Adjacency Graph).
 
-**Notes**: Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits and `faces[].index` above uses), resolved through `AAGNode.distinctFaceIndex` rather than AAG's own node index, which is an occurrence index into `Shape.orientedFaces()` and only agrees with `shape.faces()` on a shape with no face shared between two solids (OCCTSwift#642, v2.0.0). Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
+**Notes**: Face indices in `faceAdjacency` follow `shape.faces()` order (the same `face[N]` scheme `query-topology` emits and `faces[].index` above uses), resolved through `AAGNode.distinctFaceIndex` rather than AAG's own node index, which is an occurrence index into `Shape.orientedFaces()` and only agrees with `shape.faces()` on a shape with no face shared between two solids (OCCTSwift#642, v2.0.0). Per-edge `convexity` is `"convex"`, `"concave"`, `"smooth"` or `"unknown"` (an edge not between exactly two faces, such as a boundary edge of an open shell, has no convexity); `dihedralAngle` is the interior angle in radians (pi/2 on a cube edge, pi when faces are tangent, 3 pi/2 on an inside corner) and is absent for `"unknown"`. Convexity is a property of the dihedral between two faces: `"convex"` (outward-pointing), `"concave"` (inward), or `"smooth"` (near-zero curvature).
 
 ---
 
