@@ -10,9 +10,10 @@ import OCCTSwift
 
 /// Convexity and interior dihedral angle of one graph edge.
 public struct EdgeClassification: Codable, Sendable, Equatable {
-    /// `"convex"`, `"concave"`, `"smooth"` (tangent faces), or `"unknown"`.
+    /// `"convex"`, `"concave"`, `"smooth"`, or `"unknown"`.
     ///
-    /// Same vocabulary as the `faceAdjacency` convexity `graph-ml` already emits. `"unknown"` means
+    /// `"smooth"` is tangent faces: it is the kernel's `Shape.EdgeConcavity.tangent`, renamed to
+    /// match the `faceAdjacency` label. Same vocabulary as the `faceAdjacency` convexity `graph-ml` already emits. `"unknown"` means
     /// the edge does not sit between exactly two faces, so a convexity is not defined: a boundary
     /// edge of an open shell, a non-manifold edge, or an edge the kernel did not classify.
     public let convexity: String
@@ -45,6 +46,10 @@ public enum EdgeClassifier {
                 graph.faceCount(of: node.index) == 2
             else { continue }
 
+            // A second, independent count. The graph's face count above decides whether a
+            // convexity is defined; the kernel's adjacency here decides whether a dihedral angle
+            // can be measured. They are read from different structures and can disagree (the edges
+            // on the cut of a split compound), in which case the angle is left out, not guessed.
             var angle: Double?
             if let faces = edge.adjacentFaces(in: shape), faces.count == 2 {
                 angle = edge.dihedralAngle(between: faces[0], and: faces[1])

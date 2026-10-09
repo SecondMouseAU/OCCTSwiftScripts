@@ -134,6 +134,12 @@ struct EdgeConvexityTests {
             try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let edges = try #require((doc["nodes"] as? [String: Any])?["edges"] as? [[String: Any]])
         #expect(edges.allSatisfy { $0["convexity"] == nil && $0["dihedralAngle"] == nil })
+
+        // Absent, not null: `JSONSerialization` parses a JSON null to `NSNull`, which the `== nil`
+        // above would not accept, but the raw text settles it for any reader.
+        let raw = try String(contentsOf: url, encoding: .utf8)
+        #expect(!raw.contains("\"convexity\""))
+        #expect(!raw.contains("\"dihedralAngle\""))
     }
 
     @Test("graph-ml emits convexity and dihedralAngle on every edge")
