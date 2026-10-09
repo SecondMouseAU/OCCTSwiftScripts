@@ -134,7 +134,7 @@ public enum GraphIO {
     /// `nil` in production, so output is unchanged. In-process tests bind it to collect a
     /// verb's JSON without redirecting fd 1: the test runner prints its own progress lines to the
     /// same descriptor from other threads, and those can land inside a redirected capture.
-    @TaskLocal public static var jsonSink: (@Sendable (Data) -> Void)?
+    @TaskLocal package static var jsonSink: (@Sendable (Data) -> Void)?
 
     /// Encode `value` as pretty-printed JSON with sorted keys to stdout.
     ///
