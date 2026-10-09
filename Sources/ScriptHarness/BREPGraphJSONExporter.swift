@@ -14,10 +14,14 @@ public enum BREPGraphJSONExporter {
     ///   - graph: The topology graph to export.
     ///   - url: Destination file URL.
     ///   - description: Optional description for the metadata.
+    ///   - shape: The shape the graph was built from. When given, each edge gains `convexity` and
+    ///     `dihedralAngle`; without it those keys are absent.
     /// - Throws: an `EncodingError` if `doc` fails to encode, or the underlying
     ///   `Foundation` I/O error if the write to `url` fails.
-    public static func export(_ graph: BRepGraph, to url: URL, description: String? = nil) throws {
-        let doc = buildDocument(graph, description: description)
+    public static func export(
+        _ graph: BRepGraph, to url: URL, description: String? = nil, shape: Shape? = nil
+    ) throws {
+        let doc = buildDocument(graph, description: description, shape: shape)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(doc)
@@ -26,7 +30,9 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Document Assembly
 
-    static func buildDocument(_ g: BRepGraph, description: String?) -> GraphDocument {
+    static func buildDocument(_ g: BRepGraph, description: String?, shape: Shape? = nil)
+        -> GraphDocument
+    {
         let s = g.stats
 
         let statsBlock = StatsBlock(
@@ -63,14 +69,15 @@ public enum BREPGraphJSONExporter {
 
         let roots = g.rootNodes.map { RootNodeEntry(kind: nodeKindName($0.kind), index: $0.index) }
 
-        let nodes = buildNodes(g)
+        let classes = shape.map { EdgeClassifier.classify(shape: $0, graph: g) }
+        let nodes = buildNodes(g, edgeClasses: classes)
         let refs = buildReferences(g)
         let adjacency = buildAdjacency(g)
         let assembly = buildAssembly(g)
 
         return GraphDocument(
             meta: MetaBlock(
-                schemaVersion: "1.0.0",
+                schemaVersion: "1.1.0",
                 generator: "OCCTSwift/BREPGraph",
                 timestamp: ISO8601DateFormatter().string(from: Date()),
                 description: description
@@ -87,7 +94,9 @@ public enum BREPGraphJSONExporter {
 
     // MARK: - Nodes
 
-    static func buildNodes(_ g: BRepGraph) -> NodesBlock {
+    static func buildNodes(_ g: BRepGraph, edgeClasses classes: [Int: EdgeClassification]? = nil)
+        -> NodesBlock
+    {
         // Vertices
         var vertices: [VertexNode] = []
         for i in 0..<g.vertexCount {
@@ -134,7 +143,9 @@ public enum BREPGraphJSONExporter {
                     wires: wireList,
                     coedges: coedgeList,
                     adjacentEdges: adjList,
-                    removed: g.isRemoved(nodeKind: .edge, nodeIndex: i)
+                    removed: g.isRemoved(nodeKind: .edge, nodeIndex: i),
+                    convexity: classes?[i]?.convexity,
+                    dihedralAngle: classes?[i]?.dihedralAngle
                 ))
         }
 
@@ -470,6 +481,10 @@ struct EdgeNode: Codable {
     let coedges: [Int]
     let adjacentEdges: [Int]
     let removed: Bool
+    /// Present only when the export was given the source shape (schema 1.1.0, #55).
+    let convexity: String?
+    /// Interior dihedral angle in radians; absent for `"unknown"` convexity.
+    let dihedralAngle: Double?
 }
 
 struct RangeBlock: Codable {
