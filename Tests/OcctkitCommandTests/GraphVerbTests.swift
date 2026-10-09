@@ -84,40 +84,104 @@ struct GraphVerbTests {
         }
     }
 
-    // MARK: graph-compact / graph-dedup (broken, #128)
+    // MARK: graph-compact / graph-dedup
 
-    @Test(
-        "graph-compact writes a rebuilt shape",
-        .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/128"))
-    func compactRebuildsShape() throws {
-        let dir = try VerbHarness.makeTempDir("compact")
+    /// A solid with an inner cavity: one solid bounded by two shells.
+    private func hollowBox() throws -> Shape {
+        try #require(try VerbHarness.box().subtracting(try VerbHarness.box(4, 4, 4)))
+    }
+
+    /// Runs `verb` on `shape` and returns the BREP it wrote plus its JSON report.
+    private func rebuild(
+        _ verb: any Subcommand.Type, _ shape: Shape, label: String
+    ) throws -> (shape: Shape, report: [String: Any]) {
+        let dir = try VerbHarness.makeTempDir(label)
         defer { try? FileManager.default.removeItem(at: dir) }
-        let input = try VerbHarness.writeBREP(try VerbHarness.box(), named: "in", in: dir)
+        let input = try VerbHarness.writeBREP(shape, named: "in", in: dir)
         let output = dir.appendingPathComponent("out.brep").path
+        let report = try VerbHarness.runJSON(verb, [input, output])
+        return (try GraphIO.loadBREP(at: output), report)
+    }
 
-        // #128: BRepGraph.rootNodes is empty, so the verb throws on every input. When the bug is
-        // fixed this block stops throwing, withKnownIssue fails, and the marker must come off.
-        withKnownIssue("graph-compact fails on every input (#128)") {
-            try VerbHarness.run(GraphCompactCommand.self, [input, output])
-            let rebuilt = try GraphIO.loadBREP(at: output)
-            #expect(abs(try #require(rebuilt.volume) - 1000) < 1e-3)
-        }
+    /// The rebuilt shape must be the same body.
+    ///
+    /// Same volume, same solid and face counts: a bare shell or a lone sub-shape would keep a
+    /// plausible volume but lose a count.
+    private func expectSameBody(_ rebuilt: Shape, as original: Shape) throws {
+        let want = try #require(original.volume)
+        #expect(abs(try #require(rebuilt.volume) - want) < 1e-6 * max(1, want))
+        #expect(
+            rebuilt.subShapeCount(ofType: .solid) == original.subShapeCount(ofType: .solid))
+        #expect(rebuilt.faces().count == original.faces().count)
+    }
+
+    @Test("graph-compact rebuilds a cube")
+    func compactCube() throws {
+        let cube = try VerbHarness.box()
+        let result = try rebuild(GraphCompactCommand.self, cube, label: "compact")
+        try expectSameBody(result.shape, as: cube)
+        #expect(result.report["nodesBefore"] != nil)
     }
 
     @Test(
-        "graph-dedup writes a rebuilt shape",
-        .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/128"))
-    func dedupRebuildsShape() throws {
-        let dir = try VerbHarness.makeTempDir("dedup")
-        defer { try? FileManager.default.removeItem(at: dir) }
-        let input = try VerbHarness.writeBREP(try VerbHarness.box(), named: "in", in: dir)
-        let output = dir.appendingPathComponent("out.brep").path
+        "graph-compact keeps both solids and the shared face of a compound, and reports the real counts"
+    )
+    func compactCompound() throws {
+        let compound = try VerbHarness.splitBoxCompound()
+        let result = try rebuild(GraphCompactCommand.self, compound, label: "compact")
+        try expectSameBody(result.shape, as: compound)
+        #expect(result.shape.subShapeCount(ofType: .solid) == 2)
 
-        withKnownIssue("graph-dedup fails on every input (#128)") {
-            try VerbHarness.run(GraphDedupCommand.self, [input, output])
-            let rebuilt = try GraphIO.loadBREP(at: output)
-            #expect(abs(try #require(rebuilt.volume) - 1000) < 1e-3)
-        }
+        // The report must match an independent run of the same graph operation, so a verb
+        // that rebuilt the shape but reported made-up numbers fails.
+        let graph = try GraphIO.buildGraph(from: compound)
+        let before = graph.stats.totalNodes
+        let compacted = graph.compact()
+        #expect(try VerbHarness.number(result.report, "nodesBefore") == Double(before))
+        #expect(try VerbHarness.number(result.report, "nodesAfter") == Double(compacted.nodesAfter))
+        #expect(
+            try VerbHarness.number(result.report, "removed", "faces")
+                == Double(compacted.removedFaces))
+    }
+
+    @Test("graph-compact keeps a hollow solid's cavity")
+    func compactHollow() throws {
+        let hollow = try hollowBox()
+        try expectSameBody(
+            try rebuild(GraphCompactCommand.self, hollow, label: "compact").shape, as: hollow)
+    }
+
+    @Test("graph-dedup rebuilds a cube")
+    func dedupCube() throws {
+        let cube = try VerbHarness.box()
+        let result = try rebuild(GraphDedupCommand.self, cube, label: "dedup")
+        try expectSameBody(result.shape, as: cube)
+        #expect(result.report["output"] != nil)
+    }
+
+    @Test(
+        "graph-dedup keeps both solids and the shared face of a compound, and reports the real counts"
+    )
+    func dedupCompound() throws {
+        let compound = try VerbHarness.splitBoxCompound()
+        let result = try rebuild(GraphDedupCommand.self, compound, label: "dedup")
+        try expectSameBody(result.shape, as: compound)
+        #expect(result.shape.subShapeCount(ofType: .solid) == 2)
+
+        let expected = try GraphIO.buildGraph(from: compound).deduplicate()
+        #expect(
+            try VerbHarness.number(result.report, "canonicalSurfaces")
+                == Double(expected.canonicalSurfaces))
+        #expect(
+            try VerbHarness.number(result.report, "canonicalCurves")
+                == Double(expected.canonicalCurves))
+    }
+
+    @Test("graph-dedup keeps a hollow solid's cavity")
+    func dedupHollow() throws {
+        let hollow = try hollowBox()
+        try expectSameBody(
+            try rebuild(GraphDedupCommand.self, hollow, label: "dedup").shape, as: hollow)
     }
 
     // MARK: feature-recognize

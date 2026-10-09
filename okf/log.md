@@ -13,6 +13,25 @@
   new one 5 of 5. Earlier fixes (a lock, line filtering by runner mark) treated the symptom; this
   removes the shared descriptor.
 
+## 2026-10-07 (fix/128-graph-rebuild-root)
+
+* **Update**: Fixed #128. `graph-compact` and `graph-dedup` threw on every input because
+  `GraphIO.rebuildShape` rebuilt from `BRepGraph.rootNodes`, which are assembly Products and are empty
+  for a graph built from a shape by design (OCCTSwift's `BRepGraph(shape:)` creates no Product). The
+  issue's first reading, an upstream regression, was wrong; the OCCTSwift docs state the contract and
+  point at `findNode(for:)` for the topology root. `rebuildShape(from:root:)` now takes the original
+  shape and uses that, which still resolves after `compact()` and `deduplicate()`. The JSON and SQLite
+  exporters keep reporting `rootNodes`, which is what that field means upstream, so their `roots` stay
+  empty for shape-built graphs.
+
+## 2026-10-07 (chore/occtswiftio-beta2)
+
+* **Update**: Moved the OCCTSwiftIO floor from `2.0.0-beta.1` to `2.0.0-beta.2` and the lockfile pin from
+  39abfc9 to 2eee626. Upstream re-pointed the published beta.1 tag, which broke SwiftPM's recorded
+  fingerprint on machines that had resolved the first commit (OCCTSwiftIO#46); beta.2 is the same tree
+  under a tag that has only ever pointed at one commit. The lockfile was produced in a clean clone with
+  `swift package update occtswiftio`, so only that pin and `originHash` changed.
+
 ## 2026-10-07 (docs/ci-branch-protection-applied)
 
 * **Update**: Merged #127, #130 and #131, then applied branch protection to `main` requiring `tests`,
