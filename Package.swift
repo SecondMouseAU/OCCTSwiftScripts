@@ -33,7 +33,7 @@ func occtDep(_ name: String, from version: String) -> Package.Dependency {
 // OCCTSwift pin, shared by the full and the WASI dependency lists. The rationale for the exact pin is
 // on the line in `dependencies` below.
 let occtSwiftDependency: Package.Dependency =
-    .package(url: "https://github.com/SecondMouseAU/OCCTSwift.git", exact: "4.0.0-beta.4")
+    .package(url: "https://github.com/SecondMouseAU/OCCTSwift.git", exact: "4.0.0-beta.5")
 
 let package = Package(
     name: "OCCTSwiftScripts",
@@ -130,7 +130,7 @@ let package = Package(
         // full graph until they catch up, same situation as the 2.0.0 bump (see git history on
         // this comment block). Local builds against sibling checkouts work today because path
         // dependencies bypass semver ranges entirely.
-        occtSwiftDependency,  // EXACT, not `from:`: v4.0.0-kernel.N tags are pre-releases of the same package that sort ABOVE every beta, so `from: "4.0.0-beta.4"` silently resolves to the newest kernel tag (main's source). Move this deliberately when the next beta ships.
+        occtSwiftDependency,  // EXACT, not `from:`: v4.0.0-kernel.N tags are pre-releases of the same package that sort ABOVE every beta, so `from: "4.0.0-beta.5"` silently resolves to the newest kernel tag (main's source). Move this deliberately when the next beta ships.
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
@@ -160,10 +160,10 @@ let package = Package(
         // the SubShape <-> ViewportBody plumbing for highlight overlays. Selection / Manipulator /
         // SwiftUI surfaces aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        occtDep("OCCTSwiftInteraction", from: "3.0.0-beta.1"),
+        occtDep("OCCTSwiftInteraction", from: "3.0.0-beta.5"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
-        occtDep("OCCTSwiftMesh", from: "1.7.6-beta.1"),
+        occtDep("OCCTSwiftMesh", from: "1.7.6-beta.3"),
         // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
         // BRepGraph.exportForML / exportJSON via extension after OCCTSwift
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
@@ -197,7 +197,7 @@ let package = Package(
         // Floored at 2.0.0-beta.2, not beta.1: upstream moved the published beta.1 tag from ccf49c3 to
         // 39abfc9, which gives anyone who had already resolved it a SwiftPM fingerprint mismatch
         // (OCCTSwiftIO#46). beta.2 is the same tree under a tag that has only ever pointed at one commit.
-        occtDep("OCCTSwiftIO", from: "2.0.0-beta.2"),
+        occtDep("OCCTSwiftIO", from: "2.0.0-beta.3"),
     ],
     targets: [
         .target(

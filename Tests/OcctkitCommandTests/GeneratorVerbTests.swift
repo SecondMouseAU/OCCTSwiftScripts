@@ -51,9 +51,7 @@ struct GeneratorVerbTests {
         #expect(abs(try #require(shape.volume) - expected) < 1e-2)
     }
 
-    @Test(
-        "reconstruct revolve yields a solid",
-        .bug("https://github.com/SecondMouseAU/OCCTSwiftScripts/issues/129"))
+    @Test("reconstruct revolve yields a solid")
     func reconstructRevolveIsSolid() throws {
         let dir = try VerbHarness.makeTempDir("reconstruct")
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -69,11 +67,10 @@ struct GeneratorVerbTests {
         let json = try VerbHarness.runJSON(ReconstructCommand.self, [spec])
         let shape = try GraphIO.loadBREP(at: try #require(json["shape"] as? String))
 
-        // #129: the revolve comes back as a bare Shell. A shell still reports a plausible volume,
-        // so the solid count is the assertion that matters (#100).
-        withKnownIssue("revolve returns a Shell with no solid (#129)") {
-            #expect(shape.subShapeCount(ofType: .solid) == 1)
-        }
+        // #129: before OCCTSwift 4.0.0-beta.5 (OCCTSwift#3139) the revolve came back as a bare
+        // Shell, which still reports a plausible volume, so the solid count is the assertion
+        // that matters (#100).
+        #expect(shape.subShapeCount(ofType: .solid) == 1)
     }
 
     @Test("reconstruct warns when the result is a shell with no solid, and not for a solid")
