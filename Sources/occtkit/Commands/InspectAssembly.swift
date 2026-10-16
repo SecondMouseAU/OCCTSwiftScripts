@@ -20,7 +20,6 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
 
 enum InspectAssemblyCommand: Subcommand {
     static let name = "inspect-assembly"

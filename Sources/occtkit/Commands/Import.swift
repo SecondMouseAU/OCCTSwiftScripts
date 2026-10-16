@@ -34,7 +34,6 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
 
 enum ImportCommand: Subcommand {
     static let name = "import"
