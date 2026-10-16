@@ -20,7 +20,6 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
 
 enum InspectAssemblyCommand: Subcommand {
     static let name = "inspect-assembly"
@@ -210,9 +209,8 @@ enum InspectAssemblyCommand: Subcommand {
         }
     }
 
-    static func flatten4x4(_ m: simd_float4x4) -> [Float] {
-        let cols = [m.columns.0, m.columns.1, m.columns.2, m.columns.3]
-        return cols.flatMap { [$0.x, $0.y, $0.z, $0.w] }
+    static func flatten4x4(_ m: Matrix4x4F) -> [Float] {
+        m.columnMajorElements
     }
 
     static func identityFloat4x4() -> [Float] {
