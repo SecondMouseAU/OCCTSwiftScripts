@@ -44,8 +44,20 @@ public final class ScriptContext: Sendable {
     /// Part/project metadata written into the manifest.
     public let metadata: ManifestMetadata?
 
-    public init(exportSTEP: Bool = true, metadata: ManifestMetadata? = nil) {
-        let dir: URL
+    /// Environment variable a host sets to point runs at a stage directory.
+    ///
+    /// Never `OCCTMCP_OUTPUT_DIR`, which OCCTMCP owns for its scene directory.
+    public static let outputDirectoryEnvironmentKey = "OCCTSWIFT_OUTPUT_DIR"
+
+    /// Where a run writes: `override`, else `OCCTSWIFT_OUTPUT_DIR`, else the default location
+    /// (iCloud Drive on macOS when present, otherwise `~/.occtswift-scripts/output`).
+    public static func resolveOutputDirectory(override: URL? = nil) -> URL {
+        if let override { return override }
+        if let env = ProcessInfo.processInfo.environment[outputDirectoryEnvironmentKey],
+            !env.isEmpty
+        {
+            return URL(fileURLWithPath: env, isDirectory: true)
+        }
         #if os(macOS)
             let home = FileManager.default.homeDirectoryForCurrentUser
 
@@ -59,10 +71,9 @@ public final class ScriptContext: Sendable {
             if FileManager.default.fileExists(
                 atPath: iCloudDir.deletingLastPathComponent().deletingLastPathComponent().path)
             {
-                dir = iCloudDir
-            } else {
-                dir = localDir
+                return iCloudDir
             }
+            return localDir
         #else
             // iOS/sandboxed platforms: homeDirectoryForCurrentUser and the
             // ~/Library/Mobile Documents iCloud path are unavailable. Write into
@@ -71,8 +82,21 @@ public final class ScriptContext: Sendable {
             let documents =
                 FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
                 ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            dir = documents.appendingPathComponent("OCCTSwiftScripts/output")
+            return documents.appendingPathComponent("OCCTSwiftScripts/output")
         #endif
+    }
+
+    /// - Parameters:
+    ///   - exportSTEP: Whether to also write a combined STEP file on emit.
+    ///   - metadata: Part/project metadata written into the manifest.
+    ///   - outputDirectory: Directory to write into. Defaults to `OCCTSWIFT_OUTPUT_DIR` when
+    ///     set, otherwise the standard location. The directory is created if missing and never
+    ///     emptied: a run overwrites only the files it writes, so a host's own files in a stage
+    ///     directory survive.
+    public init(
+        exportSTEP: Bool = true, metadata: ManifestMetadata? = nil, outputDirectory: URL? = nil
+    ) {
+        let dir = Self.resolveOutputDirectory(override: outputDirectory)
         self.outputDir = dir
         self.exportSTEP = exportSTEP
         self.metadata = metadata
@@ -80,12 +104,7 @@ public final class ScriptContext: Sendable {
         self.graphDescriptors = LockedArray()
         self.shapes = LockedArray()
 
-        // Clean previous output
-        let fm = FileManager.default
-        if fm.fileExists(atPath: dir.path) {
-            try? fm.removeItem(at: dir)
-        }
-        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     }
 
     // MARK: - Add Shape (solids, shells, compounds)
@@ -238,9 +257,22 @@ public final class ScriptContext: Sendable {
         }
     }
 
+    // MARK: - Failure
+
+    /// Record that this run failed, so a host can tell it from an empty scene.
+    ///
+    /// `occtkit run` calls this for a script that fails to build or exits non-zero. A script
+    /// that catches its own errors can call it directly. A later successful `emit()` removes
+    /// the marker.
+    public func fail(_ message: String) throws {
+        try ManifestIO.writeFailureMarker(message: message, in: outputDir)
+    }
+
     // MARK: - Emit
 
-    /// Write manifest.json (trigger file) and optional STEP export.
+    /// Write manifest.json (trigger file, replaced atomically) and optional STEP export.
+    ///
+    /// Removes any failure marker left by an earlier run.
     ///
     /// Call this LAST after all geometry is added.
     public func emit(description: String? = nil) throws {
@@ -266,13 +298,9 @@ public final class ScriptContext: Sendable {
             metadata: metadata
         )
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
-
-        let data = try encoder.encode(manifest)
-        let manifestURL = outputDir.appendingPathComponent("manifest.json")
-        try data.write(to: manifestURL)
+        try ManifestIO.write(
+            manifest, to: outputDir.appendingPathComponent(ManifestIO.manifestFilename))
+        ManifestIO.clearFailureMarker(in: outputDir)
 
         let bodyCount = descriptors.count
         let graphCount = graphDescriptors.count

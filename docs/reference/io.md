@@ -29,7 +29,7 @@ Load a `.brep` file and emit a manifest entry for OCCTSwiftViewport.
 | `--color` / `color` | string | no | Hex colour `#rrggbb` or `#rrggbbaa` (0–255 per channel); omit for default. |
 | `--allow-invalid` / `allowInvalid` | boolean | no | Load a topologically invalid shape as-is; default `false`. |
 
-**Returns**: JSON envelope with `bodyId`, `isValid`, `shapeType` (lowercase: `solid`, `shell`, `compound`, `face`, `wire`, `edge`, `vertex`), `faceCount`, `edgeCount`, `vertexCount`, `boundingBox` (`{ min: [...], max: [...] }`). Side effect: writes `<bodyId>.brep` and `manifest.json` to `--emit-manifest` directory.
+**Returns**: JSON envelope with `bodyId`, `isValid`, `shapeType` (lowercase: `solid`, `shell`, `compound`, `face`, `wire`, `edge`, `vertex`), `faceCount`, `edgeCount`, `vertexCount`, `boundingBox` (`{ min: [...], max: [...] }`). Side effect: writes `<bodyId>.brep` to the `--emit-manifest` directory and merges the body into its `manifest.json` (atomically; see [Staging](#staging)).
 
 **Example**
 
@@ -104,3 +104,19 @@ occtkit import /tmp/bracket.step --emit-manifest /tmp/output --preserve-assembly
 **Drives**: Format dispatch via `Shape.loadSTEP` / `Shape.loadIGES` / `Shape.loadSTL` / `Shape.loadOBJ`; assembly walk via `Document.loadSTEP` + `AssemblyNode` tree; `ScriptManifest` emission.
 
 **Notes**: `--preserve-assembly` is STEP-only for v1; passing it with non-STEP files emits a warning and falls back to single-body import. Transform field is a 4×4 column-major matrix flattened to 16 floats. `--heal-on-import` is a forward-compatibility placeholder; the actual heal logic is deferred (see `heal` verb in [Engineering analysis](engineering.md)).
+
+
+## Staging
+
+`load-brep` and `import` never replace an existing `manifest.json`. They add their bodies to it,
+replacing an entry with the same `id` and keeping every other body, `graphs`, `description`,
+`metadata` and unknown key, and the file is swapped in atomically so a reader never sees it
+half-written. A manifest that is not a JSON object is an error, not overwritten.
+
+The intended use is `--emit-manifest <stage>`: point the verb at a staging directory, then have the
+host promote the directory as one commit.
+
+```bash
+occtkit import part.step --emit-manifest /tmp/stage     # writes /tmp/stage/<id>.brep + manifest.json
+# host validates /tmp/stage, then moves it into the scene directory
+```

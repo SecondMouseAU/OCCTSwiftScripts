@@ -45,7 +45,16 @@ enum RunCommand: Subcommand {
         let config = try parse(args: args)
         try ensureWorkspace()
         try prepareScript(config)
-        try buildAndRun()
+        do {
+            try buildAndRun()
+        } catch {
+            // The script may have died before reaching `emit()`; leave a marker so a host
+            // can tell this from an empty scene (#143).
+            try? ManifestIO.writeFailureMarker(
+                message: error.localizedDescription,
+                in: ScriptContext.resolveOutputDirectory())
+            throw error
+        }
         try copyOutput(config)
         return 0
     }
@@ -338,11 +347,7 @@ enum RunCommand: Subcommand {
     private static func copyOutput(_ config: Config) throws {
         guard let outputDir = config.outputDir else { return }
         let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser
-        let iCloud = home.appendingPathComponent(
-            "Library/Mobile Documents/com~apple~CloudDocs/OCCTSwiftScripts/output")
-        let local = home.appendingPathComponent(".occtswift-scripts/output")
-        let sourceDir = fm.fileExists(atPath: iCloud.path) ? iCloud : local
+        let sourceDir = ScriptContext.resolveOutputDirectory()
         guard fm.fileExists(atPath: sourceDir.path) else { return }
 
         let destURL = URL(fileURLWithPath: outputDir)
