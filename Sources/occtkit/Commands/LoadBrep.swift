@@ -172,13 +172,11 @@ enum LoadBrepCommand: Subcommand {
         return bytes
     }
 
+    /// Merges `manifest` into the one at `url` (atomically), so pointing this at a scene directory
+    /// keeps its other bodies and its manifest-level fields.
     static func writeManifest(_ manifest: ScriptManifest, to url: URL) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
         do {
-            let data = try encoder.encode(manifest)
-            try data.write(to: url)
+            try ManifestIO.merge(manifest, into: url)
         } catch {
             throw ScriptError.message("Failed to write manifest: \(error.localizedDescription)")
         }

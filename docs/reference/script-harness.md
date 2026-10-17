@@ -24,7 +24,7 @@ directory on `emit()`.
 **Signature**
 
 ```swift
-ScriptContext(exportSTEP: Bool = true, metadata: ManifestMetadata? = nil)
+ScriptContext(exportSTEP: Bool = true, metadata: ManifestMetadata? = nil, outputDirectory: URL? = nil)
 ```
 
 **Parameters**
@@ -33,10 +33,14 @@ ScriptContext(exportSTEP: Bool = true, metadata: ManifestMetadata? = nil)
 |------|------|---------|-------------|
 | `exportSTEP` | `Bool` | `true` | Whether to write a combined `output.step` file (disable to skip STEP for speed) |
 | `metadata` | `ManifestMetadata?` | `nil` | Optional project metadata (name, revision, tags, notes) written into `manifest.json` |
+| `outputDirectory` | `URL?` | `nil` | Directory to write into. Falls back to `$OCCTSWIFT_OUTPUT_DIR`, then the default location below |
 
-**What it does**: Creates a new context, cleans the output directory (iCloud Drive
+**What it does**: Creates a new context and prepares to accumulate geometry. The output directory
+is `outputDirectory`, else `$OCCTSWIFT_OUTPUT_DIR`, else iCloud Drive
 `~/Library/Mobile Documents/.../OCCTSwiftScripts/output/` if available, else
-`~/.occtswift-scripts/output/`), and prepares to accumulate geometry.
+`~/.occtswift-scripts/output/`. It is created if missing and **never emptied**: a run overwrites
+only the files it writes (`body-N.brep`, `graph-N.*`, `output.step`, `manifest.json`), so a host's
+own files in a stage directory survive. `OCCTMCP_OUTPUT_DIR` is not read.
 
 **Example**
 
@@ -57,9 +61,16 @@ let profile = Wire.rectangle(width: 20, height: 10)!
 try ctx.add(profile, id: "sketch", color: ScriptContext.Colors.yellow)
 ```
 
-**Notes**: `ScriptContext` is `Sendable` (thread-safe via internal NSLock). Output directory
-is cleaned on init; if you call `ScriptContext()` multiple times in one script, only the final
-`emit()` persists.
+**Notes**: `ScriptContext` is `Sendable` (thread-safe via internal NSLock). The manifest is
+replaced atomically on `emit()`, so a watcher never reads it half-written. Because the directory
+is no longer wiped, `body-N.brep` files from an earlier, larger run stay on disk after a smaller
+one; the new manifest does not list them. If you call `ScriptContext()` multiple times in one
+script, only the final `emit()` writes the manifest.
+
+**Failed runs**: `ctx.fail(_ message:)` writes `run-failed.json` (`{version, timestamp, message}`)
+beside the manifest, and `occtkit run` writes it when the script fails to build or exits non-zero.
+A successful `emit()` removes it. A host that finds the file reports a failed run instead of an
+empty scene.
 
 ---
 
