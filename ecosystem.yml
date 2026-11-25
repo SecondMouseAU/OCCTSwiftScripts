@@ -6,5 +6,5 @@ status: active
 language: Swift
 summary: occtkit CLI plus ScriptHarness, headless OCCTSwift geometry verbs and a script-iteration harness, OCCTMCP-ready.
 products: []
-depends_on: [OCCTSwift, OCCTSwiftViewport, OCCTSwiftTools, OCCTSwiftAIS, OCCTSwiftMesh, OCCTSwiftIO]
+depends_on: [OCCTSwift, OCCTSwiftViewport, OCCTSwiftInteraction, OCCTSwiftMesh, OCCTSwiftIO]
 maintainer: gsdali
