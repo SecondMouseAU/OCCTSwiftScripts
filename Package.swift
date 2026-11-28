@@ -30,10 +30,10 @@ func occtDep(_ name: String, from version: String) -> Package.Dependency {
     .package(url: "https://github.com/SecondMouseAU/\(name).git", from: Version(version)!)
 }
 
-// OCCTSwift pin, shared by the full and the WASI dependency lists. The rationale for the exact pin is
-// on the line in `dependencies` below.
+// OCCTSwift requirement, shared by the full and the WASI dependency lists. The rationale is on the
+// line in `dependencies` below.
 let occtSwiftDependency: Package.Dependency =
-    .package(url: "https://github.com/SecondMouseAU/OCCTSwift.git", exact: "4.0.0-beta.6")
+    .package(url: "https://github.com/SecondMouseAU/OCCTSwift.git", from: "4.0.0")
 
 let package = Package(
     name: "OCCTSwiftScripts",
@@ -130,7 +130,21 @@ let package = Package(
         // full graph until they catch up, same situation as the 2.0.0 bump (see git history on
         // this comment block). Local builds against sibling checkouts work today because path
         // dependencies bypass semver ranges entirely.
-        occtSwiftDependency,  // EXACT, not `from:`: v4.0.0-kernel.N tags are pre-releases of the same package that sort ABOVE every beta, so `from: "4.0.0-beta.6"` silently resolves to the newest kernel tag (main's source). Move this deliberately when the next beta ships.
+        // from: "4.0.0", the first stable 4.x. A range with no pre-release bound never resolves a
+        // pre-release, and the kernel assets now live on non-semver tags (kernel-8.0.2-c1), so the
+        // exact pin that stood here (it existed because the v4.0.0-kernel.N tags sorted above
+        // every beta, so `from: "4.0.0-beta.6"` silently resolved to the newest kernel tag) is no
+        // longer needed.
+        // ≥4.0.0 (OCCTSwiftScripts#148): the build succeeds and all 102 tests pass (99 in 13 suites
+        // and 3 in 1), with OCCTSwift 4.0.0, OCCTSwiftInteraction 3.0.0, OCCTSwiftMesh 1.7.6 and
+        // OCCTSwiftIO 2.0.0 resolved from their URLs, and no test expectation changed. Two of the
+        // APIs whose answers changed without a compile error are called here, and no test pins
+        // either: Shape.analyze (heal, graph-validate) now reads gapCount 0 and isHealthy true for
+        // a shape with unordered wires such as a box, which used to read 24 gaps (OCCTSwift#3086);
+        // circularPattern (pattern --total-angle) puts the last copy at a partial angle, in
+        // count - 1 equal steps, and a full circle is unchanged (OCCTSwift#3356). Shape.solid(from:),
+        // FilletBuilder and offsetWire(face:) are not called.
+        occtSwiftDependency,
         // RenderPreview rasterizes through Viewport's OffscreenRenderer.
         // Floored at v1.0.4: v1.0.3 fixes an uncatchable quantize() crash on
         // body load (Viewport #30) and v1.0.4 makes the published Viewport
@@ -160,10 +174,10 @@ let package = Package(
         // the SubShape <-> ViewportBody plumbing for highlight overlays. Selection / Manipulator /
         // SwiftUI surfaces aren't relevant to a CLI; Dimension overlays render via a SwiftUI
         // Canvas inside MetalViewportView and so don't reach OffscreenRenderer.
-        occtDep("OCCTSwiftInteraction", from: "3.0.0-beta.6"),
+        occtDep("OCCTSwiftInteraction", from: "3.0.0"),
         // OCCTSwiftMesh v1.0.0 graduated alongside OCCTSwift v1.0.0. Powers
         // the `simplify-mesh` verb.
-        occtDep("OCCTSwiftMesh", from: "1.7.6-beta.4"),
+        occtDep("OCCTSwiftMesh", from: "1.7.6"),
         // OCCTSwiftIO v1.0.0 graduated alongside OCCTSwift v1.0.0. Provides
         // BRepGraph.exportForML / exportJSON via extension after OCCTSwift
         // v0.171.0 hoisted them out of the kernel. Pulled into GraphML and
@@ -197,7 +211,7 @@ let package = Package(
         // Floored at 2.0.0-beta.2, not beta.1: upstream moved the published beta.1 tag from ccf49c3 to
         // 39abfc9, which gives anyone who had already resolved it a SwiftPM fingerprint mismatch
         // (OCCTSwiftIO#46). beta.2 is the same tree under a tag that has only ever pointed at one commit.
-        occtDep("OCCTSwiftIO", from: "2.0.0-beta.4"),
+        occtDep("OCCTSwiftIO", from: "2.0.0"),
     ],
     targets: [
         .target(
