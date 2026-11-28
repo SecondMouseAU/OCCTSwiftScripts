@@ -23,7 +23,9 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
+#if canImport(simd)
+    import simd
+#endif
 
 enum MeasureDeviationCommand: Subcommand {
     static let name = "measure-deviation"

@@ -1,10 +1,25 @@
-// WASICompat.swift: the one simd matrix type occtkit needs that OCCTSwift's WASI-only `simd` shim
-// (Sources/WASICompat/simd in OCCTSwift) does not provide. Mirrors the Apple `simd_double4x4`
-// surface Transform.swift uses: identity from a scalar, diagonal, column initializer, `columns`,
-// and the matrix product.
+// WASICompat.swift: the Apple `simd` surface occtkit calls, for a build where Apple's `simd` module
+// does not exist (WASI). OCCTSwift stopped shipping a WASI-only `simd` shim in 4.0.0 and defines no
+// `simd_*` function now (OCCTSwift#3291), so the vector functions are written here over the
+// standard library's own SIMD types, and the one matrix type is mirrored: the `simd_double4x4`
+// surface Transform.swift uses (identity from a scalar, diagonal, column initializer, `columns`,
+// and the matrix product). Apple builds import the real module and compile none of this.
 
-#if os(WASI)
-    import simd
+#if !canImport(simd)
+    // swift-format-ignore: AlwaysUseLowerCamelCase
+    func simd_length<V: SIMD>(_ v: V) -> V.Scalar where V.Scalar: FloatingPoint {
+        (v * v).sum().squareRoot()
+    }
+
+    // swift-format-ignore: AlwaysUseLowerCamelCase
+    func simd_normalize<V: SIMD>(_ v: V) -> V where V.Scalar: FloatingPoint {
+        v / simd_length(v)
+    }
+
+    // swift-format-ignore: AlwaysUseLowerCamelCase
+    func simd_dot<V: SIMD>(_ a: V, _ b: V) -> V.Scalar where V.Scalar: FloatingPoint {
+        (a * b).sum()
+    }
 
     // swift-format-ignore: TypeNamesShouldBeCapitalized
     struct simd_double4x4 {

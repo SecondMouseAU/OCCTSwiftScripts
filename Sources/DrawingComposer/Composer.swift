@@ -6,7 +6,9 @@
 
 import Foundation
 import OCCTSwift
-import simd
+#if canImport(simd)
+    import simd
+#endif
 
 public enum DrawingComposerError: Error, LocalizedError {
     case noViewsProjected

@@ -22,10 +22,24 @@ public enum ManifestIO {
         return encoder
     }
 
+    /// The write option that replaces a file atomically, where the platform has one.
+    ///
+    /// That is `.atomic` wherever a temporary file can be written and renamed over the destination.
+    /// WASI cannot: its Foundation marks `.atomic` unavailable because temporary files are not
+    /// supported, so a WASI write goes straight to the destination, and a write that fails partway
+    /// can leave a partial file there.
+    private static var atomicWrite: Data.WritingOptions {
+        #if os(WASI)
+            []
+        #else
+            .atomic
+        #endif
+    }
+
     /// Replaces the manifest at `url` atomically: the data goes to a temporary file in the same
     /// directory, then is renamed over the destination.
     public static func write(_ manifest: ScriptManifest, to url: URL) throws {
-        try encoder().encode(manifest).write(to: url, options: .atomic)
+        try encoder().encode(manifest).write(to: url, options: atomicWrite)
     }
 
     /// Merges the bodies and graphs of a manifest into the one already on disk.
@@ -67,7 +81,7 @@ public enum ManifestIO {
 
         let data = try JSONSerialization.data(
             withJSONObject: merged, options: [.prettyPrinted, .sortedKeys])
-        try data.write(to: url, options: .atomic)
+        try data.write(to: url, options: atomicWrite)
     }
 
     private static func mergeEntries(
@@ -100,7 +114,7 @@ public enum ManifestIO {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try encoder().encode(Marker(message: message))
             .write(
-                to: directory.appendingPathComponent(failureMarkerFilename), options: .atomic)
+                to: directory.appendingPathComponent(failureMarkerFilename), options: atomicWrite)
     }
 
     public static func clearFailureMarker(in directory: URL) {

@@ -5,7 +5,9 @@
 
 import Foundation
 import OCCTSwift
-import simd
+#if canImport(simd)
+    import simd
+#endif
 
 public struct ViewItem: Sendable {
     public let name: String
