@@ -29,7 +29,9 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
+#if canImport(simd)
+    import simd
+#endif
 
 enum TransformCommand: Subcommand {
     static let name = "transform"

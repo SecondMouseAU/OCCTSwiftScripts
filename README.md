@@ -279,7 +279,17 @@ WASI has no working directory, so pass absolute paths and preopen the directorie
 (`OCCTMCP_OCCTKIT_WASM=<occtkit.wasm>`). Measured on Linux x86_64 through that path, against
 analytic answers on two overlapping 10 mm cubes: volume 1000, area 600, centre of mass (5, 5, 5),
 intersect 250, union 1750, subtract 750, distance 10 and 0, wall thickness 10, all within 1e-6.
-No native-vs-wasm parity run has been done yet (it needs a Mac).
+A native-against-wasm comparison on a Mac (arm64, OCCTSwift 4.0.0), on a 10 x 10 x 5 block with a
+4 mm bore built by `reconstruct`: `metrics`, `mesh`, `check-thickness`, `measure-distance`,
+`measure-deviation`, `query-topology` (faces and edges), `transform` (translate and rotate) and
+`drawing-export` agree to 1e-6, and the drawing's DXF is byte for byte the same. The one difference
+is `metrics`' order of two principal axes whose moments are equal, which is arbitrary. The other
+verbs have not been compared. `occtkit` has not been built for wasm between OCCTSwift 4.0.0-beta.6
+and this change: 4.0.0 removed its WASI `simd` shim (OCCTSwift#3291), so the `simd_*` functions the
+verbs use are defined in `Sources/occtkit/WASICompat.swift` and `Sources/DrawingComposer/SIMDCompat.swift`
+where Apple's `simd` module does not exist. WASI also cannot write a temporary file, so a manifest or
+failure marker written there is not written atomically: a write that fails partway can leave a partial
+file.
 
 ## Requirements
 

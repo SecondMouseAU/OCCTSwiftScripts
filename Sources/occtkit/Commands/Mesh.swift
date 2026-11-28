@@ -36,7 +36,9 @@
 import Foundation
 import OCCTSwift
 import ScriptHarness
-import simd
+#if canImport(simd)
+    import simd
+#endif
 
 enum MeshCommand: Subcommand {
     static let name = "mesh"

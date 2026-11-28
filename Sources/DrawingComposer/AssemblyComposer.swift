@@ -19,7 +19,9 @@
 
 import Foundation
 import OCCTSwift
-import simd
+#if canImport(simd)
+    import simd
+#endif
 
 extension Composer {
 
