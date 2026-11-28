@@ -1,5 +1,9 @@
 # Knowledge Log
 
+## 2026-11-28 (chore/repin-occtswift-4.0.0)
+
+* **Update**: Floors moved to the stable tags (OCCTSwiftScripts#148): `OCCTSwift` from an exact pin on `4.0.0-beta.6` to `from: "4.0.0"`, `OCCTSwiftInteraction` `3.0.0-beta.6 -> 3.0.0`, `OCCTSwiftMesh` `1.7.6-beta.4 -> 1.7.6` and `OCCTSwiftIO` `2.0.0-beta.4 -> 2.0.0`. A range with no pre-release bound never resolves a pre-release, and the kernel assets live on non-semver tags (`kernel-8.0.2-c1`), so the exact pin is no longer needed. Resolved from the published URLs the build succeeds and all 102 tests pass (99 in 13 suites, 3 in 1) with no expectation changed. Two OCCTSwift 4.0.0 behaviour changes reach `occtkit` users and no test pins them: `Shape.analyze` (`heal`, `graph-validate`) reports `gapCount` 0 and `isHealthy` true for a shape with unordered wires such as a box, where it reported 24 gaps (OCCTSwift#3086), and `pattern --kind circular` with a partial `--total-angle` puts its last copy at the angle (OCCTSwift#3356); the cookbook says so. Floors recorded in [the dependencies reference](references/dependencies.md).
+
 ## 2026-10-09 (feat/55-edge-convexity)
 
 * **Update**: Finished #55. The issue asked for per-edge `convexity` and `dihedralAngle` in the graph

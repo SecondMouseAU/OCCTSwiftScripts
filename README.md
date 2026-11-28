@@ -251,7 +251,7 @@ See [`recipes/README.md`](recipes/README.md) for the full index and contributor 
 `ScriptHarness` and `DrawingComposer` are exposed as library products for in-process consumers:
 
 ```swift
-.package(url: "https://github.com/SecondMouseAU/OCCTSwiftScripts.git", from: "1.4.2"),
+.package(url: "https://github.com/SecondMouseAU/OCCTSwiftScripts.git", from: "1.7.1"),
 ```
 
 ```swift

@@ -30,7 +30,8 @@ and a single bolt-hole cylinder (`hole.brep`), we:
 
 `pattern` takes one BREP and writes one file per instance into `--output-dir`. Circular mode
 needs an axis origin, an axis direction, and a total count. Omitting `--total-angle` means a full
-2π circle divided equally.
+2π circle divided equally. A partial `--total-angle` (radians) steps the copies in `count - 1` equal
+steps, so the last copy lands at that angle; before OCCTSwift 4.0.0 it stopped one step short.
 
 ```bash
 occtkit pattern hole.brep \
